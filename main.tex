@@ -72,6 +72,11 @@
 \usepgfplotslibrary{colorbrewer}
 \pgfplotsset{compat=1.14, colormap/Blues, every axis/.append style={label style={font=\large}, tick label style={font=\large}}}
 
+
+\usepackage{xcolor}
+\newcommand\todo[1]{\textcolor{red}{TODO:#1}}
+\newcommand\question[1]{\textcolor{blue}{Question:#1}}
+
 \usepackage{mathtools}
 
 \begin{document}
@@ -109,6 +114,8 @@
 \include{prerequis/chap}
 \include{resumeTextes/chap}
 \include{mcs/chap}
+\include{mcts/chap}
+\include{linmcts/chap}
 \include{conclusion}
 
 \appendix                       % annexes le cas échéant

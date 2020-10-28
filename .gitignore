@@ -286,3 +286,6 @@ TSWLatexianTemp*
 # VSCode
 settings.json
 .vscode
+
+# Results folders
+*ExpResults
