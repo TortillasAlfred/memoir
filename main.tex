@@ -65,14 +65,23 @@
   %% d'une page de titre (interdite lors du dépôt à la FESP).
   % \annee{<20xx>}
 
+
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{pgfplotstable}
+\usepgfplotslibrary{colorbrewer}
+\pgfplotsset{compat=1.14, colormap/Blues, every axis/.append style={label style={font=\large}, tick label style={font=\large}}}
+
+\usepackage{mathtools}
+
 \begin{document}
 
 \frontmatter                    % pages liminaires
 
 \frontispice                    % production de la page frontispice
 
-\include{resume}                % résumé français
-\include{abstract}              % résumé anglais
+\include{resume/resume}                % résumé français
+\include{resume/abstract}              % résumé anglais
 \cleardoublepage
 
 \maxtocdepth{subsection}
@@ -88,25 +97,23 @@
 \dedicace{<Dédicace si désiré>}
 \cleardoublepage
 
-\epigraphe{<Texte de l'épigraphe>}{<Source ou auteur>}
+\epigraphe{"<Texte de l'épigraphe>"}{<Source ou auteur>}
 \cleardoublepage
 
-\include{remerciements}         % remerciements
-\include{avantpropos}           % avant-propos
+\include{remerciements/remerciements}         % remerciements
+\include{avantpropos/avantpropos}           % avant-propos
 
 \mainmatter                     % corps du document
 
-\include{introduction}
-\include{chap_reseaux_neurones}
-\include{chap_montecarlo}
-\include{chap_resume}
-\include{chap_bandits}
-\include{chap_mcts}
+\include{introduction/chap}
+\include{prerequis/chap}
+\include{resumeTextes/chap}
+\include{mcs/chap}
 \include{conclusion}
 
 \appendix                       % annexes le cas échéant
 
-% \include{annexe}                % annexe A
+\include{annexe/a}                % annexe A
 
 % \bibliography{}                 % production de la bibliographie
 
