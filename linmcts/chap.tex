@@ -1,6 +1,19 @@
 \chapter{Recherche arborescente linéaire}
 \label{chap:linmcts}                   % étiquette pour renvois (à compléter!)
 
+\section{Estimation du score de tous les résumés}
+
+On a des représentations vectorielles $\psi(s)$ des noeuds
+de l'arbre de résumé.
+Les représentations sont issues de l'encodeur.
+On cherche à trouver le mapping linéaire $\theta$ minimisant
+
+\begin{equation}
+    \left( R(s, \hat(s)) - \langle \theta, \psi(s)\rangle \right)^2
+\end{equation}
+
+
+\section{Recherche d'une approximation du score de tous les résumés}
 
 \commentaire{Juste un copier-coller d'un document que j'avais préparé à la fin de
     l'été.}
@@ -10,7 +23,6 @@ For the pre-training, a fully connected layer took as input 3 sentence embedding
 For each document in the pre-training phase, 250 summaries of 3 sentences were randomly sampled and their ROUGE scores were used as targets.
 The pre-training batch size was of 64.
 
-\vspace{-10pt}
 \begin{center}
     \begin{tikzpicture}
         \begin{axis}[title={Importance of pre-training, $\alpha = 0.1$}, grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, name=plot0, xshift=-.1\textwidth, y tick label style={/pgf/number format/fixed zerofill}, ylabel={Inferred ROUGE}, xlabel={n samples}, width=\textwidth, legend style={at={(1,0.1)},anchor=south east}, smooth, xmin=0, xmax=500, ymin=0.2, ymax=0.45]
@@ -93,3 +105,12 @@ A linear scaling seems legitimate, starting at 200 samples for documents of 10 s
     \item \textbf{Should explore values of $\alpha \in [0.05, 0.5]$}.
     \item Should try scaling number of MCTS samples per document with document length via $n = \ceil{7.5|d|} + 125$.
 \end{itemize}
+
+\section{Intégration}
+
+Le linUCT génère des targets $\theta$, qu'on apprend par perte cosine.
+À l'inférence, on utilise la linéarité du produit vectoriel
+et le fait que nos représentations de résumés sont la somme
+des représentations des phrases pour prédire les 3 phrases
+dont la représentation a le produit vectoriel maximal avec la mapping
+prédit.

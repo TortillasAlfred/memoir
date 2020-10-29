@@ -1,18 +1,30 @@
 \chapter{Recherche arborescente}
 \label{chap:mcts}                   % étiquette pour renvois (à compléter!)
 
-<Texte du chapitre ou de l'article.>
+\section{Recherche du résumé optimal}
 
-\section{Description}
+On cherche à calculer
 
-\section{Apprentissage}
+\begin{equation}
+    f = \arg\max R(s, \hat(s))
+\end{equation}
 
-\subsection{Approche contextuelle}
+À cause de la taille déraisonnable de l'espace des résumés, on ne peut
+pas calculer directement.
 
-Approches inspirées de UCT
+\section{Calcul d'un résumé presque-optimal}
 
-\subsection{Approche linéaire}
+Arbre de résumé.
 
-Leaf-LinUCT and so on
+Algorithme UCT pour parcours d'arbre.
 
-\section{Résultats}
+Expériences sur grand nombre de documents, potentiellement plusieurs
+formulations envisageables, importance des hyperparamètres, taille des
+documents.
+
+\section{Intégration}
+
+UCT génère une distribution cible sur les phrases.
+
+La distribution est apprise par MSE et l'inférence est faite de manière
+vorace.
