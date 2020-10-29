@@ -1,14 +1,107 @@
 \chapter{Génération automatique de résumés de textes}     % numéroté
 \label{chap:generation_resumes}                           % étiquette pour renvois (à compléter!)
 
-<Texte du chapitre ou de l'article.>
+Quand on résume, on veut (1) compresser un ou des textes tout en
+s'assurant de (2) conserver la majeure partie de l'information contenue.
 
-\section{Traitement automatique de la langue naturelle}
+On dit qu'il s'agit d'un dilemme compression-conservation.
 
-\section{Formulation extractive}
+Deux techniques principales actuellement utilisées: abstractive et extractive.
 
 \section{Formulation abstractive}
 
+On écrit un résumé \textit{à la mitaine}.
+
+Formulation difficile car nécessite de gérer la syntaxe et les fautes
+d'orthographe en plus de la gestion du dilemme compression-conversation.
+
+Récentes percées en NLG ont beaucoup boosté les performances ici.
+
+\citep{2020t5, unilm, zhang2019pegasus}
+
+\section{Formulation extractive}
+
+On sélectionne des phrases du ou des documents initiaux.
+
+Les approches de l'état de l'art sont toutes basées sur une approche
+encodeur-décodeur avec des réseaux de neurones.
+
+Ces approches produisent en sortie une distribution sur les phrases
+originales.
+
+Le résumé est ensuite bâti à partir de la distribution prédite par le modèle.
+
+\citep{dong2018banditsum,luo-etal-2019-reading,zhong-etal-2020-extractive}
+sont des approches représentant l'état de l'art en la matière actuellement.
+
+\citep{dong2018banditsum,luo-etal-2019-reading} emploient le
+même modèle neurones.
+Comme encodeur, deux LSTMs consécutifs, un travaillant au niveau
+des mots et l'autre au niveau des phrases.
+Comme décodeur, une couche pleinement connectée partagée pour toutes les
+phrases et avec sortie réelle.
+Un schéma et davantage de détails sur ce modèle neuronal sont disponibles
+au chapitre \ref{chap:mcs}.
+Nous reprendrons une architecture similaire de réseau de neurones pour toutes
+les expérimentations.
+
+Définition formelle: On dit qu'on a un modèle de génération de résumés
+$(\pi, \phi)$.
+Ici $\pi$ prend en entrée un document $d$ et retourne
+$\pi(d)$, une distribution de probabilités de sélection sur les phrases
+de $d$. On a ensuite $\phi$, qui est un processus de génération de résumé
+extractif à partir d'une distribution $\pi(d)$.
+Deux exemples intuitifs de $\phi$ sont les processus voraces et stochastiques,
+où on choisit les $n$ phrases avec la plus grande probabilité ou on en pige
+$n$ sans remise de $\pi(d)$, respectivement.
+
+Note: le modèle doit fondamentalement contenir $\phi$ et $\pi$ car
+l'encoder-décodeur optimal $\pi^*$ dépend du processus $\phi$ employé
+pour la génération de résumés.
+
 \section{Évaluation de la performance}
 
-\section{Jeux de données}
+Comment distinguer quantitativement deux résumés candidats $s$ et $\hat{s}$ ?
+
+Intuition: on se base sur les \ngrams d'un résumé cible. Plus le overlap
+est grand entre les \ngrams d'un candidat et ceux de la cible, plus le résumé
+a conservé l'information recherchée.
+
+Un problème: si on se fie juste au rappel sur les \ngrams, le résumé optimal sera
+de conserver tout le texte original. Pour incorporer la portion compression du dilemme
+fondamental de la génération de résumé, on peut utiliser une métrique plus
+appropriée comme le score F1 pour ajouter une pénalité sur les \ngrams présents dans
+le candidat pas dans la cible.
+
+Les considérations précédentes ont mené à la famille de métriques ROUGE \citep{lin-2004-rouge},
+qui correspond à assigner une valeur numérique à un résumé candidat à partir
+de son F1-Score sur une tâche de classification sur les \ngrams d'un résumé cible.
+En pratique, on utilise généralement $n={1,2}$ et on utilise aussi la plus longue
+sous-séquence, nommée ROUGE-L. On utilise généralement
+
+\begin{equation}
+    \label{eq:ROUGE}
+    R(s, \hat{s}) = \frac{1}{3} R_1(s, \hat{s}) + R_2(s, \hat{s}) + R_L(s, \hat{s})
+\end{equation}
+
+pour évaluer un candidat $s$ à partir d'une cible $\hat{s}$.
+\todo{expliquer mérites et défauts de R1, R2 et RL et donc
+    pourquoi leur moyenne est bonne. Range de R est [0,1]}
+
+\question{ROUGE est invariant à l'ordre des phrases. J'utilise cette propriété
+    dans le pré-calcul des ROUGE et dans la recherche arborescente. Je devrais en parler ici ?}
+
+Benchmark classique: CNN/DailyMail \citep{DBLP:journals/corr/SeeLM17}. À ajouter :
+
+\begin{itemize}
+    \item N articles (n train/valid/test)
+    \item Moyennes mots, phrases texte/abstract
+\end{itemize}
+
+En fonction des stats, les modèles entraînés sur ce jeu de données produisent
+pour la plupart des résumés de 3 phrases du document original.
+
+C'est ce jeu de données qu'on utilisera pour tous les tests.
+
+\question{Où est-ce que je dis que j'ai précomputé tous les scores ROUGE possibles pour
+    tous les documents ?}

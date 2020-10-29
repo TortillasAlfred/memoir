@@ -1,18 +1,145 @@
-\chapter{Estimation}
+\chapter{Échantillonnage}
 \label{chap:mcs}                   % étiquette pour renvois (à compléter!)
 
-<Texte du chapitre ou de l'article.>
+Idée: si je possède une distribution sur les phrases, j'aimerais savoir
+quelle est la performance qui lui est associée (processus de génération
+stochastique seulement).
 
-\section{Description}
+Concrètement, on cherche donc à approximer
 
-\section{Apprentissage}
+\begin{equation}
+    f = \underset{{s \sim \phi(\pi(d))}}{\mathbb{E}} \,\left[R(s, \hat{s})\right].
+\end{equation}
 
-\subsection{Approche contextuelle}
+Cette fonction ne peut pas être calculée analytiquement dans un temps
+raisonnable car le nombre de résumés possibles à considérer est trop grand
+(exponentiel en nombre de phrases).
 
-Approches inspirées de UCT
+Or, pour estimer $f$, on n'a pas \textbf{besoin} de vérifier tous les résumés
+possibles: on a seulement besoin de ceux qui sont les plus susceptibles selon
+$\phi(\pi(d))$.
+À mentionner: la différence de probabilité entre deux résumés finit par outrepasser
+la différence de $R$ entre les deux mêmes résumés, c'est aussi pour ça que ça marche.
 
-\subsection{Approche linéaire}
+On procède donc avec une approche nommé Échantillonnage de Monte-Carlo, où on
+calcule plutôt
 
-Leaf-LinUCT and so on
+\begin{equation}
+    \tilde{f} = \frac{1}{N} \sum_{t=1}^N R(s_t, \hat{s}),
+\end{equation}
 
-\section{Résultats}
+avec les résumés $s_t$ échantillonnés selon $\phi(\pi(d))$. Notons que $\tilde{f}$
+est un estimateur non-biaisé de $f$.
+
+\section{Expériences sur l'échantillonnage}
+
+Pour les tests, on prend 10 000 documents d'entraînement du jeu de données.
+
+On pige aléatoirement des distributions $\pi(d)$ qui sont une moyenne pondérée
+entre une distribution uniforme $U(d)$ et une distribution \textit{3-hot} $G(d)$
+sous la forme
+
+\begin{equation}
+    \pi(d) = (1 - \tau) U(d) + \tau G(d).
+\end{equation}
+
+On explore $\tau \in \{\frac{n}{100}: 0 \leq n \leq 100\}$ en repigeant les 3
+index non-nuls de $G(d)$ à chaque fois. On ajoute un bruit gaussien sur chaque $\pi(d)$.
+
+On calcule analytiquement $f$ grâce au fait que l'on possède tous les scores
+ROUGE de tous les résumés possibles pour les documents du jeu de données.
+On pige 1000 échantillons de $\phi(\pi(d))$, où $\phi$ est le processus de
+pige sans remise de 3 phrases.
+On calcule ainsi $\tilde{f}_t$ pour $t$ jusqu'à 1000.
+
+\section{Résultats échantillonnage}
+
+\commentaire{Pour les tableaux, je veux surtout votre input sur (1) la pertinence
+    de chacun, (2) la manière de les présenter (j'ai les données brutes, je peux
+    facilement réorganiser comment je présente les donnnées) et (3) s'il y a des
+    expériences supplémentaires que vous jugez pertinentes.}
+
+\begin{tikzpicture}
+    \begin{axis}[title={Erreur de l'échantillonnage}, grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, name=plot0, xshift=-.1\textwidth, y tick label style={/pgf/number format/fixed zerofill}, ylabel={Erreur absolue * 100}, xlabel={Nombre d'échantillons}, width=\textwidth, smooth, xmin=0, xmax=50]
+        \addplot[blue, ylabel near ticks, line width=3pt] table[x=x, y=y, col sep=comma]{mcs/mcsExpResults/overall/mean.csv};
+        \addplot[red, ylabel near ticks, line width=3pt] table[x=x, y=y, col sep=comma]{mcs/mcsExpResults/overall/less20.csv};
+        \addplot[green, ylabel near ticks, line width=3pt] table[x=x, y=y, col sep=comma]{mcs/mcsExpResults/overall/20to35.csv};
+        \addplot[yellow, ylabel near ticks, line width=3pt] table[x=x, y=y, col sep=comma]{mcs/mcsExpResults/overall/more35.csv};
+        \legend{Moyenne, $|d| \leq 20$, $20 < |d| < 35$, $35 \leq |d|$}
+    \end{axis}
+\end{tikzpicture}
+
+\begin{tikzpicture}
+    \begin{axis}[title={Erreur de l'échantillonnage selon l'entropie}, grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, name=plot0, xshift=-.1\textwidth, y tick label style={/pgf/number format/fixed zerofill}, ylabel={Erreur absolue * 100}, xlabel={Entropie}, width=\textwidth, smooth]
+        \addplot[blue, ylabel near ticks, line width=3pt] table[x=x, y=t8, col sep=comma]{mcs/mcsExpResults/entropy/all.csv};
+        \addplot[red, ylabel near ticks, line width=3pt] table[x=x, y=t16, col sep=comma]{mcs/mcsExpResults/entropy/all.csv};
+        \addplot[green, ylabel near ticks, line width=3pt] table[x=x, y=t32, col sep=comma]{mcs/mcsExpResults/entropy/all.csv};
+        \addplot[yellow, ylabel near ticks, line width=3pt] table[x=x, y=t64, col sep=comma]{mcs/mcsExpResults/entropy/all.csv};
+        \legend{$t=8$, $t=16$, $t=32$, $t=64$}
+    \end{axis}
+\end{tikzpicture}
+
+\begin{tikzpicture}
+    \begin{axis}[title={Erreur de l'échantillonnage selon la plus grande probabilité présente}, grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, name=plot0, xshift=-.1\textwidth, y tick label style={/pgf/number format/fixed zerofill}, ylabel={Erreur absolue * 100}, xlabel={Probabilité maximale de $\phi(\pi(d))$}, width=\textwidth, smooth]
+        \addplot[blue, ylabel near ticks, line width=3pt] table[x=x, y=t8, col sep=comma]{mcs/mcsExpResults/top3/all.csv};
+        \addplot[red, ylabel near ticks, line width=3pt] table[x=x, y=t16, col sep=comma]{mcs/mcsExpResults/top3/all.csv};
+        \addplot[green, ylabel near ticks, line width=3pt] table[x=x, y=t32, col sep=comma]{mcs/mcsExpResults/top3/all.csv};
+        \addplot[yellow, ylabel near ticks, line width=3pt] table[x=x, y=t64, col sep=comma]{mcs/mcsExpResults/top3/all.csv};
+        \legend{$t=8$, $t=16$, $t=32$, $t=64$}
+    \end{axis}
+\end{tikzpicture}
+
+Analyse:
+
+\begin{itemize}
+    \item Absolument aucun impact de la taille des documents
+    \item Bizarre le creux à 1 pour l'entropie.
+    \item Semblerait que $t=16$ est un bon compromis pour être rapide mais pas trop faire d'erreurs. C'est ce que BanditSUM ont aussi.
+\end{itemize}
+
+\section{Intégration dans un modèle complet}
+
+Pour un modèle avec des paramètres $\theta$, on souhaite maximiser
+la fonction objectif
+
+\begin{equation}
+    J(\theta) = f = \underset{{s \sim \phi(\pi(d))}}{\mathbb{E}} \,\left[R(s, \hat{s})\right].
+\end{equation}
+
+Comme on a vu qu'on peut approximer $f$ efficacement, on peut se limiter
+à faire une ascension de gradient sur l'estimateur non-biaisé
+
+\begin{equation}
+    \tilde{J}(\theta) = \frac{1}{N} \sum_{t=1}^N R(s_t, \hat{s}).
+\end{equation}
+
+On peut alors utiliser l'ascension de gradient et mettre à jour les poids $\theta$
+selon la règle
+
+\begin{equation*}
+    \theta = \theta + \nabla_\theta \tilde{J}(\theta).
+\end{equation*}
+
+C'est exactement ce que fait BanditSUM \citep{dong2018banditsum}.
+
+\question{Ici, je reprends la logique derrière les approches policy gradient (RENFORCE
+    notamment) en RL. J'ai décidé que ce serait pas souhaitable de m'étaler sur quoique ce soit
+    RL dans mon mémoire alors je sais pas à quel point je devrais prendre un moment
+    pour mentionner que j'emprunte cette logique là à des travaux antérieurs.}
+
+BanditSUM introduit une baseline pour stabilier les gradients de J
+et prend un document à la fois, en posant $N=16$.
+
+\todo{Détails du processus d'entraînement complet BanditSUM}
+
+\commentaire{Dernière rencontre j'avais parlé de considérer un autre processus de génération
+    de résumés que le sampling qui arrête à 3, mais après réflexion je pense pas que ça va
+    apporter quelque chose tant que ça et que ça va juste alourdir la lecture. Je vais
+    le garder pour une conclusion avec les avenues possibles pour les futurs travaux.}
+
+\commentaire{Les expériences pour BanditSUM sont en train de rouler. Je pense surtout
+    rapporter la courbe de performance. Peut-être aussi rapporter comme plafond l'état de l'art ?}
+
+\section{Conclusion}
+
+\todo{à faire une fois les résultats de BanditSUM en main}

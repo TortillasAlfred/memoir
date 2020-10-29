@@ -1,0 +1,100 @@
+@article{2020t5,
+  author  = {Colin Raffel and Noam Shazeer and Adam Roberts and Katherine Lee and Sharan Narang and Michael Matena and Yanqi Zhou and Wei Li and Peter J. Liu},
+  title   = {Exploring the Limits of Transfer Learning with a Unified Text-to-Text Transformer},
+  journal = {Journal of Machine Learning Research},
+  year    = {2020},
+  volume  = {21},
+  number  = {140},
+  pages   = {1-67},
+  url     = {http://jmlr.org/papers/v21/20-074.html}
+}
+
+@inproceedings{unilm,
+  title     = {Unified Language Model Pre-training for Natural Language Understanding and Generation},
+  author    = {Dong, Li and Yang, Nan and Wang, Wenhui and Wei, Furu and Liu, Xiaodong and Wang, Yu and Gao, Jianfeng and Zhou, Ming and Hon, Hsiao-Wuen},
+  year      = {2019},
+  booktitle = {33rd Conference on Neural Information Processing Systems (NeurIPS 2019)}
+}
+
+@misc{zhang2019pegasus,
+  title         = {PEGASUS: Pre-training with Extracted Gap-sentences for Abstractive Summarization},
+  author        = {Jingqing Zhang and Yao Zhao and Mohammad Saleh and Peter J. Liu},
+  year          = {2019},
+  eprint        = {1912.08777},
+  archiveprefix = {arXiv},
+  primaryclass  = {cs.CL}
+}
+
+@inproceedings{dong2018banditsum,
+  title     = {BanditSum: Extractive Summarization as a Contextual Bandit},
+  author    = {Dong, Yue and Shen, Yikang and Crawford, Eric and van Hoof, Herke and Cheung, Jackie Chi Kit},
+  booktitle = {Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing},
+  pages     = {3739--3748},
+  year      = {2018}
+}
+
+@inproceedings{luo-etal-2019-reading,
+  title     = {Reading Like {HER}: Human Reading Inspired Extractive Summarization},
+  author    = {Luo, Ling  and
+      Ao, Xiang  and
+      Song, Yan  and
+      Pan, Feiyang  and
+      Yang, Min  and
+      He, Qing},
+  booktitle = {Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP)},
+  month     = nov,
+  year      = {2019},
+  address   = {Hong Kong, China},
+  publisher = {Association for Computational Linguistics},
+  url       = {https://www.aclweb.org/anthology/D19-1300},
+  doi       = {10.18653/v1/D19-1300},
+  pages     = {3033--3043},
+  abstract  = {In this work, we re-examine the problem of extractive text summarization for long documents. We observe that the process of extracting summarization of human can be divided into two stages: 1) a rough reading stage to look for sketched information, and 2) a subsequent careful reading stage to select key sentences to form the summary. By simulating such a two-stage process, we propose a novel approach for extractive summarization. We formulate the problem as a contextual-bandit problem and solve it with policy gradient. We adopt a convolutional neural network to encode gist of paragraphs for rough reading, and a decision making policy with an adapted termination mechanism for careful reading. Experiments on the CNN and DailyMail datasets show that our proposed method can provide high-quality summaries with varied length, and significantly outperform the state-of-the-art extractive methods in terms of ROUGE metrics.}
+}
+
+@inproceedings{zhong-etal-2020-extractive,
+  title     = {Extractive Summarization as Text Matching},
+  author    = {Zhong, Ming  and
+      Liu, Pengfei  and
+      Chen, Yiran  and
+      Wang, Danqing  and
+      Qiu, Xipeng  and
+      Huang, Xuanjing},
+  booktitle = {Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics},
+  month     = jul,
+  year      = {2020},
+  address   = {Online},
+  publisher = {Association for Computational Linguistics},
+  url       = {https://www.aclweb.org/anthology/2020.acl-main.552},
+  doi       = {10.18653/v1/2020.acl-main.552},
+  pages     = {6197--6208},
+  abstract  = {This paper creates a paradigm shift with regard to the way we build neural extractive summarization systems. Instead of following the commonly used framework of extracting sentences individually and modeling the relationship between sentences, we formulate the extractive summarization task as a semantic text matching problem, in which a source document and candidate summaries will be (extracted from the original text) matched in a semantic space. Notably, this paradigm shift to semantic matching framework is well-grounded in our comprehensive analysis of the inherent gap between sentence-level and summary-level extractors based on the property of the dataset. Besides, even instantiating the framework with a simple form of a matching model, we have driven the state-of-the-art extractive result on CNN/DailyMail to a new level (44.41 in ROUGE-1). Experiments on the other five datasets also show the effectiveness of the matching framework. We believe the power of this matching-based summarization framework has not been fully exploited. To encourage more instantiations in the future, we have released our codes, processed dataset, as well as generated summaries in \url{https://github.com/maszhongming/MatchSum}.}
+}
+
+@inproceedings{lin-2004-rouge,
+  title     = {{ROUGE}: A Package for Automatic Evaluation of Summaries},
+  author    = {Lin, Chin-Yew},
+  booktitle = {Text Summarization Branches Out},
+  month     = jul,
+  year      = {2004},
+  address   = {Barcelona, Spain},
+  publisher = {Association for Computational Linguistics},
+  url       = {https://www.aclweb.org/anthology/W04-1013},
+  pages     = {74--81}
+}
+
+@article{DBLP:journals/corr/SeeLM17,
+  author        = {Abigail See and
+               Peter J. Liu and
+               Christopher D. Manning},
+  title         = {Get To The Point: Summarization with Pointer-Generator Networks},
+  journal       = {CoRR},
+  volume        = {abs/1704.04368},
+  year          = {2017},
+  url           = {http://arxiv.org/abs/1704.04368},
+  archiveprefix = {arXiv},
+  eprint        = {1704.04368},
+  timestamp     = {Mon, 13 Aug 2018 16:46:08 +0200},
+  biburl        = {https://dblp.org/rec/bib/journals/corr/SeeLM17},
+  bibsource     = {dblp computer science bibliography, https://dblp.org}
+}

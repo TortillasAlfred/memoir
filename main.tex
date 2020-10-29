@@ -19,13 +19,13 @@
 
   %% Charger ici les autres paquetages nécessaires pour le document.
   %% Quelques exemples; décommenter au besoin.
-  %\usepackage{amsmath}       % recommandé pour les mathématiques
-  %\usepackage{icomma}        % gestion de la virgule dans les nombres
-
+  \usepackage{amsmath}       % recommandé pour les mathématiques
+  \usepackage{icomma}        % gestion de la virgule dans les nombres
+  \usepackage{amssymb}
   %% Utilisation d'une autre police de caractères pour le document.
   %% - Sous LaTeX
-  \usepackage{mathpazo}      % texte et mathématiques en Palatino
-  \usepackage{mathptmx}      % texte et mathématiques en Times
+  \usepackage{tgpagella}      % texte et mathématiques en Palatino
+  % \usepackage{mathptmx}      % texte et mathématiques en Times
   %% - Sous XeLaTeX
   %\setmainfont{TeX Gyre Pagella}      % texte en Pagella (Palatino)
   %\setmathfont{TeX Gyre Pagella Math} % mathématiques en Pagella (Palatino)
@@ -43,27 +43,12 @@
   }
 
   %% Style de la bibliographie.
- % \bibliographystyle{}
 
-  %% Composition de la page frontispice. Remplacer les éléments entre < >.
-  %% Supprimer les caractères < >. Couper un long titre ou un long
-  %% sous-titre manuellement avec \\.
   \titre{Méthodes neuronales de Monte-Carlo pour la génération automatique de résumés de textes}
-  % \titre{Ceci est un exemple de long titre \\
-  %   avec saut de ligne manuel}
-  % \soustitre{Sous-titre le cas échéant}
-  % \soustitre{Ceci est un exemple de long sous-titre \\
-  %   avec saut de ligne manuel}
   \auteur{Mathieu Godbout}
   \programme{Maîtrise en informatique}
-  % \direction{<Prénom Nom>, <directeur ou directrice> de recherche}
-  % \codirection{<Prénom Nom>, <codirecteur ou codirectrice> de recherche}
   \codirection{Luc Lamontagne, codirecteur de recherche \\
               Audrey Durand, codirectrice de recherche}
-
-  %% Les commandes ci-dessous servent uniquement pour la création
-  %% d'une page de titre (interdite lors du dépôt à la FESP).
-  % \annee{<20xx>}
 
 
 \usepackage{tikz}
@@ -72,10 +57,14 @@
 \usepgfplotslibrary{colorbrewer}
 \pgfplotsset{compat=1.14, colormap/Blues, every axis/.append style={label style={font=\large}, tick label style={font=\large}}}
 
+\usepackage{mathtools}
+\DeclarePairedDelimiter{\ceil}{\lceil}{\rceil}
 
 \usepackage{xcolor}
-\newcommand\todo[1]{\textcolor{red}{TODO:#1}}
-\newcommand\question[1]{\textcolor{blue}{Question:#1}}
+\newcommand\todo[1]{\textcolor{red}{TODO: #1}}
+\newcommand\question[1]{\textcolor{blue}{Question: #1}}
+\newcommand\commentaire[1]{\textcolor{violet}{Commentaire: #1}}
+\newcommand\ngrams{\textit{n}-grammes }
 
 \usepackage{mathtools}
 
@@ -120,8 +109,9 @@
 
 \appendix                       % annexes le cas échéant
 
-\include{annexe/a}                % annexe A
+% \include{annexe/a}                % annexe A
 
-% \bibliography{}                 % production de la bibliographie
+\bibliographystyle{abbrvnat}         % production de la bibliographie
+\bibliography{biblio}
 
 \end{document}

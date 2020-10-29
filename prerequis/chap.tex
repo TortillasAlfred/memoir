@@ -2,9 +2,9 @@
 \chapter{Prérequis}     % numéroté
 \label{chap:montecarlo}                   % étiquette pour renvois (à compléter!)
 
-Tout ceci est seulement en place à titre indicatif.
-Toute information pertinente sera insérée ou retirée en fonction
-du développement des chapitres de corps du mémoire.
+\commentaire{Tout ceci est seulement en place à titre indicatif.
+    Toute information pertinente sera insérée ou retirée en fonction
+    du développement des chapitres de corps du mémoire.}
 
 \section{Méthodes de Monte-Carlo}
 
@@ -12,7 +12,30 @@ Approximation statistique de procédés déterministes
 
 \subsection{Estimation de Monte-Carlo}
 
+On a une fonction qui est faite sous la forme d'une espérance.
+
+En samplant directement la distribution, on peut converger rapidement
+à un bon estimé de la vraie valeur.
+
+Applications variées: cas de calcul de $\pi$ en tirant au hasard plusieurs
+fois deux nombres entre -1 et 1.
+
 \subsection{Recherche arborescente de Monte-Carlo}
+
+On a une fonction qui affiche une structure arborescente
+(séquentielle avec direction) et on souhaite avoir son maximum (max de -f si min).
+
+On doit parcourir un nombre suffisant de feuilles de l'arbre de $f$ pour
+s'assurer de l'optimalité de notre réponse mais on veut aussi s'éviter d'avoir
+à visiter toutes les feuilles (sinon un minmax ferait le travail).
+
+Idée: explorer les sous-arbres en fonction des feuilles vues à présent,
+en priorisant les sous-arbres \textit{payants} et ceux qui ont été
+moins explorés.
+
+Variante linéaire: si on dispose de représentations pour les noeuds de
+l'arbre, on peut utiliser la représentation d'un noeud exploré pour
+tenter d'estimer les valeurs associées à d'autre noeuds.
 
 \section{Réseaux de neurones}
 
@@ -25,10 +48,12 @@ supervisé.
     \item Préciser architecture : neurone, activation
     \item Préciser fonction de perte : doit être intimement connectée
           au savoir préalable (prior) sur la tâche et la cible.
-    \item Optimisation : taux d'apprentissage, Adam vs SGD
 \end{itemize}
 
 \subsection{Réseaux récurrents}
+
+Cas où les données sont des séquences de tailles variables (i.e. données
+textuelles).
 
 \begin{itemize}
     \item RNN
