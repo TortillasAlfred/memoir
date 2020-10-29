@@ -1,11 +1,68 @@
 % !TeX root = ./main.tex
-\chapter{Introduction}
+\chapter*{Introduction}
 \label{chap:introduction}       % étiquette pour renvois
 
-<Texte de l'introduction. La thèse ou le mémoire devrait normalement
-débuter par une introduction. Celle-ci est traitée comme un chapitre
-normal, sauf qu'elle n'est pas numérotée.>
+\question{
+    À quel point est-ce que l'introduction doit déboucher exactement sur mon mémoire ?
+    J'ai l'impression qu'à la fin de mon intro, le lecteur devrait être en contexte
+    par rapport au titre, i.e. il devrait savoir qu'on va parler de (1) résumés, (2)
+    méthodes de MC et (3) que tout ça va être fait avec des NN.
+}
 
-\section{Objectifs}
+Ère du big data: on a une quantité immense de données, notamment textuelles.
 
-\section{Structure du mémoire}
+Succès des dernières décennies nous montrent le potentiel qui peut se cacher
+derrière une utilisation judicieuse de ces données.
+
+Les humains sont encore requis dans la loop avec données textuelles pour
+plusieurs applications en raison de législations ou d'assurance qualité.
+
+Une question se pose: Comment est-ce que l'on peut améliorer l'efficacité d'un système
+conjoint humain-machine ?
+
+C'est pour répondre à ce besoin que plusieurs applications ajoutent maintenant
+un intermédiaire qui fait un résumé automatique d'un ou de plusieurs textes pour
+faciliter la lecture et le traitement par un humain.
+
+Comment fonctionnent ces systèmes de génération de résumés?
+
+L'espace des résumés possibles est tellement vaste, quelles sont les techniques pour
+l'explorer de manière efficace ?
+
+Des outils probabilistes, connus sous le nom de méthodes de Monte-Carlo, ont été
+spécifiquement conçus pour de tels contextes.
+
+Ils se basent sur l'aléatoire pour parcourir efficacement des espaces potentiellement
+très grands.
+
+\section*{Objectifs}
+
+Dans ce mémoire, on explorera d'abord comment différentes méthodes de Monte-Carlo
+peuvent être utilisées pour estimer des fonctions difficilement calculables de
+manière analytique.
+
+On verra ensuite comment des méthodes peuvent être incorporées dans un système
+de génération automatique de résumé.
+
+
+\section*{Structure du mémoire}
+
+Ce mémoire sera divisé en trois chapitres pour les trois méthodes de Monte-Carlo explorées:
+échantillonnage, recherche arborescente et recherche arborescente linéaire.
+
+Pour chacun des chapitres, on posera d'abord une fonction en lien avec la génération de résumé
+qui est difficile à évaluer.
+
+On montera ensuite comment une méthode Monte-Carlo
+peut être utilisée pour l'approximer.
+
+On évaluera empiriquement la rapidité
+de la convergence de la méthode proposée.
+
+On proposera ensuite un modèle neuronal
+de génération automatique de textes utilisant la méthode MC à l'essai.
+
+Des expériences seront ensuite roulées pour évaluer la performance du modèle.
+
+Les hyperparamètres de la portion MC seront settés aux valeurs suggérées par les tests
+empiriques préliminaires.
