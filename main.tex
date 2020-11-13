@@ -42,7 +42,7 @@
     og=«, fg=»                     % caractères « et » sont les guillemets
   }
 
-  %% Style de la bibliographie.
+  %% Style de la bibliographie.  
 
   \titre{Méthodes neuronales de Monte-Carlo pour la génération automatique de résumés de textes}
   \auteur{Mathieu Godbout}
@@ -52,10 +52,14 @@
 
 
 \usepackage{tikz}
+
+\usetikzlibrary{external}
+\tikzexternalize[prefix=figures/]
+
 \usepackage{pgfplots}
 \usepackage{pgfplotstable}
 \usepgfplotslibrary{colorbrewer}
-\pgfplotsset{compat=1.14, colormap/Blues, every axis/.append style={label style={font=\large}, tick label style={font=\large}}}
+\pgfplotsset{compat=1.16, colormap/Blues, every axis/.append style={label style={font=\large}, tick label style={font=\large}}}
 
 \usepackage{mathtools}
 \DeclarePairedDelimiter{\ceil}{\lceil}{\rceil}
@@ -67,6 +71,31 @@
 \newcommand\ngrams{\textit{n}-grammes }
 
 \usepackage{mathtools}
+
+\addto\captionsfrench{\def\tablename{Tableau}}
+
+  % French version of algorithmic
+  \usepackage[noend]{algpseudocode}
+  \usepackage{algorithm}
+  \algnewcommand\AND{\textbf{et} }
+	\renewcommand{\listalgorithmname}{Liste des algorithmes}
+	\floatname{algorithm}{Algorithme}
+	\renewcommand{\algorithmicreturn}{\textbf{retourne}}
+	\renewcommand{\algorithmicprocedure}{\textbf{procédure}}
+	\renewcommand{\algorithmicrequire}{\textbf{Entrée:}}
+	\renewcommand{\algorithmicensure}{\textbf{Sortie:}}
+	\renewcommand{\algorithmiccomment}[1]{\{#1\}}
+	\renewcommand{\algorithmicend}{\textbf{fin}}
+	\renewcommand{\algorithmicif}{\textbf{si}}
+	\renewcommand{\algorithmicthen}{\textbf{alors}}
+	\renewcommand{\algorithmicelse}{\textbf{sinon}}
+	\renewcommand{\algorithmicfor}{\textbf{pour}}
+	\renewcommand{\algorithmicforall}{\textbf{pour tout}}
+	\renewcommand{\algorithmicdo}{\textbf{faire}}
+	\renewcommand{\algorithmicwhile}{\textbf{tant que}}
+	\newcommand{\algorithmicelsif}{\algorithmicelse\ \algorithmicif}
+	\newcommand{\algorithmicendif}{\algorithmicend\ \algorithmicif}
+	\newcommand{\algorithmicendfor}{\algorithmicend\ \algorithmicfor}
 
 \begin{document}
 

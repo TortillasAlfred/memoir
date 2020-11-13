@@ -14,20 +14,27 @@
 Succès des dernières décennies nous montrent le potentiel qui peut se cacher
 derrière une utilisation judicieuse de ces données.
 
-Les humains sont encore requis dans la loop avec données textuelles pour
-plusieurs applications en raison de législations ou d'assurance qualité.
+Or, il n'est pas toujours possible d'incorporer toutes les données dans 
+un processus de traitement.
 
-Une question se pose: Comment est-ce que l'on peut améliorer l'efficacité d'un système
-conjoint humain-machine ?
+Notamment, dans certains domaines, les humains sont encore requis dans la loop 
+dans des applications de traitement de données textuelles en raison de 
+législations ou d'assurance qualité (i.e. processus de réclamations en assurance).
 
-C'est pour répondre à ce besoin que plusieurs applications ajoutent maintenant
-un intermédiaire qui fait un résumé automatique d'un ou de plusieurs textes pour
-faciliter la lecture et le traitement par un humain.
+Comment faire profiter du grand afflux de données dans des systèmes où l'humain (et 
+sa capacité de traitement limitée) sont essentiels ?
 
-Comment fonctionnent ces systèmes de génération de résumés?
+Une option qui peut s'avérer facilement attrayante est l'idée de condenser un ou plusieurs
+documents en un texte concis contenant seulement l'information requise pour procéder à la 
+tâche à exécuter.
 
-L'espace des résumés possibles est tellement vaste, quelles sont les techniques pour
-l'explorer de manière efficace ?
+On dit alors que l'on fait appel à un système de génération automatique de résumés de textes.
+
+Comment fonctionnent ces systèmes de génération de résumés ?
+
+L'espace des résumés possibles est très vaste; comment faire pour en trouver un qui est
+suffisamment bon dans un délai de temps assez raisonnable pour l'utilisation dans un contexte
+du monde réel ?
 
 Des outils probabilistes, connus sous le nom de méthodes de Monte-Carlo, ont été
 spécifiquement conçus pour de tels contextes.
@@ -35,15 +42,23 @@ spécifiquement conçus pour de tels contextes.
 Ils se basent sur l'aléatoire pour parcourir efficacement des espaces potentiellement
 très grands.
 
+En les jumelant à des approches neuronales ayant démontré largement leur efficacité sur des données
+textuelles, il est naturel de s'attendre à ce que ces outils permettent d'obtenir des 
+systèmes de génération automatique qui produisent non seulement d'excellents résumés, mais qui
+ne le font pas au détriment d'un temps d'entraînement déraisonnable.
+
 \section*{Objectifs}
 
 Dans ce mémoire, on explorera d'abord comment différentes méthodes de Monte-Carlo
-peuvent être utilisées pour estimer des fonctions difficilement calculables de
-manière analytique.
+peuvent être utilisées pour estimer des mesures liées à la qualité de résumés de textes
+dont le calcul est difficile à première vue.
 
-On verra ensuite comment des méthodes peuvent être incorporées dans un système
-de génération automatique de résumé.
+On verra ensuite comment ces approximations obtenues par des approches Monte-Carlo
+peuvent être utilisées dans un système complet de génération de résumés.
 
+Les différents systèmes explorés seront enfin comparés aux approches représentant
+l'état de l'art en génération de résumés en fonction de leur efficacité d'entraînement
+et de prédiction ainsi que selon la qualité des résumés produits.
 
 \section*{Structure du mémoire}
 
@@ -62,7 +77,7 @@ de la convergence de la méthode proposée.
 On proposera ensuite un modèle neuronal
 de génération automatique de textes utilisant la méthode MC à l'essai.
 
-Des expériences seront ensuite roulées pour évaluer la performance du modèle.
+Des expériences seront ensuite effectuées pour évaluer la performance du modèle.
 
-Les hyperparamètres de la portion MC seront settés aux valeurs suggérées par les tests
+Les hyperparamètres de la portion MC seront choisis en fonction des tests
 empiriques préliminaires.

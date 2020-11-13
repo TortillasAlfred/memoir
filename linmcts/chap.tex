@@ -23,6 +23,7 @@ For the pre-training, a fully connected layer took as input 3 sentence embedding
 For each document in the pre-training phase, 250 summaries of 3 sentences were randomly sampled and their ROUGE scores were used as targets.
 The pre-training batch size was of 64.
 
+\tikzsetnextfilename{linMcts_pretraining}
 \begin{center}
     \begin{tikzpicture}
         \begin{axis}[title={Importance of pre-training, $\alpha = 0.1$}, grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, name=plot0, xshift=-.1\textwidth, y tick label style={/pgf/number format/fixed zerofill}, ylabel={Inferred ROUGE}, xlabel={n samples}, width=\textwidth, legend style={at={(1,0.1)},anchor=south east}, smooth, xmin=0, xmax=500, ymin=0.2, ymax=0.45]
@@ -41,6 +42,8 @@ After 100 warmup steps, the score prediction head has merely learned which range
 After 1000 warmup steps, it has however begun to better correlate embeddings to their scores, enabling a much improved MCTS exploration.
 Less massive batches could be interesting to explore (i.e. instead of sampling 250 summaries per document, move to a more reasonable 16 summaries in a more classical online learning fashion).
 
+
+\tikzsetnextfilename{linMcts_exploration}
 \begin{center}
     \begin{tikzpicture}
         \begin{axis}[title={Exploring the exploration, all 10 000 warmup steps}, grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, name=plot0, xshift=-.1\textwidth, y tick label style={/pgf/number format/fixed zerofill}, ylabel={Inferred ROUGE}, xlabel={n samples}, width=\textwidth, legend style={at={(1,0.1)},anchor=south east}, smooth, xmin=0, xmax=500, ymin=0.2, ymax=0.45]
@@ -58,6 +61,8 @@ Less massive batches could be interesting to explore (i.e. instead of sampling 2
 There seems to be a sole winner of $\alpha=0.1$ as the best exploration parameter for our experiments.
 It seems this parameter is absolutely crucial as it really influences the performance in both the earlier and later stages of the MCTS.
 
+
+\tikzsetnextfilename{linMcts_less20}
 \begin{tikzpicture}[baseline]
     \begin{axis}[grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\Large}, width=0.45\textwidth,
             height=0.6\textwidth, name=plot0, xshift=-.1\textwidth, y tick label style={/pgf/number format/fixed zerofill},xmin=0.0, xmax=500.0, ymin=0.20, ymax=0.45, ylabel={Inferred ROUGE}, xlabel={n samples}, legend style={at={(1,0.05), nodes={scale=0.5, transform shape}},anchor=south east}, smooth, title={$|d| \leq 20$}]
@@ -69,6 +74,7 @@ It seems this parameter is absolutely crucial as it really influences the perfor
 
     \end{axis}
 \end{tikzpicture}
+\tikzsetnextfilename{linMcts_20to35}
 \begin{tikzpicture}[baseline]
     \begin{axis}[grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, width=.45\textwidth,
             height=0.6\textwidth, name=plot0, xshift=-.1\textwidth, y tick label style={/pgf/number format/fixed zerofill},xmin=0.0, xmax=500.0, ymin=0.20, ymax=0.45, xlabel={n samples}, legend style={at={(0.9,0.1)},anchor=south east}, smooth, title={$20 < |d| < 35$}, ymajorticks=false]
@@ -78,6 +84,7 @@ It seems this parameter is absolutely crucial as it really influences the perfor
         \addplot[black, dotted, ylabel near ticks, line width=3pt] table[x=x0, y=y3, col sep=comma]{linmcts/linmctsExpResults/document_length_experiment/alpha_0.1--1000--pretrained--c2.csv};
     \end{axis}
 \end{tikzpicture}
+\tikzsetnextfilename{linMcts_more35}
 \begin{tikzpicture}[baseline]
     \begin{axis}[grid style={dashed,gray!50}, axis y line*=right, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, width=.4\textwidth,
             height=0.6\textwidth, name=plot0, xshift=-.1\textwidth, y tick label style={/pgf/number format/fixed zerofill},xmin=0.0, xmax=500.0, ymin=0.20, ymax=0.45, xlabel={n samples}, legend style={at={(1,0.1)},anchor=south east}, smooth, title={$35 \leq |d|$}]

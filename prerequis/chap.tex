@@ -1,24 +1,33 @@
-% !TeX root = ./main.tex
-\chapter{Prérequis}     % numéroté
-\label{chap:montecarlo}                   % étiquette pour renvois (à compléter!)
-
-\commentaire{Tout ceci est seulement en place à titre indicatif.
-    Toute information pertinente sera insérée ou retirée en fonction
-    du développement des chapitres de corps du mémoire.}
+\chapter{Concepts de base pertinents aux travaux}     % numéroté
+\label{chap:prerequis}                   % étiquette pour renvois (à compléter!)
 
 \section{Méthodes de Monte-Carlo}
 
 Approximation statistique de procédés déterministes
 
-\subsection{Estimation de Monte-Carlo}
+\subsection{Échantillonnage de Monte-Carlo}
+\label{souschap:mcs}
 
 On a une fonction qui est faite sous la forme d'une espérance.
 
-En samplant directement la distribution, on peut converger rapidement
-à un bon estimé de la vraie valeur.
+\begin{equation*}
+    f = \underset{x \sim \Psi}{\mathbb{E}} \left[x\right],
+\end{equation*}
+
+où $\Psi$ est une processus aléatoire pour lequel on ne possède pas de forme analytique
+facilement calculable.
+
+Si on a accès à $\Psi$, on peut y piger une suite d'échantillons $(x_1, ..., x_N)$,
+que l'on peut ensuite utiliser pour approximer $f$ selon
+
+\begin{equation*}
+    \bar{f} = \frac{1}{N} \sum_{t=1}^N x_t.
+\end{equation*}
+
+Notons que $\bar{f}$ est un estimateur non-biaisé de $f$.
 
 Applications variées: cas de calcul de $\pi$ en tirant au hasard plusieurs
-fois deux nombres entre -1 et 1.
+fois deux nombres entre -1 et 1 \citep{doi:10.1080/00029890.1969.12000364}.
 
 \subsection{Recherche arborescente de Monte-Carlo}
 
@@ -29,13 +38,19 @@ On doit parcourir un nombre suffisant de feuilles de l'arbre de $f$ pour
 s'assurer de l'optimalité de notre réponse mais on veut aussi s'éviter d'avoir
 à visiter toutes les feuilles (sinon un minmax ferait le travail).
 
-Idée: explorer les sous-arbres en fonction des feuilles vues à présent,
+Idée: explorer les sous-arbres en fonction des feuilles vues précédemment,
 en priorisant les sous-arbres \textit{payants} et ceux qui ont été
 moins explorés.
+
+L'exploration est guidée par une borne supérieure sur la performance anticipée
+d'un sous-arbre donné.
+
+Principale variante considérée : UCT \citep{10.5555/3020488.3020497}.
 
 Variante linéaire: si on dispose de représentations pour les noeuds de
 l'arbre, on peut utiliser la représentation d'un noeud exploré pour
 tenter d'estimer les valeurs associées à d'autre noeuds.
+Principale variante considérée : linUCT \citep{7860440}.
 
 \section{Réseaux de neurones}
 
@@ -59,3 +74,15 @@ textuelles).
     \item RNN
     \item LSTM : pour quelle raison ?
 \end{itemize}
+
+\subsection{Plongements de mots}
+
+On peut utiliser des réseaux pour apprendre des représentations
+vectorielles de mots \citep{NIPS2013_9aa42b31,pennington2014glove}.
+
+Ces représentations vectorielles permettent d'exprimer certaines
+relations linéaire entre les mots ("roi" - "homme" + "femme" = "reine").
+
+Les plongements de mots sont à la base de l'explosion de performance dans les
+tâches liées aux données textuelles grâce à leur utilisation avec des réseaux de
+neurones.

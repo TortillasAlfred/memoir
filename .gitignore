@@ -289,3 +289,6 @@ settings.json
 
 # Results folders
 *ExpResults
+
+# Figures folder
+figures/
