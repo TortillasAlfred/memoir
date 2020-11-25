@@ -26,12 +26,11 @@ The pre-training batch size was of 64.
 \tikzsetnextfilename{linMcts_pretraining}
 \begin{center}
     \begin{tikzpicture}
-        \begin{axis}[title={Importance of pre-training, $\alpha = 0.1$}, grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, name=plot0, xshift=-.1\textwidth, y tick label style={/pgf/number format/fixed zerofill}, ylabel={Inferred ROUGE}, xlabel={n samples}, width=\textwidth, legend style={at={(1,0.1)},anchor=south east}, smooth, xmin=0, xmax=500, ymin=0.2, ymax=0.45]
+        \begin{axis}[title={Importance du pré-entraînement $(\alpha = 0.1)$}, grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, name=plot0, y tick label style={/pgf/number format/fixed zerofill}, ylabel={$\Delta_t$}, xlabel={$t$}, width=0.95\textwidth, height=0.4\textwidth, smooth, xmin=0, xmax=100]
             \addplot[blue, ylabel near ticks, line width=3pt] table[x=x0, y=y0, col sep=comma]{linmcts/linmctsExpResults/pre_training_experiment/alpha_0.1--1000--pretrained.csv};
             \addplot[red, ylabel near ticks, line width=3pt] table[x=x0, y=y0, col sep=comma]{linmcts/linmctsExpResults/pre_training_experiment/alpha_0.1--100--pretrained.csv};
             \addplot[green, ylabel near ticks, line width=3pt] table[x=x0, y=y0, col sep=comma]{linmcts/linmctsExpResults/pre_training_experiment/alpha_0.1--1000--raw.csv};
-            \addplot[black, dotted, ylabel near ticks, line width=3pt] table[x=x0, y=y3, col sep=comma]{linmcts/linmctsExpResults/pre_training_experiment/alpha_0.1--1000--raw.csv};
-            \legend{1000 warmup steps, 100 warmup steps, random, maximum}
+            \legend{1000 minibatches, 100 minibatches, aucun pré-entraînement}
         \end{axis}
     \end{tikzpicture}
 \end{center}
@@ -46,13 +45,12 @@ Less massive batches could be interesting to explore (i.e. instead of sampling 2
 \tikzsetnextfilename{linMcts_exploration}
 \begin{center}
     \begin{tikzpicture}
-        \begin{axis}[title={Exploring the exploration, all 10 000 warmup steps}, grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, name=plot0, xshift=-.1\textwidth, y tick label style={/pgf/number format/fixed zerofill}, ylabel={Inferred ROUGE}, xlabel={n samples}, width=\textwidth, legend style={at={(1,0.1)},anchor=south east}, smooth, xmin=0, xmax=500, ymin=0.2, ymax=0.45]
+        \begin{axis}[title={Impact de l'exploration (pré-entraînement de 1000 minibatches)}, grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, name=plot0, y tick label style={/pgf/number format/fixed zerofill}, ylabel={$\Delta_t$}, xlabel={$t$}, width=0.95\textwidth, height=0.4\textwidth, smooth, xmin=0, xmax=100]
             \addplot[blue, ylabel near ticks, line width=3pt] table[x=x0, y=y0, col sep=comma]{linmcts/linmctsExpResults/alpha_experiment/alpha_0.1--1000--pretrained.csv};
             \addplot[red, ylabel near ticks, line width=3pt] table[x=x0, y=y0, col sep=comma]{linmcts/linmctsExpResults/alpha_experiment/alpha_1.0--1000--pretrained.csv};
             \addplot[green, ylabel near ticks, line width=3pt] table[x=x0, y=y0, col sep=comma]{linmcts/linmctsExpResults/alpha_experiment/alpha_0.01--1000--pretrained.csv};
             \addplot[cyan, ylabel near ticks, line width=3pt] table[x=x0, y=y0, col sep=comma]{linmcts/linmctsExpResults/alpha_experiment/alpha_10.0--1000--pretrained.csv};
-            \addplot[black, dotted, ylabel near ticks, line width=3pt] table[x=x0, y=y3, col sep=comma]{linmcts/linmctsExpResults/pre_training_experiment/alpha_0.1--1000--raw.csv};
-            \legend{$\alpha = 0.1$, $\alpha = 1.0$, $\alpha = 0.01$, $\alpha = 10.0$, maximum}
+            \legend{$\alpha = 0.1$, $\alpha = 1.0$, $\alpha = 0.01$, $\alpha = 10.0$}
         \end{axis}
     \end{tikzpicture}
 \end{center}
@@ -64,34 +62,30 @@ It seems this parameter is absolutely crucial as it really influences the perfor
 
 \tikzsetnextfilename{linMcts_less20}
 \begin{tikzpicture}[baseline]
-    \begin{axis}[grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\Large}, width=0.45\textwidth,
-            height=0.6\textwidth, name=plot0, xshift=-.1\textwidth, y tick label style={/pgf/number format/fixed zerofill},xmin=0.0, xmax=500.0, ymin=0.20, ymax=0.45, ylabel={Inferred ROUGE}, xlabel={n samples}, legend style={at={(1,0.05), nodes={scale=0.5, transform shape}},anchor=south east}, smooth, title={$|d| \leq 20$}]
+    \begin{axis}[grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\Large}, width=0.35\textwidth,
+            height=0.4\textwidth, name=plot0, y tick label style={/pgf/number format/fixed zerofill}, xmin=0.0, xmax=100.0, ymin=0.0, ymax=0.40, ylabel={$\Delta_t$}, xlabel={$t$}, smooth, title={$|d| \leq 20$}]
         \addplot[yellow, ylabel near ticks, line width=3pt] table[x=x0, y=y0, col sep=comma]{linmcts/linmctsExpResults/document_length_experiment/alpha_0.01--1000--pretrained--c1.csv};
         \addplot[blue, ylabel near ticks, line width=3pt] table[x=x0, y=y0, col sep=comma]{linmcts/linmctsExpResults/document_length_experiment/alpha_0.1--1000--pretrained--c1.csv};
         \addplot[red, ylabel near ticks, line width=3pt] table[x=x0, y=y0, col sep=comma]{linmcts/linmctsExpResults/document_length_experiment/alpha_1.0--1000--pretrained--c1.csv};
-        \addplot[black, dotted, ylabel near ticks, line width=3pt] table[x=x0, y=y3, col sep=comma]{linmcts/linmctsExpResults/document_length_experiment/alpha_0.1--1000--pretrained--c1.csv};
-        \legend{$\alpha=0.01$, $\alpha=0.1$, $\alpha=1.0$, maximum}
-
+        \legend{$\alpha=0.01$, $\alpha=0.1$, $\alpha=1.0$}
     \end{axis}
 \end{tikzpicture}
 \tikzsetnextfilename{linMcts_20to35}
 \begin{tikzpicture}[baseline]
-    \begin{axis}[grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, width=.45\textwidth,
-            height=0.6\textwidth, name=plot0, xshift=-.1\textwidth, y tick label style={/pgf/number format/fixed zerofill},xmin=0.0, xmax=500.0, ymin=0.20, ymax=0.45, xlabel={n samples}, legend style={at={(0.9,0.1)},anchor=south east}, smooth, title={$20 < |d| < 35$}, ymajorticks=false]
+    \begin{axis}[grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, width=.35\textwidth,
+            height=0.4\textwidth, name=plot0, xshift=-.1\textwidth, y tick label style={/pgf/number format/fixed zerofill},xmin=0.0, xmax=100.0, ymin=0.0, ymax=0.40, xlabel={$t$}, legend style={at={(0.9,0.1)},anchor=south east}, smooth, title={$20 < |d| < 35$}, ymajorticks=false]
         \addplot[yellow, ylabel near ticks, line width=3pt] table[x=x0, y=y0, col sep=comma]{linmcts/linmctsExpResults/document_length_experiment/alpha_0.01--1000--pretrained--c2.csv};
         \addplot[blue, ylabel near ticks, line width=3pt] table[x=x0, y=y0, col sep=comma]{linmcts/linmctsExpResults/document_length_experiment/alpha_0.1--1000--pretrained--c2.csv};
         \addplot[red, ylabel near ticks, line width=3pt] table[x=x0, y=y0, col sep=comma]{linmcts/linmctsExpResults/document_length_experiment/alpha_1.0--1000--pretrained--c2.csv};
-        \addplot[black, dotted, ylabel near ticks, line width=3pt] table[x=x0, y=y3, col sep=comma]{linmcts/linmctsExpResults/document_length_experiment/alpha_0.1--1000--pretrained--c2.csv};
     \end{axis}
 \end{tikzpicture}
 \tikzsetnextfilename{linMcts_more35}
 \begin{tikzpicture}[baseline]
-    \begin{axis}[grid style={dashed,gray!50}, axis y line*=right, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, width=.4\textwidth,
-            height=0.6\textwidth, name=plot0, xshift=-.1\textwidth, y tick label style={/pgf/number format/fixed zerofill},xmin=0.0, xmax=500.0, ymin=0.20, ymax=0.45, xlabel={n samples}, legend style={at={(1,0.1)},anchor=south east}, smooth, title={$35 \leq |d|$}]
+    \begin{axis}[grid style={dashed,gray!50}, axis y line*=right, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, width=.35\textwidth,
+            height=0.4\textwidth, name=plot0, xshift=-.1\textwidth, y tick label style={/pgf/number format/fixed zerofill}, xmin=0.0, xmax=100.0, ymin=0.0, ymax=0.40, xlabel={$t$}, legend style={at={(1,0.1)},anchor=south east}, smooth, title={$35 \leq |d|$}]
         \addplot[yellow, ylabel near ticks, line width=3pt] table[x=x0, y=y0, col sep=comma]{linmcts/linmctsExpResults/document_length_experiment/alpha_0.01--1000--pretrained--c3.csv};
         \addplot[blue, ylabel near ticks, line width=3pt] table[x=x0, y=y0, col sep=comma]{linmcts/linmctsExpResults/document_length_experiment/alpha_0.1--1000--pretrained--c3.csv};
         \addplot[red, ylabel near ticks, line width=3pt] table[x=x0, y=y0, col sep=comma]{linmcts/linmctsExpResults/document_length_experiment/alpha_1.0--1000--pretrained--c3.csv};
-        \addplot[black, dotted, ylabel near ticks, line width=3pt] table[x=x0, y=y3, col sep=comma]{linmcts/linmctsExpResults/document_length_experiment/alpha_0.1--1000--pretrained--c3.csv};
     \end{axis}
 \end{tikzpicture}
 \vspace{10pt}
