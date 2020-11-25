@@ -63,7 +63,7 @@ It seems this parameter is absolutely crucial as it really influences the perfor
 \tikzsetnextfilename{linMcts_less20}
 \begin{tikzpicture}[baseline]
     \begin{axis}[grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\Large}, width=0.35\textwidth,
-            height=0.4\textwidth, name=plot0, y tick label style={/pgf/number format/fixed zerofill}, xmin=0.0, xmax=100.0, ymin=0.0, ymax=0.40, ylabel={$\Delta_t$}, xlabel={$t$}, smooth, title={$|d| \leq 20$}]
+            height=0.4\textwidth, name=plot0, y tick label style={/pgf/number format/fixed zerofill}, xmin=0.0, xmax=100.0, ymin=0.01, ymax=0.35, ylabel={$\Delta_t$}, xlabel={$t$}, smooth, title={$|d| \leq 20$}]
         \addplot[yellow, ylabel near ticks, line width=3pt] table[x=x0, y=y0, col sep=comma]{linmcts/linmctsExpResults/document_length_experiment/alpha_0.01--1000--pretrained--c1.csv};
         \addplot[blue, ylabel near ticks, line width=3pt] table[x=x0, y=y0, col sep=comma]{linmcts/linmctsExpResults/document_length_experiment/alpha_0.1--1000--pretrained--c1.csv};
         \addplot[red, ylabel near ticks, line width=3pt] table[x=x0, y=y0, col sep=comma]{linmcts/linmctsExpResults/document_length_experiment/alpha_1.0--1000--pretrained--c1.csv};
@@ -73,7 +73,7 @@ It seems this parameter is absolutely crucial as it really influences the perfor
 \tikzsetnextfilename{linMcts_20to35}
 \begin{tikzpicture}[baseline]
     \begin{axis}[grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, width=.35\textwidth,
-            height=0.4\textwidth, name=plot0, xshift=-.1\textwidth, y tick label style={/pgf/number format/fixed zerofill},xmin=0.0, xmax=100.0, ymin=0.0, ymax=0.40, xlabel={$t$}, legend style={at={(0.9,0.1)},anchor=south east}, smooth, title={$20 < |d| < 35$}, ymajorticks=false]
+            height=0.4\textwidth, name=plot0, xshift=-.1\textwidth, y tick label style={/pgf/number format/fixed zerofill},xmin=0.0, xmax=100.0, ymin=0.01, ymax=0.35, xlabel={$t$}, legend style={at={(0.9,0.1)},anchor=south east}, smooth, title={$20 < |d| < 35$}, ymajorticks=false]
         \addplot[yellow, ylabel near ticks, line width=3pt] table[x=x0, y=y0, col sep=comma]{linmcts/linmctsExpResults/document_length_experiment/alpha_0.01--1000--pretrained--c2.csv};
         \addplot[blue, ylabel near ticks, line width=3pt] table[x=x0, y=y0, col sep=comma]{linmcts/linmctsExpResults/document_length_experiment/alpha_0.1--1000--pretrained--c2.csv};
         \addplot[red, ylabel near ticks, line width=3pt] table[x=x0, y=y0, col sep=comma]{linmcts/linmctsExpResults/document_length_experiment/alpha_1.0--1000--pretrained--c2.csv};
@@ -82,7 +82,7 @@ It seems this parameter is absolutely crucial as it really influences the perfor
 \tikzsetnextfilename{linMcts_more35}
 \begin{tikzpicture}[baseline]
     \begin{axis}[grid style={dashed,gray!50}, axis y line*=right, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, width=.35\textwidth,
-            height=0.4\textwidth, name=plot0, xshift=-.1\textwidth, y tick label style={/pgf/number format/fixed zerofill}, xmin=0.0, xmax=100.0, ymin=0.0, ymax=0.40, xlabel={$t$}, legend style={at={(1,0.1)},anchor=south east}, smooth, title={$35 \leq |d|$}]
+            height=0.4\textwidth, name=plot0, xshift=-.1\textwidth, y tick label style={/pgf/number format/fixed zerofill}, xmin=0.0, xmax=100.0, ymin=0.01, ymax=0.35, xlabel={$t$}, legend style={at={(1,0.1)},anchor=south east}, smooth, title={$35 \leq |d|$}]
         \addplot[yellow, ylabel near ticks, line width=3pt] table[x=x0, y=y0, col sep=comma]{linmcts/linmctsExpResults/document_length_experiment/alpha_0.01--1000--pretrained--c3.csv};
         \addplot[blue, ylabel near ticks, line width=3pt] table[x=x0, y=y0, col sep=comma]{linmcts/linmctsExpResults/document_length_experiment/alpha_0.1--1000--pretrained--c3.csv};
         \addplot[red, ylabel near ticks, line width=3pt] table[x=x0, y=y0, col sep=comma]{linmcts/linmctsExpResults/document_length_experiment/alpha_1.0--1000--pretrained--c3.csv};

@@ -1,4 +1,4 @@
-\chapter{Recherche arborescente}
+\chapter{Recherche arborescente de Monte-Carlo}
 \label{chap:mcts}                   % étiquette pour renvois (à compléter!)
 
 \section{Recherche du résumé optimal}
@@ -6,7 +6,7 @@
 On cherche à calculer
 
 \begin{equation}
-    f = \arg\max R(s, \hat(s))
+    f = \arg\max R(s, (\hat s))
 \end{equation}
 
 À cause de la taille déraisonnable de l'espace des résumés, on ne peut
@@ -21,6 +21,103 @@ Algorithme UCT pour parcours d'arbre.
 Expériences sur grand nombre de documents, potentiellement plusieurs
 formulations envisageables, importance des hyperparamètres, taille des
 documents.
+
+\tikzsetnextfilename{mcts_q_argmax}
+\begin{figure}[h!]
+    \begin{center}
+        \begin{tikzpicture}
+            \begin{axis}[title={Critère de sélection du résumé retenu}, grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, name=plot0, y tick label style={/pgf/number format/fixed zerofill}, ylabel={$\Delta_t$}, xlabel={$t$}, width=0.95\textwidth, height=0.4\textwidth, smooth, xmin=0, xmax=100, y tick label style={/pgf/number format/fixed}]
+                \addplot[green, ylabel near ticks, line width=3pt] table[x=t, y=arg_1e1, col sep=comma]{mcts/mctsExpResults/alpha/all.csv};
+                \addplot[blue, ylabel near ticks, line width=3pt] table[x=t, y=q_1e1, col sep=comma]{mcts/mctsExpResults/alpha/all.csv};
+                \legend{$N_i$, $\bar{x_i}$}
+            \end{axis}
+        \end{tikzpicture}
+    \end{center}
+    \caption{Impact du critère de sélection utilisé pour choisir le résumé retenu au temps $t$.}
+    \label{fig:mcts_q_argmax}
+\end{figure}
+
+\tikzsetnextfilename{mcts_alpha}
+\begin{figure}[h!]
+    \begin{center}
+        \begin{tikzpicture}
+            \begin{axis}[title={Impact de l'exploration}, grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, name=plot0, y tick label style={/pgf/number format/fixed zerofill}, ylabel={$\Delta_t$}, xlabel={$t$}, width=0.95\textwidth, height=0.4\textwidth, smooth, xmin=0, xmax=250, y tick label style={/pgf/number format/fixed}]
+                \addplot[red, ylabel near ticks, line width=3pt] table[x=t, y=q_1e0, col sep=comma]{mcts/mctsExpResults/alpha/all.csv};
+                \addplot[green, ylabel near ticks, line width=3pt] table[x=t, y=q_1e1, col sep=comma]{mcts/mctsExpResults/alpha/all.csv};
+                \addplot[blue, ylabel near ticks, line width=3pt] table[x=t, y=q_1e2, col sep=comma]{mcts/mctsExpResults/alpha/all.csv};
+                \legend{$\alpha = 1$, $\alpha = 10$, $\alpha = 100$}
+            \end{axis}
+        \end{tikzpicture}
+    \end{center}
+    \caption{Impact du paramètre d'exploration $\alpha$ utilisé par UCB sur la convergence.}
+    \label{fig:mcts_alpha}
+\end{figure}
+
+\begin{figure}[h!]
+    \tikzsetnextfilename{mcts_less20}
+    \begin{tikzpicture}[baseline]
+        \begin{axis}[grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\Large}, width=0.35\textwidth,
+                height=0.4\textwidth, name=plot0, y tick label style={/pgf/number format/fixed zerofill}, xmin=0.0, xmax=250.0, ymin=0.01, ymax=0.30, ylabel={$\Delta_t$}, xlabel={$t$}, smooth, title={$|d| \leq 20$}]
+            \addplot[yellow, ylabel near ticks, line width=3pt] table[x=t, y=less20_1e0, col sep=comma]{mcts/mctsExpResults/doc_len/all.csv};
+            \addplot[blue, ylabel near ticks, line width=3pt] table[x=t, y=less20_1e1, col sep=comma]{mcts/mctsExpResults/doc_len/all.csv};
+            \addplot[red, ylabel near ticks, line width=3pt] table[x=t, y=less20_1e2, col sep=comma]{mcts/mctsExpResults/doc_len/all.csv};
+            \legend{$\alpha=1$, $\alpha=10$, $\alpha=100$}
+        \end{axis}
+    \end{tikzpicture}
+    \tikzsetnextfilename{mcts_20to35}
+    \begin{tikzpicture}[baseline]
+        \begin{axis}[grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, width=.35\textwidth,
+                height=0.4\textwidth, name=plot0, xshift=-.1\textwidth, y tick label style={/pgf/number format/fixed zerofill},xmin=0.0, xmax=250.0, ymin=0.01, ymax=0.30, xlabel={$t$}, legend style={at={(0.9,0.1)},anchor=south east}, smooth, title={$20 < |d| < 35$}, ymajorticks=false]
+            \addplot[yellow, ylabel near ticks, line width=3pt] table[x=t, y=20to35_1e0, col sep=comma]{mcts/mctsExpResults/doc_len/all.csv};
+            \addplot[blue, ylabel near ticks, line width=3pt] table[x=t, y=20to35_1e1, col sep=comma]{mcts/mctsExpResults/doc_len/all.csv};
+            \addplot[red, ylabel near ticks, line width=3pt] table[x=t, y=20to35_1e2, col sep=comma]{mcts/mctsExpResults/doc_len/all.csv};
+        \end{axis}
+    \end{tikzpicture}
+    \tikzsetnextfilename{mcts_more35}
+    \begin{tikzpicture}[baseline]
+        \begin{axis}[grid style={dashed,gray!50}, axis y line*=right, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, width=.35\textwidth,
+                height=0.4\textwidth, name=plot0, xshift=-.1\textwidth, y tick label style={/pgf/number format/fixed zerofill}, xmin=0.0, xmax=250.0, ymin=0.01, ymax=0.30, xlabel={$t$}, legend style={at={(1,0.1)},anchor=south east}, smooth, title={$35 \leq |d|$}]
+            \addplot[yellow, ylabel near ticks, line width=3pt] table[x=t, y=more35_1e0, col sep=comma]{mcts/mctsExpResults/doc_len/all.csv};
+            \addplot[blue, ylabel near ticks, line width=3pt] table[x=t, y=more35_1e1, col sep=comma]{mcts/mctsExpResults/doc_len/all.csv};
+            \addplot[red, ylabel near ticks, line width=3pt] table[x=t, y=more35_1e2, col sep=comma]{mcts/mctsExpResults/doc_len/all.csv};
+        \end{axis}
+    \end{tikzpicture}
+    \caption{Impact de la taille du document sur l'évolution du regret instantané.}
+    \label{fig:mcts_doc_len}
+\end{figure}
+
+\tikzsetnextfilename{mcts_prior_score}
+\begin{figure}[h!]
+    \begin{center}
+        \begin{tikzpicture}
+            \begin{axis}[title={Amélioration d'une distribution à priori}, grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, name=plot0, y tick label style={/pgf/number format/fixed zerofill}, ylabel={$R_t - p_t$}, xlabel={$t$}, width=0.95\textwidth, height=0.4\textwidth, smooth, xmin=0, xmax=250, y tick label style={/pgf/number format/fixed}, legend style={at={(1,0.1)},anchor=south east}]
+                \addplot[blue, ylabel near ticks, line width=3pt] table[x=t, y=1e1, col sep=comma]{mcts/mctsExpResults/prior_alpha/all.csv};
+                \addplot[red, ylabel near ticks, line width=3pt] table[x=t, y=1e2, col sep=comma]{mcts/mctsExpResults/prior_alpha/all.csv};
+                \addplot[black, dotted, ylabel near ticks, line width=3pt] table[x=t, y=max_room, col sep=comma]{mcts/mctsExpResults/prior_alpha/all.csv};
+                \legend{$\alpha=10$, $\alpha=100$, maximum}
+            \end{axis}
+        \end{tikzpicture}
+    \end{center}
+    \caption{Évolution de l'amélioration de distributions à priori selon le nombre $t$ de rondes effectuées.}
+    \label{fig:mcts_prior_score}
+\end{figure}
+
+
+\tikzsetnextfilename{mcts_prior_proba}
+\begin{figure}[h!]
+    \begin{center}
+        \begin{tikzpicture}
+            \begin{axis}[title={Amélioration d'une distribution à priori}, grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, name=plot0, y tick label style={/pgf/number format/fixed zerofill}, ylabel={$\Delta_t$}, xlabel={Résumé avec la probabilité maximale selon $p$}, width=0.95\textwidth, height=0.4\textwidth, smooth, xmin=0, xmax=1, y tick label style={/pgf/number format/fixed}, legend style={at={(1,0.1)},anchor=south east}]
+                \addplot[blue, ylabel near ticks, line width=3pt] table[x=proba, y=t8, col sep=comma]{mcts/mctsExpResults/prior_proba/all.csv};
+                \addplot[red, ylabel near ticks, line width=3pt] table[x=proba, y=t32, col sep=comma]{mcts/mctsExpResults/prior_proba/all.csv};
+                \addplot[yellow, ylabel near ticks, line width=3pt] table[x=proba, y=t128, col sep=comma]{mcts/mctsExpResults/prior_proba/all.csv};
+                \legend{$t=8$, $t=32$, $t=128$}
+            \end{axis}
+        \end{tikzpicture}
+    \end{center}
+    \caption{Évolution de l'amélioration de distributions à priori selon le nombre $t$ de rondes effectuées.}
+    \label{fig:mcts_prior_proba}
+\end{figure}
 
 \section{Intégration}
 
