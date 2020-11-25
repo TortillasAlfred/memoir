@@ -1,4 +1,4 @@
-\chapter{Échantillonnage}
+\chapter{Échantillonnage de Monte-Carlo}
 \label{chap:mcs}                   % étiquette pour renvois (à compléter!)
 
 Idée: si on possède une distribution sur les phrases, on souhaiterait savoir
@@ -78,7 +78,7 @@ que l'on définit naturellement comme la différence absolue entre $f$ et $\bar{
 \begin{figure}[h!]
     \begin{center}
         \begin{tikzpicture}
-            \begin{axis}[title={Erreur de l'échantillonnage selon la taille des documents}, grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, name=plot0, xshift=-.1\textwidth, y tick label style={/pgf/number format/fixed zerofill}, ylabel={$\left|f - \bar{f_t}\right|$}, xlabel={Nombre d'échantillons}, width=0.95\textwidth, height=0.4\textwidth, smooth, xmin=0, xmax=50]
+            \begin{axis}[title={Erreur de l'échantillonnage selon la taille des documents}, grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, name=plot0, xshift=-.1\textwidth, y tick label style={/pgf/number format/fixed zerofill}, ylabel={$\left|f - \bar{f_t}\right|$}, xlabel={Nombre d'échantillons}, width=0.95\textwidth, height=0.4\textwidth, smooth, xmin=0, xmax=50, y tick label style={/pgf/number format/fixed}, scaled y ticks = false, ytick={0.01, 0.02, 0.03, 0.04, 0.05}]
                 \addplot[blue, ylabel near ticks, line width=3pt] table[x=x, y=y, col sep=comma]{mcs/mcsExpResults/overall/mean.csv};
                 \addplot[red, ylabel near ticks, line width=3pt] table[x=x, y=y, col sep=comma]{mcs/mcsExpResults/overall/less20.csv};
                 \addplot[green, ylabel near ticks, line width=3pt] table[x=x, y=y, col sep=comma]{mcs/mcsExpResults/overall/20to35.csv};
@@ -91,29 +91,11 @@ que l'on définit naturellement comme la différence absolue entre $f$ et $\bar{
     \label{fig:mcs_overall}
 \end{figure}
 
-\tikzsetnextfilename{mcs_entropy}
-\begin{figure}[h!]
-    \begin{center}
-        \begin{tikzpicture}
-            \begin{axis}[title={Erreur de l'échantillonnage selon l'entropie}, grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, name=plot0, xshift=-.1\textwidth, y tick label style={/pgf/number format/fixed zerofill}, ylabel={$\left|f - \bar{f_t}\right|$}, xlabel={Entropie}, width=0.95\textwidth, height=0.4\textwidth, smooth]
-                \addplot[blue, ylabel near ticks, line width=3pt] table[x=x, y=t8, col sep=comma]{mcs/mcsExpResults/entropy/all.csv};
-                \addplot[red, ylabel near ticks, line width=3pt] table[x=x, y=t16, col sep=comma]{mcs/mcsExpResults/entropy/all.csv};
-                \addplot[green, ylabel near ticks, line width=3pt] table[x=x, y=t32, col sep=comma]{mcs/mcsExpResults/entropy/all.csv};
-                \addplot[yellow, ylabel near ticks, line width=3pt] table[x=x, y=t64, col sep=comma]{mcs/mcsExpResults/entropy/all.csv};
-                \legend{$t=8$, $t=16$, $t=32$, $t=64$}
-            \end{axis}
-        \end{tikzpicture}
-    \end{center}
-    \caption{Impact de l'entropie de la distribution des résumés sur l'erreur d'échantillonnage.}
-    \label{fig:mcs_entropy}
-\end{figure}
-
-
 \tikzsetnextfilename{mcs_top3}
 \begin{figure}[h!]
     \begin{center}
         \begin{tikzpicture}
-            \begin{axis}[title={Erreur de l'échantillonnage selon la plus grande probabilité présente}, grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, name=plot0, xshift=-.1\textwidth, y tick label style={/pgf/number format/fixed zerofill}, ylabel={$\left|f - \bar{f_t}\right|$}, xlabel={Probabilité maximale de $\phi(\pi(d))$}, width=0.95\textwidth, height=0.4\textwidth, smooth]
+            \begin{axis}[title={Erreur de l'échantillonnage selon la plus grande probabilité présente}, grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, name=plot0, xshift=-.1\textwidth, y tick label style={/pgf/number format/fixed zerofill}, ylabel={$\left|f - \bar{f_t}\right|$}, xlabel={Probabilité maximale de $\phi(\pi(d))$}, width=0.95\textwidth, height=0.4\textwidth, smooth, yticklabel style={/pgf/number format/.cd,fixed,precision=3},, scaled y ticks = false, ymin=0.0, ytick={0.005, 0.010, 0.015, 0.020}, xmin=0.05]
                 \addplot[blue, ylabel near ticks, line width=3pt] table[x=x, y=t8, col sep=comma]{mcs/mcsExpResults/top3/all.csv};
                 \addplot[red, ylabel near ticks, line width=3pt] table[x=x, y=t16, col sep=comma]{mcs/mcsExpResults/top3/all.csv};
                 \addplot[green, ylabel near ticks, line width=3pt] table[x=x, y=t32, col sep=comma]{mcs/mcsExpResults/top3/all.csv};
@@ -126,7 +108,7 @@ que l'on définit naturellement comme la différence absolue entre $f$ et $\bar{
     \label{fig:mcs_top3}
 \end{figure}
 
-Les résultats obtenus sont rapportés dans les figures \ref{fig:mcs_overall}, \ref{fig:mcs_entropy}
+Les résultats obtenus sont rapportés dans les figures \ref{fig:mcs_overall}
 et \ref{fig:mcs_top3}.
 
 Tout d'abord, sur la figure \ref{fig:mcs_overall}, on remarque que le nombre de phrases dans un document n'est pas un
