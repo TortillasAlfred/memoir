@@ -1,0 +1,21 @@
+\chapter*{Conclusion}           % ne pas numéroter
+\label{chap:conclusion}         % étiquette pour renvois
+\phantomsection\addcontentsline{toc}{chapter}{\nameref{chap:conclusion}} % inclure dans TdM
+
+\section*{Synthèse}
+
+\todo{Comparaison des méthodes entre elles et avec l'état de l'art.
+    Les angles à aborder sont la perfomance $R$, la vitesse en temps de calcul
+    ainsi que la vitesse en nombre de documents.}
+
+\section*{Travaux futurs}
+
+On résout seulement une instance très limitée de bandit combinatoire: celle où la taille est
+fixée.
+On pourrait étudier comment des formulations plus souples comme \citep{luo-etal-2019-reading}
+seraient envisageables avec les formulations par bandit explorées dans les deux derniers chapitres.
+Autre point: on n'a utilisé aucun algo de bandit combinatoire dédié, on a juste utilisé
+une généralisation des algos de MAB habituels pour les transformer en mode combinatoire
+comme on avait une formulation facile.
+Ce serait intéressant de voir la différence de performance quand on utilise les algorithmes
+dédiés spécifiquement à cette tâche.

@@ -1,31 +1,26 @@
-% !TeX root = ./main.tex
 \chapter*{Introduction}
 \label{chap:introduction}       % étiquette pour renvois
 
-\question{
-    À quel point est-ce que l'introduction doit déboucher exactement sur mon mémoire ?
-    J'ai l'impression qu'à la fin de mon intro, le lecteur devrait être en contexte
-    par rapport au titre, i.e. il devrait savoir qu'on va parler de (1) résumés, (2)
-    méthodes de MC et (3) que tout ça va être fait avec des NN.
-}
+\commentaire{Toute la portion de mise en contexte n'est pas touchée. Pas pertinent
+    de la lire, comme elle n'incorpore pas encore les approches par bandit.}
 
 Ère du big data: on a une quantité immense de données, notamment textuelles.
 
 Succès des dernières décennies nous montrent le potentiel qui peut se cacher
 derrière une utilisation judicieuse de ces données.
 
-Or, il n'est pas toujours possible d'incorporer toutes les données dans 
+Or, il n'est pas toujours possible d'incorporer toutes les données dans
 un processus de traitement.
 
-Notamment, dans certains domaines, les humains sont encore requis dans la loop 
-dans des applications de traitement de données textuelles en raison de 
+Notamment, dans certains domaines, les humains sont encore requis dans la loop
+dans des applications de traitement de données textuelles en raison de
 législations ou d'assurance qualité (i.e. processus de réclamations en assurance).
 
-Comment faire profiter du grand afflux de données dans des systèmes où l'humain (et 
+Comment faire profiter du grand afflux de données dans des systèmes où l'humain (et
 sa capacité de traitement limitée) sont essentiels ?
 
 Une option qui peut s'avérer facilement attrayante est l'idée de condenser un ou plusieurs
-documents en un texte concis contenant seulement l'information requise pour procéder à la 
+documents en un texte concis contenant seulement l'information requise pour procéder à la
 tâche à exécuter.
 
 On dit alors que l'on fait appel à un système de génération automatique de résumés de textes.
@@ -43,41 +38,53 @@ Ils se basent sur l'aléatoire pour parcourir efficacement des espaces potentiel
 très grands.
 
 En les jumelant à des approches neuronales ayant démontré largement leur efficacité sur des données
-textuelles, il est naturel de s'attendre à ce que ces outils permettent d'obtenir des 
+textuelles, il est naturel de s'attendre à ce que ces outils permettent d'obtenir des
 systèmes de génération automatique qui produisent non seulement d'excellents résumés, mais qui
 ne le font pas au détriment d'un temps d'entraînement déraisonnable.
 
 \section*{Objectifs}
 
-Dans ce mémoire, on explorera d'abord comment différentes méthodes de Monte-Carlo
-peuvent être utilisées pour estimer des mesures liées à la qualité de résumés de textes
-dont le calcul est difficile à première vue.
+\commentaire{À partir d'ici c'est mis à jour et prêt à révision.}
 
-On verra ensuite comment ces approximations obtenues par des approches Monte-Carlo
-peuvent être utilisées dans un système complet de génération de résumés.
+Répondre aux questions suivantes :
 
-Les différents systèmes explorés seront enfin comparés aux approches représentant
-l'état de l'art en génération de résumés en fonction de leur efficacité d'entraînement
-et de prédiction ainsi que selon la qualité des résumés produits.
+\begin{itemize}
+    \item Comment peut-on formuler la génération de résumés comme un problème de bandit multi-bras (MAB) ?
+          Quels sont les algorithmes de la littérature utilisés habituellement pour résoudre ces problèmes ?
+    \item Dans quelle mesure ces algorithmes de bandit sont-ils performants dans le contexte de résumés?
+          Sont-ils plus rapides en temps de calcul ? En nombre d'échantillons requis pour une
+          bonne performance ? Est-ce que les solutions auxquelles ils convergent sont meilleures ?
+    \item Comment peut-on intégrer ces formulations bandits dans un algorithme qui produit
+          un système de génération de résumés ?
+    \item Comment l'introduction de ces artefacts bandits a-t-elle affecté la performance ?
+          Est-ce que les systèmes produits génèrent des résumés de meilleure qualité ?
+          A-t-on besoin de moins d'exemples avant d'avoir un système de haute qualité ?
+          Est-ce que l'entraînement est plus rapide à effectuer ? Avec quelles ressources de calcul ?
+    \item Comment les performances de ces algorithmes se comparent-ils entre eux ? Et par rapport à l'état de l'art ?
+\end{itemize}
+
+On répond aux objectifs en proposant 3 formulations de bandits applicables au processus
+de la génération de résumés.
+
+Une des approches proposée est présente dans la littérature mais les deux autres sont
+des nouveautés, du mieux de notre connaissance.
 
 \section*{Structure du mémoire}
 
-Ce mémoire sera divisé en trois chapitres pour les trois méthodes de Monte-Carlo explorées:
-échantillonnage, recherche arborescente et recherche arborescente linéaire.
+Ce mémoire débutera par une introduction aux concepts de base essentiels à la compréhension
+du reste du document.
 
-Pour chacun des chapitres, on posera d'abord une fonction en lien avec la génération de résumé
-qui est difficile à évaluer.
+Le document sera ensuite divisé en trois chapitres pour les trois formulations de MAB explorées:
+bandit contextuel, bandit combinatoire et bandit combinatoire linéaire.
 
-On montera ensuite comment une méthode Monte-Carlo
-peut être utilisée pour l'approximer.
-
-On évaluera empiriquement la rapidité
-de la convergence de la méthode proposée.
+Pour chacun des chapitres, on définira le cadre MAB proposé.
+Des expériences empiriques seront effectuées pour justifier l'applicabilité
+du cadre au contexte de génération de résumés.
 
 On proposera ensuite un modèle neuronal
-de génération automatique de textes utilisant la méthode MC à l'essai.
+de génération automatique de textes utilisant le cadre proposé.
 
 Des expériences seront ensuite effectuées pour évaluer la performance du modèle.
 
-Les hyperparamètres de la portion MC seront choisis en fonction des tests
+Les hyperparamètres de la portion bandit seront choisis en fonction des tests
 empiriques préliminaires.

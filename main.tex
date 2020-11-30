@@ -44,7 +44,7 @@
 
   %% Style de la bibliographie.  
 
-  \titre{Méthodes neuronales de Monte-Carlo pour la génération automatique de résumés de textes}
+  \titre{Approches de bandits pour la\\ génération automatique de résumés de textes}
   \auteur{Mathieu Godbout}
   \programme{Maîtrise en informatique}
   \codirection{Luc Lamontagne, codirecteur de recherche \\
@@ -63,6 +63,13 @@
 
 \usepackage{mathtools}
 \DeclarePairedDelimiter{\ceil}{\lceil}{\rceil}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+
+\usepackage[mathscr]{euscript}
+\let\euscr\mathscr \let\mathscr\relax
+\usepackage[scr]{rsfso}
 
 \usepackage{xcolor}
 \newcommand\todo[1]{\textcolor{red}{TODO: #1}}
@@ -80,11 +87,10 @@
   \algnewcommand\AND{\textbf{et} }
 	\renewcommand{\listalgorithmname}{Liste des algorithmes}
 	\floatname{algorithm}{Algorithme}
-	\renewcommand{\algorithmicreturn}{\textbf{retourne}}
+	\renewcommand{\algorithmicreturn}{\textbf{retourner}}
 	\renewcommand{\algorithmicprocedure}{\textbf{procédure}}
 	\renewcommand{\algorithmicrequire}{\textbf{Entrée:}}
 	\renewcommand{\algorithmicensure}{\textbf{Sortie:}}
-	\renewcommand{\algorithmiccomment}[1]{\{#1\}}
 	\renewcommand{\algorithmicend}{\textbf{fin}}
 	\renewcommand{\algorithmicif}{\textbf{si}}
 	\renewcommand{\algorithmicthen}{\textbf{alors}}
@@ -117,6 +123,9 @@
 \listoffigures                  % production de la liste des figures
 \cleardoublepage
 
+\listofalgorithms
+\cleardoublepage
+
 \dedicace{<Dédicace si désiré>}
 \cleardoublepage
 
@@ -130,11 +139,10 @@
 
 \include{introduction/chap}
 \include{prerequis/chap}
-\include{resumeTextes/chap}
-\include{mcs/chap}
-\include{mcts/chap}
-\include{linmcts/chap}
-\include{conclusion}
+\include{bandit_contextuel/chap}
+\include{bandit_combi/chap}
+\include{bandit_combi_lin/chap}
+\include{conclusion/chap}
 
 \appendix                       % annexes le cas échéant
 
