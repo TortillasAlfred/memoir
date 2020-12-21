@@ -5,7 +5,6 @@
   year    = {2020},
   volume  = {21},
   number  = {140},
-  pages   = {1-67},
   url     = {http://jmlr.org/papers/v21/20-074.html}
 }
 
@@ -16,20 +15,25 @@
   booktitle = {33rd Conference on Neural Information Processing Systems (NeurIPS 2019)}
 }
 
-@misc{zhang2019pegasus,
-  title         = {PEGASUS: Pre-training with Extracted Gap-sentences for Abstractive Summarization},
-  author        = {Jingqing Zhang and Yao Zhao and Mohammad Saleh and Peter J. Liu},
-  year          = {2019},
-  eprint        = {1912.08777},
-  archiveprefix = {arXiv},
-  primaryclass  = {cs.CL}
-}
+@InProceedings{zhang2019pegasus, 
+title = {{PEGASUS}: Pre-training with Extracted Gap-sentences for Abstractive Summarization}, 
+author = {Zhang, Jingqing and Zhao, Yao and Saleh, Mohammad and Liu, Peter}, 
+booktitle = {Proceedings of the 37th International Conference on Machine Learning}, 
+year = {2020}, 
+editor = {Hal Daumé III and Aarti Singh}, 
+volume = {119}, 
+series = {Proceedings of Machine Learning Research}, 
+address = {Virtual}, 
+month = {13--18 Jul}, 
+publisher = {PMLR}, 
+pdf = {http://proceedings.mlr.press/v119/zhang20ae/zhang20ae.pdf}, 
+url = {http://proceedings.mlr.press/v119/zhang20ae.html}
+} 
 
 @inproceedings{dong2018banditsum,
   title     = {BanditSum: Extractive Summarization as a Contextual Bandit},
   author    = {Dong, Yue and Shen, Yikang and Crawford, Eric and van Hoof, Herke and Cheung, Jackie Chi Kit},
   booktitle = {Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing},
-  pages     = {3739--3748},
   year      = {2018}
 }
 
@@ -48,7 +52,6 @@
   publisher = {Association for Computational Linguistics},
   url       = {https://www.aclweb.org/anthology/D19-1300},
   doi       = {10.18653/v1/D19-1300},
-  pages     = {3033--3043},
   abstract  = {In this work, we re-examine the problem of extractive text summarization for long documents. We observe that the process of extracting summarization of human can be divided into two stages: 1) a rough reading stage to look for sketched information, and 2) a subsequent careful reading stage to select key sentences to form the summary. By simulating such a two-stage process, we propose a novel approach for extractive summarization. We formulate the problem as a contextual-bandit problem and solve it with policy gradient. We adopt a convolutional neural network to encode gist of paragraphs for rough reading, and a decision making policy with an adapted termination mechanism for careful reading. Experiments on the CNN and DailyMail datasets show that our proposed method can provide high-quality summaries with varied length, and significantly outperform the state-of-the-art extractive methods in terms of ROUGE metrics.}
 }
 
@@ -67,7 +70,6 @@
   publisher = {Association for Computational Linguistics},
   url       = {https://www.aclweb.org/anthology/2020.acl-main.552},
   doi       = {10.18653/v1/2020.acl-main.552},
-  pages     = {6197--6208},
   abstract  = {This paper creates a paradigm shift with regard to the way we build neural extractive summarization systems. Instead of following the commonly used framework of extracting sentences individually and modeling the relationship between sentences, we formulate the extractive summarization task as a semantic text matching problem, in which a source document and candidate summaries will be (extracted from the original text) matched in a semantic space. Notably, this paradigm shift to semantic matching framework is well-grounded in our comprehensive analysis of the inherent gap between sentence-level and summary-level extractors based on the property of the dataset. Besides, even instantiating the framework with a simple form of a matching model, we have driven the state-of-the-art extractive result on CNN/DailyMail to a new level (44.41 in ROUGE-1). Experiments on the other five datasets also show the effectiveness of the matching framework. We believe the power of this matching-based summarization framework has not been fully exploited. To encourage more instantiations in the future, we have released our codes, processed dataset, as well as generated summaries in \url{https://github.com/maszhongming/MatchSum}.}
 }
 
@@ -80,7 +82,6 @@
   address   = {Barcelona, Spain},
   publisher = {Association for Computational Linguistics},
   url       = {https://www.aclweb.org/anthology/W04-1013},
-  pages     = {74--81}
 }
 
 @article{DBLP:journals/corr/SeeLM17,
@@ -108,8 +109,6 @@
   address   = {Arlington, Virginia, USA},
   abstract  = {Bandit based methods for tree search have recently gained popularity when applied to huge trees, e.g. in the game of go [6]. Their efficient exploration of the tree enables to return rapidly a good value, and improve precision if more time is provided. The UCT algorithm [8], a tree search method based on Upper Confidence Bounds (UCB) [2], is believed to adapt locally to the effective smoothness of the tree. However, we show that UCT is "over-optimistic" in some sense, leading to a worst-case regret that may be very poor. We propose alternative bandit algorithms for tree search. First, a modification of UCT using a confidence sequence that scales exponentially in the horizon depth is analyzed. We then consider Flat-UCB performed on the leaves and provide a finite regret bound with high probability. Then, we introduce and analyze a Bandit Algorithm for Smooth Trees (BAST) which takes into account actual smoothness of the rewards for performing efficient "cuts" of sub-optimal branches with high confidence. Finally, we present an incremental tree expansion which applies when the full tree is too big (possibly infinite) to be entirely represented and show that with high probability, only the optimal branches are indefinitely developed. We illustrate these methods on a global optimization problem of a continuous function, given noisy values.},
   booktitle = {Proceedings of the Twenty-Third Conference on Uncertainty in Artificial Intelligence},
-  pages     = {67–74},
-  numpages  = {8},
   location  = {Vancouver, BC, Canada},
   series    = {UAI'07}
 }
@@ -121,7 +120,6 @@
   year      = {2016},
   volume    = {},
   number    = {},
-  pages     = {1-8},
   doi       = {10.1109/CIG.2016.7860440}
 }
 
@@ -131,7 +129,6 @@
   journal   = {The American Mathematical Monthly},
   volume    = {76},
   number    = {8},
-  pages     = {916-918},
   year      = {1969},
   publisher = {Taylor & Francis},
   doi       = {10.1080/00029890.1969.12000364},
@@ -149,7 +146,6 @@
   author    = {Mikolov, Tomas and Sutskever, Ilya and Chen, Kai and Corrado, Greg S and Dean, Jeff},
   booktitle = {Advances in Neural Information Processing Systems},
   editor    = {C. J. C. Burges and L. Bottou and M. Welling and Z. Ghahramani and K. Q. Weinberger},
-  pages     = {3111--3119},
   publisher = {Curran Associates, Inc.},
   title     = {Distributed Representations of Words and Phrases and their Compositionality},
   url       = {https://proceedings.neurips.cc/paper/2013/file/9aa42b31882ec039965f3c4923ce901b-Paper.pdf},
@@ -164,8 +160,6 @@
   publisher = {AAAI Press},
   abstract  = {We present SummaRuNNer, a Recurrent Neural Network (RNN) based sequence model for extractive summarization of documents and show that it achieves performance better than or comparable to state-of-the-art. Our model has the additional advantage of being very interpretable, since it allows visualization of its predictions broken up by abstract features such as information content, salience and novelty. Another novel contribution of our work is abstractive training of our extractive model that can train on human generated reference summaries alone, eliminating the need for sentence-level extractive labels.},
   booktitle = {Proceedings of the Thirty-First AAAI Conference on Artificial Intelligence},
-  pages     = {3075–3081},
-  numpages  = {7},
   location  = {San Francisco, California, USA},
   series    = {AAAI'17}
 }
@@ -178,7 +172,6 @@
   interhash = {29813227df1eea94efa14c7df2b5553a},
   intrahash = {a6e77a38c13e374ab250e13ae22993ec},
   keywords  = {deeplearning deepwiki glove semantic},
-  pages     = {1532--1543},
   timestamp = {2016-09-06T08:23:07.000+0200},
   title     = {Glove: Global Vectors for Word Representation.},
   volume    = 14,
@@ -201,13 +194,14 @@
   bibsource     = {dblp computer science bibliography, https://dblp.org}
 }
 
-@misc{kuleshov2014algorithms,
-  title         = {Algorithms for multi-armed bandit problems},
-  author        = {Volodymyr Kuleshov and Doina Precup},
-  year          = {2014},
-  eprint        = {1402.6028},
-  archiveprefix = {arXiv},
-  primaryclass  = {cs.AI}
+@article{kuleshov2014algorithms,
+author = {Kuleshov, Volodymyr and Precup, Doina},
+year = {2014},
+month = {02},
+pages = {},
+title = {Algorithms for multi-armed bandit problems},
+volume = {1},
+journal = {Journal of Machine Learning Research}
 }
 
 @inproceedings{10.5555/2832249.2832384,
@@ -218,8 +212,6 @@
   publisher = {AAAI Press},
   abstract  = {The investigation and development of new methods from diverse perspectives to shed light on portfolio choice problems has never stagnated in financial research. Recently, multi-armed bandits have drawn intensive attention in various machine learning applications in online settings. The tradeoff between exploration and exploitation to maximize rewards in bandit algorithms naturally establishes a connection to portfolio choice problems. In this paper, we present a bandit algorithm for conducting online portfolio choices by effectually exploiting correlations among multiple arms. Through constructing orthogonal portfolios from multiple assets and integrating with the upper confidence bound bandit framework, we derive the optimal portfolio strategy that represents the combination of passive and active investments according to a risk-adjusted reward function. Compared with oft-quoted trading strategies in finance and machine learning fields across representative real-world market datasets, the proposed algorithm demonstrates superiority in both risk-adjusted return and cumulative wealth.},
   booktitle = {Proceedings of the 24th International Conference on Artificial Intelligence},
-  pages     = {974–980},
-  numpages  = {7},
   location  = {Buenos Aires, Argentina},
   series    = {IJCAI'15}
 }
@@ -275,7 +267,6 @@ effective as using their randomized counterpart. By using RReLU, we achieved
   journal     = {IET Conference Proceedings},
   year        = {1999},
   month       = {January},
-  pages       = {850-855(5)},
   publisher   = {Institution of Engineering and Technology},
   url         = {https://digital-library.theiet.org/content/conferences/10.1049/cp_19991218}
 }
@@ -286,7 +277,6 @@ effective as using their randomized counterpart. By using RReLU, we achieved
   journal   = {Machine learning},
   volume    = {8},
   number    = {3-4},
-  pages     = {229--256},
   year      = {1992},
   publisher = {Springer}
 }
@@ -296,7 +286,6 @@ effective as using their randomized counterpart. By using RReLU, we achieved
   author  = {Sutton, Richard S and McAllester, David and Singh, Satinder and Mansour, Yishay},
   journal = {Advances in neural information processing systems},
   volume  = {12},
-  pages   = {1057--1063},
   year    = {1999}
 }
 
@@ -311,7 +300,6 @@ effective as using their randomized counterpart. By using RReLU, we achieved
   publisher = {Association for Computational Linguistics},
   url       = {https://www.aclweb.org/anthology/P19-1502},
   doi       = {10.18653/v1/P19-1502},
-  pages     = {5093--5100},
   abstract  = {In summarization, automatic evaluation metrics are usually compared based on their ability to correlate with human judgments. Unfortunately, the few existing human judgment datasets have been created as by-products of the manual evaluations performed during the DUC/TAC shared tasks. However, modern systems are typically better than the best systems submitted at the time of these shared tasks. We show that, surprisingly, evaluation metrics which behave similarly on these datasets (average-scoring range) strongly disagree in the higher-scoring range in which current systems now operate. It is problematic because metrics disagree yet we can{'}t decide which one to trust. This is a call for collecting human judgments for high-scoring summaries as this would resolve the debate over which metrics to trust. This would also be greatly beneficial to further improve summarization systems and metrics alike.}
 }
 
@@ -326,8 +314,7 @@ effective as using their randomized counterpart. By using RReLU, we achieved
   publisher = {Association for Computational Linguistics},
   url       = {https://www.aclweb.org/anthology/D15-1222},
   doi       = {10.18653/v1/D15-1222},
-  pages     = {1925--1930}
-}
+  }
 
 @article{61115,
   author  = {J. {Lin}},
@@ -336,7 +323,6 @@ effective as using their randomized counterpart. By using RReLU, we achieved
   year    = {1991},
   volume  = {37},
   number  = {1},
-  pages   = {145-151},
   doi     = {10.1109/18.61115}
 }
 
@@ -352,7 +338,6 @@ effective as using their randomized counterpart. By using RReLU, we achieved
   publisher = {Association for Computational Linguistics},
   url       = {https://www.aclweb.org/anthology/W17-4510},
   doi       = {10.18653/v1/W17-4510},
-  pages     = {74--84},
   abstract  = {The evaluation of summaries is a challenging but crucial task of the summarization field. In this work, we propose to learn an automatic scoring metric based on the human judgements available as part of classical summarization datasets like TAC-2008 and TAC-2009. Any existing automatic scoring metrics can be included as features, the model learns the combination exhibiting the best correlation with human judgments. The reliability of the new metric is tested in a further manual evaluation where we ask humans to evaluate summaries covering the whole scoring spectrum of the metric. We release the trained metric as an open-source tool.}
 }
 
@@ -362,7 +347,6 @@ effective as using their randomized counterpart. By using RReLU, we achieved
   journal   = {Machine learning},
   volume    = {47},
   number    = {2-3},
-  pages     = {235--256},
   year      = {2002},
   publisher = {Springer}
 }
@@ -372,7 +356,6 @@ effective as using their randomized counterpart. By using RReLU, we achieved
   title     = {Contextual bandits with linear payoff functions},
   author    = {Chu, Wei and Li, Lihong and Reyzin, Lev and Schapire, Robert},
   booktitle = {Proceedings of the Fourteenth International Conference on Artificial Intelligence and Statistics},
-  pages     = {208--214},
   year      = {2011}
 }
 
@@ -383,7 +366,123 @@ effective as using their randomized counterpart. By using RReLU, we achieved
   booktitle    = {Doklady Akademii Nauk},
   volume       = {151},
   number       = {3},
-  pages        = {501--504},
   year         = {1963},
   organization = {Russian Academy of Sciences}
+}
+
+@book{banditalgs,
+  place     = {Cambridge},
+  title     = {Bandit Algorithms},
+  doi       = {10.1017/9781108571401},
+  publisher = {Cambridge University Press},
+  author    = {Lattimore, Tor and Szepesvári, Csaba},
+  year      = {2020}
+}
+
+@article{Li_2010,
+  title     = {A contextual-bandit approach to personalized news article recommendation},
+  isbn      = {9781605587998},
+  url       = {http://dx.doi.org/10.1145/1772690.1772758},
+  doi       = {10.1145/1772690.1772758},
+  journal   = {Proceedings of the 19th international conference on World wide web - WWW  ’10},
+  publisher = {ACM Press},
+  author    = {Li, Lihong and Chu, Wei and Langford, John and Schapire, Robert E.},
+  year      = {2010}
+}
+
+@misc{kingma2014method,
+  added-at = {2020-01-17T03:14:27.000+0100},
+  author = {Kingma, Diederik P. and Ba, Jimmy},
+  biburl = {https://www.bibsonomy.org/bibtex/2d53bcfff0fe1a1d3a4a171352ee6e92c/simon_diener},
+  description = {An upgrade over the standard stochastic gradient descend as it is able to apply changes to the learning rate by itself to be able to escape local maxima etc. This methods was used for the dynamic explainable recommender framework by Chen et al.},
+  interhash = {57d2ac873f398f21bb94790081e80394},
+  intrahash = {d53bcfff0fe1a1d3a4a171352ee6e92c},
+  keywords = {final thema:neural_attentional_rating_regression},
+  note = {cite arxiv:1412.6980Comment: Published as a conference paper at the 3rd International Conference  for Learning Representations, San Diego, 2015},
+  timestamp = {2020-01-17T03:14:27.000+0100},
+  title = {Adam: A Method for Stochastic Optimization},
+  url = {http://arxiv.org/abs/1412.6980},
+  year = 2014
+}
+
+
+@misc{agarap2018learning,
+  added-at = {2018-03-23T15:12:05.000+0100},
+  author = {Agarap, Abien Fred},
+  biburl = {https://www.bibsonomy.org/bibtex/2ac4c868baa4ea267dad6d02b9c4b5c33/kylemccaulley},
+  interhash = {0b73d7eb00fe360679c6741645b9c874},
+  intrahash = {ac4c868baa4ea267dad6d02b9c4b5c33},
+  keywords = {},
+  timestamp = {2018-03-23T15:12:05.000+0100},
+  title = {Deep Learning using Rectified Linear Units (ReLU)},
+  url = {http://arxiv.org/abs/1803.08375},
+  year = 2018
+}
+
+@article{alphago,
+title	= {Mastering the game of Go with deep neural networks and tree search},
+author	= {David Silver and Aja Huang and Christopher J. Maddison and Arthur Guez and Laurent Sifre and George van den Driessche and Julian Schrittwieser and Ioannis Antonoglou and Veda Panneershelvam and Marc Lanctot and Sander Dieleman and Dominik Grewe and John Nham and Nal Kalchbrenner and Ilya Sutskever and Timothy Lillicrap and Madeleine Leach and Koray Kavukcuoglu and Thore Graepel and Demis Hassabis},
+year	= {2016},
+URL	= {http://www.nature.com/nature/journal/v529/n7587/full/nature16961.html},
+journal	= {Nature},
+volume	= {529}
+}
+
+@article{abbasi2011improved,
+  title={Improved algorithms for linear stochastic bandits},
+  author={Abbasi-Yadkori, Yasin and P{\'a}l, D{\'a}vid and Szepesv{\'a}ri, Csaba},
+  journal={Advances in neural information processing systems},
+  volume={24},
+  year={2011}
+}
+
+@misc{halko2010finding,
+      title={Finding structure with randomness: Probabilistic algorithms for constructing approximate matrix decompositions}, 
+      author={Nathan Halko and Per-Gunnar Martinsson and Joel A. Tropp},
+      year={2010},
+      eprint={0909.4061},
+      archivePrefix={arXiv},
+      primaryClass={math.NA}
+}
+
+@article{10.1145/291128.291131,
+author = {Kolda, Tamara G. and O'Leary, Dianne P.},
+title = {A Semidiscrete Matrix Decomposition for Latent Semantic Indexing Information Retrieval},
+year = {1998},
+issue_date = {Oct. 1998},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {16},
+number = {4},
+issn = {1046-8188},
+url = {https://doi.org/10.1145/291128.291131},
+doi = {10.1145/291128.291131},
+abstract = {The vast amount of textual information available today is useless unless it can be effectively and efficiently searched. The goal in information retrieval is to find documents that are relevant to a given user query. We can represent and document collection by a matrix whose (i, j) entry is nonzero only if the ith term appears in the jth document; thus each document corresponds to a columm vector. The query is also represented as a column vector whose ith term is nonzero only if the ith term appears in the query. We score each document for relevancy by taking its inner product with the query. The highest-scoring documents are considered the most relevant. Unfortunately, this method does not necessarily retrieve all relevant documents because it is based on literal term matching.  Latent semantic indexing (LSI) replaces the document matrix with an approximation generated by the truncated singular-value decomposition (SVD). This method has been shown to overcome many difficulties associated with literal term matching. In this article we propose replacing the SVD with the semidiscrete decomposition (SDD). We will describe the SDD approximation, show how to compute it, and compare the SDD-based LSI method to the SVD-based LSI methods. We will show that SDD-based LSI does as well as SVD-based LSI in terms of document retrieval while requiring only one-twentieth the storage and one-half the time to compute each query. We will also show how to update the SDD approximation when documents are added or deleted from the document collection.},
+journal = {ACM Trans. Inf. Syst.},
+month = oct,
+pages = {322–346},
+numpages = {25},
+keywords = {semidiscrete decomposition, singular-value decomposition, data mining, latent semantic indexing, text retrieval}
+}
+
+@article{sherman1950adjustment,
+  title={Adjustment of an inverse matrix corresponding to a change in one element of a given matrix},
+  author={Sherman, Jack and Morrison, Winifred J},
+  journal={The Annals of Mathematical Statistics},
+  volume={21},
+  number={1},
+  pages={124--127},
+  year={1950},
+  publisher={JSTOR}
+}
+
+@article{schuster1997bidirectional,
+  title={Bidirectional recurrent neural networks},
+  author={Schuster, Mike and Paliwal, Kuldip K},
+  journal={IEEE transactions on Signal Processing},
+  volume={45},
+  number={11},
+  pages={2673--2681},
+  year={1997},
+  publisher={Ieee}
 }

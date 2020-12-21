@@ -12,13 +12,33 @@ sont donc présentés dans ce chapitre.
 À la fin de ce chapitre, le lecteur trouvera ainsi une présentation formelle du
 problème exploré dans ce document, sous toutes les contraintes et hypothèses retenues.
 
-\section{Approches de bandits}
+\section{Approches par bandits}
+\label{sec:bandits}
 
-Formulation générale Multi-Armed Bandit (MAB) stochastique: Problème pour lequel on a un ensemble
+On définit un bandit \citep{banditalgs} comme étant un apprenant qui interagit
+avec un environnement séquentiel.
+À chaque pas de temps, le bandit sélectionne une action à effectuer et
+reçoit une récompense de l'environnement associée à l'action.
+L'objectif du bandit est maximiser les récompenses obtenues sur un horizon
+fini $n$ d'interactions avec l'environnement.
+Notons que cet objectif est différent des approches d'apprentissage automatique
+supervisées: au lieu de s'intéresser seulement à la performance finale de
+l'apprenant, on s'intéresse aussi à ce que sa performance s'améliore
+rapidement.
+En pratique, l'objectif bandit est le plus approprié pour des problèmes
+où il est crucial de ne pas commettre trop d'erreurs durant l'apprentissage.
+Notamment, diverses déclinaisons des bandits ont été appliquées avec succès dans
+les domaines des essais cliniques \citep{kuleshov2014algorithms}, de
+la gestion de portfolios financiers \citep{10.5555/2832249.2832384} et
+de la suggestion personnalisée d'articles de journaux \citep{Li_2010}.
+
+\subsection{Bandit multi-bras stochastique}
+
+Un bandit multi-bras stochastique (MAB) est un problème pour lequel on a un ensemble
 $\mathcal{A}$ de $k$ actions disponibles (bras).
 À chaque action $a$ est associée une récompense $X_{a,t}$ pour la $t$-ème fois qu'elle
 est choisie.
-Les récompenses ne sont pas nécessairement identiques pour tout $t$, mais on suppose
+Dans le contexte stochastique, les récompenses ne sont pas nécessairement identiques pour tout $t$, mais on suppose
 qu'il existe $\mu_a$ tel que $\mu_a = \mathbb{E} \left[X_{a,t} \right]$.
 
 On définit alors l'action optimale $a^* = \underset{a \in \mathcal{A}}{\argmax} \; \mu_a$.
@@ -26,31 +46,30 @@ Conjointement, on a aussi $\mu^* = \mu_{a^*}$, l'espérance du bras optimal.
 L'objectif d'un algorithme visant à résoudre le MAB est de sélectionner
 successivement des actions $a_t$ et de maximiser les récompenses $X_t$ perçues.
 Pour normaliser la formulation à des récompenses d'amplitude variée, la métrique de performance
-utilisée est le regret cumulatif
+utilisée est le regret cumulatif après $T$ interactions :
 
 \begin{equation}
-    \rho_n = n \mu^* -  \sum_{t=1}^n  X_t,
+    \rho_T = T \mu^* -  \sum_{t=1}^T  X_t.
     \label{eq:regret_cumulatif}
 \end{equation}
 
-qui représente la différence entre la récompense qui aurait été reçue en prenant
-l'action optimale et celle reçue par l'action sélectionnée.
-Les algorithmes sont donc généralement formulés de sorte à minimiser le regret cumulatif.
+Ici, $\rho_T$ représente donc la différence entre les récompenses obtenues en sélectionnant
+l'action optimale et les actions sélectionnées par l'apprenant.
+Il s'agit donc d'une mesure de la sous-optimalité de l'apprenant.
+En minimisant le regret cumulatif, un apprenant maximise donc les récompenses perçues
+et satisfait l'objectif bandit.
 
-Il est important de comprendre que l'objectif de minimisation du regret cumulatif
-ne consiste pas exactement à trouver l'action optimale.
-En effet, comme le regret cumulatif inclut les erreurs commises
-depuis le début de l'apprentissage, un bon algorithme au sens de la minimisation
-du regret cumulatif doit à la fois converger à une action presque optimale, mais il
-doit aussi le faire en mettant de côté rapidement les actions les plus sous-optimales.
-
-En pratique, la formulation MAB est donc la plus appropriée pour des problèmes
-où il est crucial de ne pas commettre trop d'erreurs durant l'apprentissage.
-Notamment, diverses déclinaisons des bandits ont été appliquées avec succès dans
-les domaines des essais cliniques \citep{kuleshov2014algorithms} et de
-la gestion de portfolios financiers \citep{10.5555/2832249.2832384}.
+L'objectif de minimisation du regret cumulatif fait intervenir un principe fondamental
+dans la littérature bandit: le dilemme exploration-exploitation.
+En effet, afin de minimiser le regret, un bandit doit limiter la sous-optimalité de
+la récompense associée à l'action qu'il choisit en s'assurant qu'elle exploite
+les informations perçues par le passé mais explore aussi suffisamment les actions
+susceptibles d'être meilleures.
 
 \section{Réseaux de neurones}
+
+\todo{Cette section va être à retoucher selon les commentaires de Luc.
+    Pas encore modifié car pas prioritaire pour le moment.}
 
 Classe de fonctions $h_\theta$ paramétrées par des poids $\theta \in \mathbb{R}^n$ qui peuvent être appliquées pour apprendre
 virtuellement n'importe quelle fonction $f$ à l'étude.
@@ -78,8 +97,8 @@ supervisé.
     \item Unité de base: le neurone. Neurone prend entrée un vecteur de caractéristiques numériques.
           Le neurone fait une somme pondérée sur les caractéristiques en entrée et applique une
           fonction d'activation pour obtenir une couche de non-linéarité.
-    \item Fonction d'activation: ReLU \citep{xu2015empirical}.
-    \item Les neurones sont regroupées ensemble en couches, où un vecteur de caractéristiques
+    \item Fonction d'activations: ReLU \citep{xu2015empirical} et sigmoïde.
+    \item Les neurones sont regroupés ensemble en couches, où un vecteur de caractéristiques
           est passé à travers une séquence de couches, où la sortie d'une couche représente l'entrée
           de la prochaine.
     \item $\theta$ est un ensemble de matrices, où chaque matrice représente les poids
@@ -92,8 +111,7 @@ supervisé.
 
 Cas où les données sont des séquences de tailles variables (i.e. données
 textuelles).
-
-Juste présenter le LSTM \citep{iet:/content/conferences/10.1049/cp_19991218}.
+Présenter RNN \citep{schuster1997bidirectional}, puis LSTM \citep{iet:/content/conferences/10.1049/cp_19991218}.
 Architecture qui incorpore les notions de mémoire à court et à long termes pour
 exploiter les relations séquentielles courtes et longues présentes dans une même
 séquence en entrée.
@@ -122,27 +140,26 @@ Deux techniques principales actuellement utilisées: extractive et abstractive.
 
 Nous nous intéresserons seulement au cas de la génération de résumés à partir
 d'un seul document $d$ pour lequel nous possédons un seul résumé cible $s$.
-
-Notons que le cas où on génère un résumé à partir de plusieurs documents se ramène
-naturellement au cas d'un seul document en considérant un nouveau document
-représentant la concaténation de tous les documents en entrée.
+Des approches existent spécifiquement pour la génération de résumés
+à partir d'un ensemble de documents en entrée, mais nous nous contentons
+de dire que le cas multi-documents se ramène grossièrement au cas de la génération d'un seul
+document en considérant la concaténation de l'ensemble de documents.
 
 \subsection{Formulation extractive}
 \label{sec:extractive}
 
 On sélectionne des phrases du document initial.
 
-Formulation simple à résoudre: la nombre de résumés dépend maintenant seulement du nombre
-de phrases et on s'évite toute les difficultés en termes de syntaxe et de cohérence
-d'avoir à générer du texte.
+Formulation simple à résoudre: la nombre de résumés possibles dépend maintenant seulement
+du nombre de phrases et on s'évite toute les difficultés en termes de syntaxe
+et de cohérence liées à avoir à générer du texte.
 
-Les approches de l'état de l'art sont toutes basées sur une approche
-encodeur-décodeur avec des réseaux de neurones.
-
-Ces approches produisent en sortie une distribution sur les phrases
-originales.
-
-Le résumé est ensuite bâti à partir de la distribution prédite par le modèle.
+Les approches de l'état de l'art sont toutes basées sur l'obtention
+d'une représentation vectorielle de chaque phrase.
+Ces représentations sont ensuite utilisées pour prédire un score
+associé à chaque phrase.
+Ces scores produisent une distribution sur les phrases, à partir
+de laquelle le résumé est bâti.
 
 Définition formelle: On a un document en entrée $d$ qui contient $|d|$ phrases $[d_1, ..., d_{|d|}]$
 et pour lequel on a un résumé cible $s$.
@@ -158,19 +175,15 @@ de $d$), on a la signature $\phi(\pi(d)) \in \mathscr{P}(d)$.
 Deux exemples intuitifs de $\phi$ sont les processus voraces et stochastiques,
 où on choisit les $n$ phrases avec la plus grande probabilité ou on en pige
 $n$ sans remise de $\pi(d)$, respectivement.
+On définit $\psi$ comme étant le processus vorace et $\xi$ le processus stochastique.
 
-Enfin, pour un problème de génération de résumés donnés, on fixe habituellement $\phi$
-pour tous les documents.
+Enfin, pour un problème de génération de résumés donnés, on fixe habituellement $\phi$.
 L'objectif d'apprentissage est alors de trouver des paramètres $\theta$
 qui permettent de maximiser la qualité des résumés produits par le modèle
 $(\pi_\theta, \phi)$ par rapport à des paires document-résumé cible $(d, s)$ contenues
 dans un jeu de données $\mathcal{D}$.
 La forme habituellement retenue pour $\pi_\theta$ est celle d'un réseau de neurones
 récurrent LSTM.
-
-Note: le modèle doit fondamentalement contenir $\phi$ et $\pi$ car
-l'encoder-décodeur optimal $\pi^*$ dépend du processus $\phi$ employé
-pour la génération de résumés.
 
 \todo{Figure tikz qui prend pas mal une page complète décrivant le processus de résumé extractif
     selon la formalisation donnée. Les étapes sont:
@@ -211,6 +224,7 @@ La performance est tout de même très bonne; \citep{zhong-etal-2020-extractive}
 actuel en extractive.
 
 \subsubsection*{Approches par renforcement}
+\label{subsec:rl_summ}
 
 Au lieu d'utiliser des cibles binaires, les approches par renforcement visent à
 optimiser directement une mesure numérique de la similarité entre deux résumés.
@@ -234,9 +248,11 @@ L'algorithme REINFORCE \citep{williams1992simple} propose une
 solution élégante à ce problème, faisant une mise à jour des poids $\theta$ selon l'approximation du gradient
 de $J(\theta)$
 \begin{equation}
-    \nabla J(\theta) = R(\hat{s}, s)\nabla \ln \pi_\theta (\hat{s}).
+    \nabla J(\theta) = R(\hat{s}, s)\nabla \ln \phi\left(\pi_\theta (\hat{s})\right),
     \label{eq:REINFORCE_sample}
 \end{equation}
+
+basée sur un échantillon de $J$.
 Le théorème du gradient de politique \citep{sutton1999policy} affirme que, en espérance,
 l'approximation \ref{eq:REINFORCE_sample} correspond au véritable gradient \ref{eq:REINFORCE_expectation}
 et peut donc être utilisée pour une ascension de gradient.
@@ -246,10 +262,10 @@ de l'art pour la génération automatique de résumés.
 
 Au niveau architectural, \citep{dong2018banditsum,luo-etal-2019-reading} emploient le
 même modèle de réseau de neurones.
-Comme encodeur, deux LSTMs consécutifs, un travaillant au niveau
+Deux LSTMs consécutifs sont utilisés pour générer les représentations des phrases, un travaillant au niveau
 des mots et l'autre au niveau des phrases.
-Comme décodeur, une couche pleinement connectée partagée pour toutes les
-phrases et avec sortie réelle.
+Les scores sont obtenus via une couche pleinement connectée avec sortie réelle, partagée pour toutes les
+phrases.
 Un schéma et davantage de détails sur ce modèle neuronal sont disponibles
 au chapitre \ref{chap:bandit_contextuel}.
 Nous reprendrons une architecture similaire de réseau de neurones pour toutes
@@ -325,22 +341,22 @@ Notamment, comme \citep{dong2018banditsum}, nous considérerons seulement les r�
 de 3 phrases en sortie.
 Cette contrainte, utilisée fréquemment sur le jeu de données du CNN/DailyMail,
 est basée sur le fait que la moyenne du nombre de phrases contenues dans les résumés cibles
-est de 3.
+est près de 3.
 Aussi, une référence souvent utilisée pour ce jeu de données est l'heuristique \textit{Lead-3} \citep{10.5555/3298483.3298681}
 qui consiste à générer le résumé d'un document en retenant les 3 premières phrases.
 Les résultats obtenus par \textit{Lead-3} sont très bons aux yeux des métriques automatiques,
 justifiant encore une fois qu'avec 3 phrases on peut générer de bons résumés des documents du jeu
 de données.
-Nous considérerons aussi la régularisation du jeu de données qui consiste à conserver seulement
-les documents d'au moins 3 phrases, limiter la taille des documents à 50 phrases au maximum et
-celle des phrases à 80 mots.
+En vue des statistiques du jeu de données, nous considérerons aussi la régularisation du jeu de données
+qui consiste à conserver seulement les documents d'au moins 3 phrases, limiter la taille des documents à
+50 phrases au maximum et celle des phrases à 80 mots.
 En cas d'excès de mots ou de phrases, l'excédent est simplement retiré.
 
 Pour l'évaluation, on retient la métrique de similarité entre deux résumés
 utilisée par la plupart des travaux employant l'apprentissage par renforcement \citep{dong2018banditsum,luo-etal-2019-reading}:
 \begin{equation}
     \label{eq:ROUGE}
-    R(\hat{s}, s) := \frac{1}{3} \left[ R_1(\hat{s}, s) + R_2(\hat{s}, s) + R_L(\hat{s}, s) \right].
+    R(\hat{s}, s) := \frac{1}{3} \left[ \text{ROUGE-1}(\hat{s}, s) + \text{ROUGE-2}(\hat{s}, s) + \text{ROUGE-L}(\hat{s}, s) \right].
 \end{equation}
 
 Ce choix de $R$ est motivé par:
@@ -349,6 +365,6 @@ Ce choix de $R$ est motivé par:
     \item Diversité de signal, comme expliqué plus haut.
     \item $R$ est \textbf{presque} invariante à l'ordre des phrases dans un résumé (seulement ROUGE-2
           n'est pas invariant, mais seulement au niveau de la jonction entre deux phrases). Cette propriété
-          permet d'éviter l'explosion combinatoire induite par la considération de l'ordre des phrases dans les
-          approches par bandits.
+          permet d'éviter l'explosion combinatoire induite par la considération de l'ordre des phrases dans l'approche
+          multitâche.
 \end{itemize}

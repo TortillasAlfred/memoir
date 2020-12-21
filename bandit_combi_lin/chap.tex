@@ -1,316 +1,445 @@
 \chapter{Bandit combinatoire linéaire}
 \label{chap:bandit_combi_lin}                   % étiquette pour renvois (à compléter!)
 
-Un des défauts de la formulation précédente est que les récompenses
-perçues pour une phrase ne sont pas propagées aux autres phrases et il faut
-donc minimalement explorer chacune des phrases quelques fois avant de déceler la
-moindre tendance.
+L'approche combinatoire pure présentée au chapitre précédent présente un inconvénient
+notoire: elle n'utilise pas de relation de similarité entre les phrases pour propager
+de l'information entre deux phrases similaires.
 Il est possible de faire cela sous la formulation du bandit combinatoire linéaire,
 où on possède des représentations vectorielles de chacune des actions et on
 fait l'hypothèse qu'il existe un vecteur propre au problème qui relie
-les représentations de phrases à leur valeur en espérance.
+les représentations de phrases à leur récompense espérée.
 
-Dans ce chapitre, on définit comment un bandit combinatoire linéaire peut être utilisé
-pour générer des cibles au cours de l'entraînement et éventuellement être
-plus efficace que sa version sans représentations vectorielles.
-On valide ensuite que cette alternative est viable en effectuant des tests sur
-le jeu de données de développement.
-Enfin, on présente comment ces cibles générées par bandit combinatoire linéaire peuvent
-être intégrées dans un système complet de génération de résumés.
-Le système entier est comparé aux performances du SOTA et les approches par bandit
-contextuel et combinatoire présentées précédemment.
+Dans ce chapitre, on présente la formulation en bandit combinatoire linéaire et 
+comment elle peut s'appliquer au processus de génération du résumé d'un document.
+On aborde l'algorithme LinUCB \citep{chu2011contextual} qui minimise 
+le regret sur le bandit combinatoire linéaire et on suggère comment il peut
+aussi être utilisé pour générer des cibles pour un système de génération de résumés.
+On valide encore une fois l'applicabilité des cibles proposées à partir 
+d'un jeu de données de développement.
+Enfin, on présente comment ces cibles peuvent être intégrées dans un système complet de
+génération de résumés, que l'on compare aux performances de l'état-de-l'art et aux approches par bandits
+présentées précédemment.
 
-\section{Formulation}
+\section{Formulation combinatoire linéaire}
 
-La formulation en bandit combinatoire linéaire reprend exactement le même
-cadre formel que la bandit combinatoire vu à la section \ref{section:formulation_combi}.
+De manière analogue à comment nous avons présenté la formulation combinatoire,
+débutons par considérer le cas multi-bras linéaire avant d'incorporer la portion 
+combinatoire.
+La formulation en bandit linéaire reprend exactement le même
+cadre formel que la bandit mutli-bras stochastique vu à la section \ref{sec:bandits}.
 La seule nouvelle notion est la présence de représentations vectorielles $\tilde{a}_i \in \mathbb{R}^n$
 pour les actions du problème et l'introduction de l'hypothèse linéaire.
-Cette dernière mentionne qu'il existe un vecteur unique $\omega_*$ tel que
-$\langle \omega_*^\intercal, a_i\rangle \approx \mu_i$ pour tout $i$.
+Cette dernière suppose que, pour les vecteurs $\tilde{a}_i$, tous soumis à $\lVert \tilde{a}_i \rVert \leq 1$,
+il existe un vecteur unique $\omega_*$ avec $\lVert \omega_* \rVert \leq 1$ de récompense permettant 
+de relier chaque à sa récompense espérée $\mu_i$, i.e. 
+$\langle \omega_*, \tilde{a}_i\rangle \approx \mu_i$ pour tout $i$.
+Lorsque l'on se place dans la version combinatoire du bandit linéaire,
+l'hypothèse linéaire est alors simplement appliquée à des représentations vectorielles 
+des \textit{super-bras} $\tilde{\mathcal{M}}$.
 
-Dans notre cas, plusieurs choix sont possibles pour le choix des représentations
-vectorielles de chaque phrase.
-Nous faisons le choix de prendre le plongement de phrase généré par le
-LSTM au niveau des phrases dans le réseau de neurones de génération de résumés
-habituel.
-La justification de ce choix deviendra claire lorsque l'on présentera
-le système complet utilisant le bandit combinatoire linéaire à la section
-\ref{section:lincombisum}.
 
 \section{Linear Upper Confidence Bound (LinUCB)}
 
-Pour la version linéaire du problème MAB, l'algorithme LinUCB \citep{chu2011contextual}
-représente l'état de l'art.
-Cet algorithme est basé sur le même principe d'optimisme face à l'incertain que
-sa version sans représentations d'action, UCB.
-Ici, au lieu de maintenir une borne supérieure sur les valeurs possibles de
-$\mu_i$, LinUCB maintient un ellipsoïde de confiance autour de son estimé
-$\hat{\omega}_t$.
-Cet ellipsoïde exploite encore le principe d'optimisme face à l'incertain car il
-est conçu pour avoir une forte probabilité de contenir le vrai $\omega_*$.
+L'algorithme LinUCB \citep{chu2011contextual} représente une application 
+du principe de l'optimisme face à l'incertitude sur le problème de bandit linéaire
+qui vise encore une fois la minimisation du regret cumulatif.
+Rappelons que ce principe consiste à avoir, pour chaque action $i$, un estimé optimiste UCB$_i$
+de sa valeur espérée $\mu_i$, lequel est plus élevé que $\mu_i$ avec forte probabilité.
+Dans le contexte linéaire, comme on souhaite faire usage des représentations vectorielles 
+des actions, on cherche à avoir UCB$_i$ qui fait usage des relations linéaires entre les 
+actions.
+Nous présentons plus bas l'intuition derrière la construction de bonnes bornes supérieures
+UCB$_i$ en omettant certains détails techniques pour alléger la lecture.
+Le lecteur plus curieux pourra se référer à \citep{chu2011contextual} ou \citep{abbasi2011improved}
+pour des descriptions techniques complètes.
 
-Pour bâtir l'ellipsoïde à chaque ronde, LinUCB utilise d'abord les
-représentations des actions choisies $\tilde{a}_{i_t}$ et la récompense $X_t$ associée pour
-fixer le centre à la meilleure estimation possible.
-L'ellipsoïde est simplement bâtie en résolvant le problème de moindres carrés
-
+Une première intuition clé pour bâtir une bonne borne supérieure est celle d'exploiter 
+les observations faites aux rondes précédentes pour bâtir un estimé $\hat{\omega}_N$ de 
+$\omega_*$.
+Cet estimé devrait naturellement viser 
+à combiner aussi bien que possible les paires bras-récompenses $(\tilde{a}_{i_t}, X_T)$
+observées aux rondes précédentes, i.e.
 \begin{equation}
-    \omega_t = \argmin_{\omega \in \mathbb{R}^n} \sum_{n=1}^{t-1} \left( \langle \omega^\intercal, a_{i_t} \rangle - X_t \right)^2.
+    \langle \hat{\omega}_N, \tilde{a}_{i_t}\rangle \approx X_t.    
+    \label{eq:omega_n_assumption}
 \end{equation}
 
-Comme le problème n'admet pas nécessairement de solution exacte, LinUCB emploie la
-régularisation de Tikhonov \citep{tikhonov1963solution} avec $\lambda=1$.
-Le centre $\omega_t$ est alors choisi selon la solution analytique connue du
+L'équation \eqref{eq:omega_n_assumption} peut être vue comme un problème 
+de moindres carrés, où l'on souhaite trouver
+\begin{equation}
+    \hat{\omega}_N = \argmin_{\omega \in \mathbb{R}^n} \sum_{t=1}^{N-1} \left( \langle \omega, \tilde{a}_{i_t} \rangle - X_t \right)^2.
+    \label{eq:lstsq}
+\end{equation}
+
+Or, le problème \eqref{eq:lstsq} n'admet pas nécessairement de solution exacte ou unique.
+LinUCB emploie donc la régularisation de Tikhonov \citep{tikhonov1963solution} 
+avec $\lambda=1$ pour garantir une solution et son unicité.
+Le centre $\hat{\omega}_N$ est alors choisi selon la solution analytique connue du
 problème
 
 \begin{equation}
-    \omega_t = (\mathbf{A}^\intercal \mathbf{A} + \lambda \mathbf{I})^{-1}\mathbf{A}^\intercal \mathbf{X},
-    \label{eq:omega_t}
+    \hat{\omega}_N = \mathbf{V_N}^{-1}\mathbf{b_N}, \quad \text{pour} \quad \mathbf{V_N} = (\mathbf{A^\top_N} \mathbf{A_N} + \lambda \mathbf{I}) \quad \text{et} \quad \mathbf{b_N}=\mathbf{A_N^\top} \mathbf{X_N},
+    \label{eq:omega_N}
 \end{equation}
 
-où $\mathbf{A}$ est la matrice dont les lignes sont les actions $\tilde{a}_{i_t}$ sélectionnées,
-$\mathbf{I}$ est la matrice identité et $\mathbf{X}$ est le vecteur composé des récompenses $X_t$.
+où $\mathbf{A_N}$ est la matrice dont les lignes sont les actions $\tilde{a}_{i_t}$ sélectionnées,
+$\mathbf{X_N}$ est le vecteur composé des récompenses $X_t$ et $\mathbf{I}$ est la matrice identité.
 
-Enfin, à partir du centre $\omega_t$ calculé selon \eqref{eq:omega_t} et de la matrice $\mathbf{A}$,
-on se retrouve avec le borne supérieure de chaque action $i$
+En pratique, $\mathbf{V_N}$ et $\mathbf{b_N}$ peuvent tous deux être calculés de manière 
+itérative selon 
 
 \begin{equation}
-    \text{UCB}_i = \langle \omega_t^\intercal, a_i \rangle + \beta \sqrt{a_i^\intercal \mathbf{A}^{-1} a_i},
+\mathbf{V_N} = \lambda \mathbf{I} + \displaystyle \sum_{t=1}^N \tilde{a}_{i_t} \tilde{a}_{i_t}^\top, \qquad \mathbf{b_N} = \displaystyle \sum_{t=1}^N \tilde{a}_{i_t} X_t.
+\label{eq:linucb_iteratif}
+\end{equation}
+
+Maintenant que l'on possède une bonne estimation $\hat{\omega}_N$ qui exploite l'expérience 
+des rondes précédentes, on cherche à introduire un terme garantissant une exploration 
+satisfaisante des actions possibles.
+LinUCB propose à cet effet d'utiliser 
+\begin{equation*}
+    \sqrt{\beta\tilde{a}_i^\top \mathbf{V_N}^{-1} \tilde{a}_i},
+    \label{eq:explo_linucb}
+\end{equation*}
+un terme qui base l'exploration liée à une action $i$ à sa différence par rapport 
+aux actions précédentes représentées par $\mathcal{A_N}$ et un hyperparamètre 
+d'exploration $\beta$.
+Les détails techniques complets permettant d'arriver au terme pour l'exploration sont 
+donnés dans \citep{abbasi2011improved}.
+
+En regroupant les termes d'exploitation et d'exploration, on obtient encore une fois 
+une borne supérieure résolvant de manière élégante le compromis exploration-exploitation: 
+
+\begin{equation}
+    \text{UCB}_i = \langle \omega_N^\top, a_i \rangle +  \sqrt{\beta\tilde{a}_i^\top \mathbf{V_N}^{-1} \tilde{a}_i},
+    \label{eq:linucb}
 \end{equation}
 
 où $\beta$ représente encore un hyperparamètre balançant l'exploration.
-Notons la différence avec UCB pour gérer l'exploration: celle-ci n'est plus gérée
-selon les nombre de visites à un bras mais bien en fonction de la similarité entre le bras
-$i$ et les bras tentés dans le passé.
 
-Application au contexte combinatoire et à la génération de résumés: on a pour chaque
-phrase une représentation $\tilde{a}_i$ produite par notre modèle.
-Toutes les représentations sont produites par le LSTM qui travaille au niveau des phrases.
-On considère ainsi la représentation vectorielle d'un super-bras $\mathcal{M}$ comme étant
+\subsubsection*{Connexions avec UCB}
+
+Nous prenons un moment ici pour mettre l'emphase sur les connexions entre UCB et 
+LinUCB, qui peut être vu comme une généralisation linéaire directe de UCB.
+En effet, si l'on considère les vecteurs d'action correspondant aux vecteurs unitaires,
+i.e. $\tilde{a}_i = e_i$, et une régularisation de Tikhonov avec $\lambda = 0$, on 
+a que $\mathbf{V_N}$ est une matrice diagonale, où la $i$-ème entrée est le nombre 
+de fois où l'action $i$ a été sélectionnée.
+À ce moment, le terme $\tilde{a}_i^\top \mathbf{V_N}^{-1} \tilde{a}_i$ n'est 
+donc que l'inverse du nombre $n_i$ de fois que l'action $i$ a été sélectionnée et le 
+terme d'exploration devient
+\begin{equation*}
+\sqrt{\frac{\beta}{n_i(N)}},
+\end{equation*}
+un terme proportionnel à celui présent dans UCB si l'on pose $\beta = 2\log(N)$.
+
+Aussi, $\hat{\omega}_N$ devient simplement le vecteur où l'entrée $i$ correspond 
+à la moyenne des récompenses perçues pour l'action $i$.
+Le produit vectoriel $\langle \hat{\omega}_N, e_i \rangle$ ne fait donc qu'aller
+chercher la moyenne $\bar{x}_i$ utilisée dans UCB.
+
+Ainsi, si l'on se positionne dans le cas où aucune information n'est partagée par 
+les vecteurs d'action $\tilde{a}_i$, LinUCB est équivalent à UCB.
+On peut donc considérer que, si l'hypothèse linéaire est respectée, LinUCB 
+obtiendra toujours une performance supérieure ou égale à UCB.
+
+\subsection{Représentations vectorielles de phrases}
+
+Les représentations vectorielles utilisées pour les phrases sont basées sur l'observation
+que les calculs de ROUGE sont essentiellement basés sur les comptes de \ngrams.
+On choisit donc de générer, pour chaque phrase, un vecteur parcimonieux
+représentant le nombre de fois qu'un $n$-gramme donné y est présent.
+Pour que les relations entre les phrases soient incorporées dans ces vecteurs,
+on associe à chaque $n$-gramme du document un index unique $i$.
+On obtient donc, pour chaque phrase, un vecteur parcimonieux de taille $N$,
+pour le nombre $N$ de \ngrams dans le document, où l'indice $i$ correspond 
+au nombre d'occurrences du $n$-gramme $i$ dans la phrase.
+Dans nos expériences, on limite l'exploration des \ngrams aux unigrammes,
+afin de garder une taille raisonnable pour les vecteurs parcimonieux générés.
+
+On bâtit ensuite une matrice parcimonieuse $M$ dont les rangées sont les vecteurs parcimonieux 
+de chaque phrase du document.
+La dimension de la matrice $M$ est ensuite réduite via une analyse sémantique latente \citep{10.1145/291128.291131}, 
+applicable naturellement dans notre cas de matrice parcimonieuse de grande taille.
+Le processus retourne $|d|$ vecteurs de taille $|d|$, que l'on normalise pour avoir 
+une norme unitaire et qu'on utilise pour les 
+représentations vectorielles $\tilde{a}_i$.
+On note ici que, si aucun $n$-gramme n'était partagé entre les phrases,
+leur représentation vectorielle $\tilde{a}_i$ serait alors simplement 
+$e_i$ et, comme mentionné plus haut, LinUCB serait équivalent à UCB.
+
+Comme pour les scores $R$, les vecteurs $\tilde{a}_i$ associés à un document peuvent 
+être pré-calculés pour ne pas avoir à les recalculer inutilement à chaque fois 
+que l'on traite un document.
+
+\subsection{Application à la génération de résumés}
+
+Pour appliquer LinUCB au contexte combinatoire, il suffit de disposer 
+de représentations vectorielles $\tilde{\mathcal{M}}$ des super-bras.
+Dans le contexte de la génération de résumés, on se base encore une fois 
+sur la contribution égale de chacune des phrases d'un résumé pour obtenir 
+les représentations vectorielles des résumés.
+Pour ce faire, on prend la représentation vectorielle 
+de chacune des phrases et que la représentation d'un résumé 
+de 3 phrases est alors représentée par la moyenne des phrases
+qu'il contient
 
 \begin{equation}
-    \tilde{\mathcal{M}} = \sum_{i \in \mathcal{M}} \tilde{a}_i.
+    \tilde{\mathcal{M}} = \frac{1}{3}\sum_{i \in \mathcal{M}} \tilde{a}_i.
 \end{equation}
 
-Encore une fois, comme on ne tient pas compte de l'ordre dans le super-bras, on peut
-sélectionner le super-bras optimal en sélectionnant simplement les 3 phrases dont
-la borne supérieure UCB$_i$ est maximale.
+Ainsi, à chaque ronde $t$, la version combinatoire de LinUCB sélectionnera 
 
-Enfin, on utilise LinUCB pour générer une cible encore une fois.
-Cette fois-ci, on s'intéresse à prédire $\omega_T$, le meilleur estimé pour $\omega_*$.
+\begin{equation*}
+\tilde{\mathcal{M}}_t = \text{3-}\argmax_{i \in \mathcal{A}} \text{UCB}_i(t),
+\end{equation*}
+pour UCB$_i$ tel que défini à l'équation \eqref{eq:linucb}.
 
-Note: on peut aussi considérer les connaissances a priori pour cette formulation.
-\todo{Il faudra faire les expériences pour les priors aussi.}
+L'objectif est encore une fois d'utiliser LinUCB pour générer des cibles.
+Dans notre cas, comme LinUCB ne garantit plus l'exploration de chacune des 
+actions, on utilise alors les approximations fournies par $\langle \omega_N, \tilde{a}_i \rangle$
+comme cibles au lieu de $\hat{x}_i$.
+On mesure la qualité de la cible générée par LinUCB par le score $R_t=R(\mathcal{M}, s)$ 
+du meilleur résumé $\mathcal{M}$ pris en sélectionnant les 3 actions dont la valeur 
+$\langle \omega_t, \tilde{a}_i \rangle$ est maximale.
+
+\subsection{Introduction de connaissances a priori}
+
+On note aussi que, comme pour le bandit combinatoire pur, des connaissance a priori $P$
+peuvent être insérées dans le calcul de borne supérieure de LinUCB, qui devient alors 
+
+\begin{equation}
+    \text{UCB}_i = \langle \omega_N^\top, a_i \rangle +  P_i\sqrt{\beta\tilde{a}_i^\top \mathbf{V_N}^{-1} \tilde{a}_i}.
+    \label{eq:linucb_prior}
+\end{equation}
 
 \subsection{Expériences}
 
+Similairement au chapitre sur la formulation combinatoire pure,
+on mesure la sous-optimalité $\Delta_t = R^* - R_t$ des cibles générées
+par LinUCB.
+On reprend donc le jeu de développement de 25 000 documents pour mener des expériences 
+sur la qualité des cibles générées par LinUCB.
 
-On reprend le jeu de 25 000 documents pour faire des tests.
-On pose encore une fois  $\Delta_t = R^* - R_t$, la différence entre le résumé
-optimal d'un document et le résumé suggéré par LinUCB au temps $t$.
-Les résultats des figures \ref{fig:bandit_combi_lin_pretraining}, \ref{fig:bandit_combi_lin_exploration}
-et \ref{fig:bandit_combi_lin_doc_len} sont obtenus en calculant les $\Delta_t$ à partir de
-l'algorithme \ref{alg:cible_linucb}.
-Le pré-entraînement fait pour obtenir des bonnes représentations de phrases $\tilde{a}_i$
-est une tâche de génération de prédiction de scores $R$ où les représentations de 3 phrases
-d'un résumé sont fournies à un réseau de neurones à une seule couche qui doit prédire
-les 3 métriques ROUGE associées au résumé.
+Les figures \ref{fig:bandit_combi_lin_alpha} et \ref{fig:bandit_combi_lin_doc_len} sont obtenues 
+avec un prior uniforme alors que les figures \ref{fig:bandit_combi_lin_prior_tau} 
+et \ref{fig:bandit_combi_lin_prior_choice} expérimentent avec les mêmes 
+configurations de priors décrite à la section \ref{sec:experiences_ucb_priors}.
+Le pseudocode permettant de recréer les expériences se trouve à l'algorithme 
+\ref{alg:cible_linucb}.
+
+Notre implémentation actuelle diffère légèrement du pseudocode présenté 
+en utilisant la nature de la matrice $\mathbf{V}$ pour éviter d'avoir 
+à calculer son inverse à chaque ronde et être computationnellement plus efficace.
+Les détails techniques de cette manipulation sont disponibles dans l'annexe 
+\ref{chap:lincub_gains} pour le lecteur intéressé.
 
 \begin{algorithm}
-    \caption{Génération de la cible pour un document $d$ avec LinUCB}
+    \caption{LinUCB combinatoire pour génération de résumé}
     \begin{algorithmic}[1]
-        \Require $d$ (document), $\phi$ (processus de génération de résumés), $\beta$ (paramètre d'exploration), $s$ (résumé cible), $T$ (nombre de rondes de UCB), $\tilde{a}$ (matrice des représentations d'actions).
-        \Procedure{Cible\_LinUCB}{$d$, $\beta$, $s$, $T$, $\tilde{a}$}
-        \State {$A = \mathbf{I}$}
-        \State {$b = \mathbf{0}$}
+        \Require $d$ (document), $s$ (résumé cible), $\beta$ (paramètre d'exploration), $T$ (nombre de rondes de UCB), $\tilde{a}_i$ (représentations des phrases).
+        \State {$\mathbf{V} = \mathbf{I}$}
+        \State {$\mathbf{b} = \mathbf{0}$}
         \For{$t=1, ..., T$}
-        \State $\omega_t = A^{-1}b$
+        \State $\omega_t = \mathbf{V}^{-1}\mathbf{b}$
         \For{$i=1,..., |d|$}
-        \State UCB$_i = \langle \omega_t^\intercal, \tilde{a}_i \rangle + \beta \sqrt{\tilde{a}_i^\intercal \mathbf{A}^{-1} \tilde{a}_i}$
+        \State UCB$_i = \langle \omega_t^\top, \tilde{a}_i \rangle + \sqrt{\beta\tilde{a}_i^\top \mathbf{V}^{-1} \tilde{a}_i}$
         \EndFor
-        \State $\mathcal{M} =$ 3-$\argmax$ UCB$_i$
-        \State $\hat{s} = \phi(\mathcal{M})$
-        \State $X_t = R(\hat{s}, s)$
-        \ForAll{$i \in \mathcal{M}$}
-        \State {$A = A + \tilde{a}_i \tilde{a}_i^\intercal$}
-        \State {$b = b + X_t \tilde{a}_i$}
+        \State $\mathcal{M}_t =$ 3-$\argmax$ UCB$_i$
+        \State $X_t = R(\mathcal{M}_t, s)$
+        \ForAll{$i \in \mathcal{M}_t$}
+        \State {$\mathbf{V} = \mathbf{V} + \tilde{a}_i \tilde{a}_i^\top$}
+        \State {$\mathbf{b} = \mathbf{b} + \tilde{a}_i X_t $}
         \EndFor
         \EndFor
-        \EndProcedure
-        \State \textbf{retourner}  $\omega_T$
     \end{algorithmic}
     \label{alg:cible_linucb}
 \end{algorithm}
 
-\commentaire{Dans mon code j'utilise plusieurs théorèmes, notamment sur l'inversion de matrices
-    qui sont des sommes. Je ne crois pas que c'est nécessaire d'en parler ici,
-    comme ce sont seulement des règles qui permettent d'alléger le coût computationnel.}
-% \todo{Les figures ont été générées avec un $3t$ au lieu de $t$ dans UCB. Je dois les rerouler (devrait
-%     pas changer grand chose).
-%     Je dois aussi rajouter les intervalles de confiance.}
-% The experiments were done using 25 000 random training documents from the CNN/DailyMail dataset.
-% For the pre-training, a fully connected layer took as input 3 sentence embeddings and was tasked with predicting their relative ROUGE-\{1,2,L\} scores.
-% For each document in the pre-training phase, 250 summaries of 3 sentences were randomly sampled and their ROUGE scores were used as targets.
-% The pre-training batch size was of 64.
 
 \subsection{Résultats}
 
-\commentaire{Les résultats présentés sont à corriger. Ils ne sont pas issus de LinUCB, c'est LinUCT, qui
-    incorporait une structure d'arbre dans la mise à jour après chaque récompense perçue.
-    Aussi, j'ai décidé de ne plus incorporer d'embeddings du document, commme ça se justifiait difficilement
-    théoriquement avec le cadre LinUCB.}
+La figure \ref{fig:bandit_combi_lin_alpha} présente comment l'hyperparamètre $\beta$ influence la
+convergence de LinUCB.
+On remarque d'abord que, comme il fallait s'y attendre, LinUCB converge permet d'obtenir 
+nettement plus rapidement des cibles de bonne qualité de UCB.
+En effet, l'erreur $\Delta_t$ de près 0.05 observée avec UCB après 250 rondes est plutôt 
+observable après 50 rondes de LinUCB.
+On remarque aussi $\beta=10^8$ (courbe bleue sur la figure) semble être un bon choix,
+réussissant à converger légèrement plus rapidement que $\beta=10^7$.
 
-\commentaire{Je skip donc pas mal les commentaires ici car l'analyse sera probablement
-    légèrement modifiée.}
+\commentaire{Honnêtement ici j'ai essayé des valeurs de $\beta$ entre $10^5 et 10^10$ et le
+constat est que la convergence est exécrable en bas de $10^7$ et similaire après.
+C'est difficle de rapporter plus de valeurs de $\beta$ car elles sont soit aberrantes soit 
+elles se confondent les unes avec les autres.}
 
-La figure \ref{fig:bandit_combi_lin_pretraining} illustre que le pré-entraînement est essentiel
-pour obtenir des performances de bonne qualité avec LinUCB.
-En effet, le processus converge à de meilleures cibles avec un pré-entraînement de
-1000 minibatches et il le fait plus rapidement.
+Il est à noter que les différences rapportées entre les différentes 
+courbes sur les figures ne sont pas statistiquement significatives.
+Pour éviter d'encombrer inutilement les figures, on rapporte alors 
+seulement les moyennes observées.
+Les versions incorporant la déviation standard des différentes courbes 
+se trouvent à l'annexe \ref{chap:variance_graphs}.
 
-\tikzsetnextfilename{bandit_combi_lin_pretraining}
-\begin{figure}
+\tikzsetnextfilename{bandit_combi_lin_alpha}
+\begin{figure}[h!]
     \begin{center}
         \begin{tikzpicture}
-            \begin{axis}[title={Importance du pré-entraînement $(\beta = 0.1)$}, grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, name=plot0, y tick label style={/pgf/number format/fixed zerofill}, ylabel={$\Delta_t$}, xlabel={$t$}, width=0.95\textwidth, height=0.4\textwidth, smooth, xmin=0, xmax=100]
-                \addplot[blue, ylabel near ticks, line width=3pt] table[x=x0, y=y0, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/pre_training_experiment/alpha_0.1--1000--pretrained.csv};
-                \addplot[red, ylabel near ticks, line width=3pt] table[x=x0, y=y0, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/pre_training_experiment/alpha_0.1--100--pretrained.csv};
-                \addplot[green, ylabel near ticks, line width=3pt] table[x=x0, y=y0, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/pre_training_experiment/alpha_0.1--1000--raw.csv};
-                \legend{1000 minibatches, 100 minibatches, aucun pré-entraînement}
+            \begin{axis}[title={Impact de l'exploration}, grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, name=plot0, y tick label style={/pgf/number format/fixed zerofill}, ylabel={$\Delta_t$}, xlabel={$t$}, width=0.95\textwidth, height=0.4\textwidth, smooth, xmin=0, xmax=100, y tick label style={/pgf/number format/fixed}, ytick={0.00, 0.05, 0.10, 0.15, 0.20, 0.25}]
+                \addplot[green, ylabel near ticks, line width=3pt] table[x=t, y=10000000.0_, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/alpha/all.csv};
+                \addplot[blue, ylabel near ticks, line width=3pt] table[x=t, y=100000000.0_, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/alpha/all.csv};
+                \addplot[black, ylabel near ticks, line width=3pt] table[x=t, y=q_1e1, col sep=comma]{bandit_combi/bandit_combiExpResults/alpha/all.csv};
+                \legend{$\beta = 10^7$, $\beta = 10^8$, UCB}
             \end{axis}
         \end{tikzpicture}
     \end{center}
-    \caption{Impact du pré-entraînement utilisé sur la convergence de LinUCB.}
-    \label{fig:bandit_combi_lin_pretraining}
+    \caption{Impact du paramètre d'exploration $\beta$ utilisé par LinUCB sur la convergence.}
+    \label{fig:bandit_combi_lin_alpha}
 \end{figure}
 
-% La figure \ref{fig:bandit_combi_lin_exploration} démontre que le paramètre $\beta$ influe beaucoup 
-% sur la convergence.
-% Notamment, la valeur $\beta=0.1$ semble 
+La figure \ref{fig:bandit_combi_lin_doc_len} évalue dans quelle mesure la taille des documents
+influe sur la sous-optimalité des cibles générées par UCB.
+La valeur $\beta=10^8$ (courbe bleue) semble encore une fois optimale et ce, pour toutes les tailles 
+de document.
+Similairement à ce qui avait été observé pour les cibles générées par UCB, il semble que le 
+rouler LinUCB avec plus de rondes est bénéfique pour les documents plus longs.
+Notamment, il semble qu'un minimum de 20 rondes soit raisonnable et que les documents plus longs
+pourraient bénéficier d'aller jusqu'à 100 rondes.
 
-
-\tikzsetnextfilename{bandit_combi_lin_exploration}
-\begin{figure}
-    \begin{center}
-        \begin{tikzpicture}
-            \begin{axis}[title={Impact de l'exploration (pré-entraînement de 1000 minibatches)}, grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, name=plot0, y tick label style={/pgf/number format/fixed zerofill}, ylabel={$\Delta_t$}, xlabel={$t$}, width=0.95\textwidth, height=0.4\textwidth, smooth, xmin=0, xmax=100]
-                \addplot[green, ylabel near ticks, line width=3pt] table[x=x0, y=y0, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/alpha_experiment/alpha_0.01--1000--pretrained.csv};
-                \addplot[blue, ylabel near ticks, line width=3pt] table[x=x0, y=y0, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/alpha_experiment/alpha_0.1--1000--pretrained.csv};
-                \addplot[red, ylabel near ticks, line width=3pt] table[x=x0, y=y0, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/alpha_experiment/alpha_1.0--1000--pretrained.csv};
-                \addplot[cyan, ylabel near ticks, line width=3pt] table[x=x0, y=y0, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/alpha_experiment/alpha_10.0--1000--pretrained.csv};
-                \legend{$\beta = 0.01$, $\beta = 0.1$, $\beta = 1.0$,  $\beta = 10.0$}
-            \end{axis}
-        \end{tikzpicture}
-    \end{center}
-    \caption{Impact de l'hyperparamètre $\beta$ sur la convergence de LinUCB}
-    \label{fig:bandit_combi_lin_exploration}
-\end{figure}
-
-
-\begin{figure}
+\begin{figure}[h!]
     \tikzsetnextfilename{bandit_combi_lin_less20}
     \begin{tikzpicture}[baseline]
-        \begin{axis}[grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\Large}, width=0.342\textwidth,
-                height=0.4\textwidth, name=plot0, y tick label style={/pgf/number format/fixed zerofill}, xmin=0.0, xmax=100.0, ymin=0.01, ymax=0.35, ylabel={$\Delta_t$}, xlabel={$t$}, smooth, title={$|d| \leq 20$}]
-            \addplot[yellow, ylabel near ticks, line width=3pt] table[x=x0, y=y0, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/document_length_experiment/alpha_0.01--1000--pretrained--c1.csv};
-            \addplot[blue, ylabel near ticks, line width=3pt] table[x=x0, y=y0, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/document_length_experiment/alpha_0.1--1000--pretrained--c1.csv};
-            \addplot[red, ylabel near ticks, line width=3pt] table[x=x0, y=y0, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/document_length_experiment/alpha_1.0--1000--pretrained--c1.csv};
-            \legend{$\beta=0.01$, $\beta=0.1$, $\beta=1.0$}
+        \begin{axis}[grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\Large}, width=0.34\textwidth,
+                height=0.4\textwidth, name=plot0, y tick label style={/pgf/number format/fixed zerofill}, xmin=0.0, xmax=100.0, ymin=0.01, ymax=0.30, ylabel={$\Delta_t$}, xlabel={$t$}, smooth, title={$|d| \leq 20$}]
+            \addplot[red, ylabel near ticks, line width=3pt] table[x=t, y=less20_10000000.0_, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/doc_len/all.csv};
+            \addplot[blue, ylabel near ticks, line width=3pt] table[x=t, y=less20_100000000.0_, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/doc_len/all.csv};
+            \legend{$\beta = 10^7$, $\beta = 10^8$}
         \end{axis}
     \end{tikzpicture}
     \tikzsetnextfilename{bandit_combi_lin_20to35}
     \begin{tikzpicture}[baseline]
-        \begin{axis}[grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, width=0.342\textwidth,
-                height=0.4\textwidth, name=plot0, xshift=-.1\textwidth, y tick label style={/pgf/number format/fixed zerofill},xmin=0.0, xmax=100.0, ymin=0.01, ymax=0.35, xlabel={$t$}, legend style={at={(0.9,0.1)},anchor=south east}, smooth, title={$20 < |d| < 35$}, ymajorticks=false]
-            \addplot[yellow, ylabel near ticks, line width=3pt] table[x=x0, y=y0, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/document_length_experiment/alpha_0.01--1000--pretrained--c2.csv};
-            \addplot[blue, ylabel near ticks, line width=3pt] table[x=x0, y=y0, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/document_length_experiment/alpha_0.1--1000--pretrained--c2.csv};
-            \addplot[red, ylabel near ticks, line width=3pt] table[x=x0, y=y0, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/document_length_experiment/alpha_1.0--1000--pretrained--c2.csv};
+        \begin{axis}[grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, width=.34\textwidth,
+                height=0.4\textwidth, name=plot0, xshift=-.1\textwidth, y tick label style={/pgf/number format/fixed zerofill},xmin=0.0, xmax=100.0, ymin=0.01, ymax=0.30, xlabel={$t$}, legend style={at={(0.9,0.1)},anchor=south east}, smooth, title={$20 < |d| < 35$}, ymajorticks=false]
+            \addplot[red, ylabel near ticks, line width=3pt] table[x=t, y=20to35_10000000.0_, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/doc_len/all.csv};
+            \addplot[blue, ylabel near ticks, line width=3pt] table[x=t, y=20to35_100000000.0_, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/doc_len/all.csv};
         \end{axis}
     \end{tikzpicture}
     \tikzsetnextfilename{bandit_combi_lin_more35}
     \begin{tikzpicture}[baseline]
-        \begin{axis}[grid style={dashed,gray!50}, axis y line*=right, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, width=0.342\textwidth,
-                height=0.4\textwidth, name=plot0, xshift=-.1\textwidth, y tick label style={/pgf/number format/fixed zerofill}, xmin=0.0, xmax=100.0, ymin=0.01, ymax=0.35, xlabel={$t$}, legend style={at={(1,0.1)},anchor=south east}, smooth, title={$35 \leq |d|$}]
-            \addplot[yellow, ylabel near ticks, line width=3pt] table[x=x0, y=y0, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/document_length_experiment/alpha_0.01--1000--pretrained--c3.csv};
-            \addplot[blue, ylabel near ticks, line width=3pt] table[x=x0, y=y0, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/document_length_experiment/alpha_0.1--1000--pretrained--c3.csv};
-            \addplot[red, ylabel near ticks, line width=3pt] table[x=x0, y=y0, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/document_length_experiment/alpha_1.0--1000--pretrained--c3.csv};
+        \begin{axis}[grid style={dashed,gray!50}, axis y line*=right, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, width=.34\textwidth,
+                height=0.4\textwidth, name=plot0, xshift=-.1\textwidth, y tick label style={/pgf/number format/fixed zerofill}, xmin=0.0, xmax=100.0, ymin=0.01, ymax=0.30, xlabel={$t$}, legend style={at={(1,0.1)},anchor=south east}, smooth, title={$35 \leq |d|$}]
+            \addplot[red, ylabel near ticks, line width=3pt] table[x=t, y=more35_10000000.0_, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/doc_len/all.csv};
+            \addplot[blue, ylabel near ticks, line width=3pt] table[x=t, y=more35_100000000.0_, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/doc_len/all.csv};
         \end{axis}
     \end{tikzpicture}
     \caption{Impact de la taille du document sur la convergence.}
     \label{fig:bandit_combi_lin_doc_len}
 \end{figure}
 
-% \noindent\textbf{Analysis}
-% Let's first note that there are 8674, 10490 and 5796 documents for each of the respective graphs.
-% The longer the document, the highest is its maximum performing summary.
-% It seems like a single value of $\beta$ is still the way to go, no matter the document length.
-% Smaller documents are easier to solve for the MCTS, much likely due to the exponentially smaller tree to explore.
-% The convergence is not only better but also faster for smaller documents.
-% This implies that one should attempt to scale the number of samples made by the MCTS with the number of sentences in a document.
-% A linear scaling seems legitimate, starting at 200 samples for documents of 10 sentences and ending at 500 for documents of 50 sentences i.e. $n = \ceil{7.5|d|} + 125$.
+La figure \ref{fig:bandit_combi_lin_prior_tau} présente comment la similarité 
+entre le prior utilisé et la distribution uniforme sur les phrases 
+(paramétrée par $\tau$) impacte la qualité des cibles générées.
+Les résultats démontrent que l'introduction de priors ne permet absolument pas de générer 
+de meilleures cibles, car le prior uniforme (ligne noire) obtient des résultats
+considérablement meilleurs.
 
-% \section*{Conclusion}
+Il est difficile de s'expliquer comment l'introduction de priors pouvait être si 
+bénéfique à la convergence de UCB mais ne fait que nuire à LinUCB.
+On émet l'hypothèse que cette différence est dûe à la nature de l'exploitation
+dans LinUCB.
+En effet, comme LinUCB bâtit un estimé $\hat{\omega}_N$ utilisé pour estimer les valeurs 
+de toutes les actions à partir des rondes précédentes, le fait d'introduire un prior 
+peut faire en sorte que $\hat{\omega}_N$ produit un piètre estimé pour les phrases
+avec un prior faible.
+Or, comme un prior faible leur est associé, le terme d'exploration ne permet pas de les 
+visiter suffisamment souvent pour générer des cibles de meilleure qualité.
 
-% \begin{itemize}
-%     \item \textbf{Pre-training formulation seems to be adequate.} The number of 1000 warmup steps is to be fixed and the number of sampled summaries per document should be tried at the lower value of 16.
-%     \item \textbf{Should explore values of $\beta \in [0.05, 0.5]$}.
-%     \item Should try scaling number of MCTS samples per document with document length via $n = \ceil{7.5|d|} + 125$.
-% \end{itemize}
+\tikzsetnextfilename{bandit_combi_lin_prior_tau}
+\begin{figure}[h!]
+    \begin{center}
+        \begin{tikzpicture}
+            \begin{axis}[title={Impact de $\tau$ $(\beta = 10^8$, résumé médian)}, grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, name=plot0, y tick label style={/pgf/number format/fixed zerofill}, ylabel={$\Delta_t$}, xlabel={$t$}, width=0.95\textwidth, height=0.4\textwidth, smooth, xmin=1, xmax=100, ymin=0.0, y tick label style={/pgf/number format/fixed}]
+                \addplot[black, ylabel near ticks, line width=3pt] table[x=t, y=best_0.0_, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/priors/all.csv};
+                \addplot[red, ylabel near ticks, line width=3pt] table[x=t, y=med_0.1_, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/priors/all.csv};
+                \addplot[blue, ylabel near ticks, line width=3pt] table[x=t, y=med_0.2_, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/priors/all.csv};
+                \legend{$\tau=0.0$, $\tau=0.1$, $\tau=0.2$}
+            \end{axis}
+        \end{tikzpicture}
+    \end{center}
+    \caption{Impact de la similarité de distributions a priori avec une distribution uniforme, selon le nombre $t$ de rondes effectuées.}
+    \label{fig:bandit_combi_lin_prior_tau}
+\end{figure}
+
+La figure \ref{fig:bandit_combi_prior_choice} présente l'impact de la qualité du prior sur l'évolution
+de $\Delta_t$.
+Sans grande surprise, les priors basés sur le pire résumé et le résumé médian génèrent 
+de piètre cibles alors que les priors basés sur le meilleur résumé convergent extrêmement 
+rapidement.
+
+\tikzsetnextfilename{bandit_combi_lin_prior_choice}
+\begin{figure}[h!]
+    \begin{center}
+        \begin{tikzpicture}
+            \begin{axis}[title={Impact de la qualité de la distribution \textit{a priori} $(\beta = 10^8, \tau=0.1)$}, grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, name=plot0, y tick label style={/pgf/number format/fixed zerofill}, ylabel={$\Delta_t$}, xlabel={$t$}, width=0.95\textwidth, height=0.4\textwidth, smooth, xmin=1, xmax=100, ymin=0.0, y tick label style={/pgf/number format/fixed}]
+                \addplot[black, ylabel near ticks, line width=3pt] table[x=t, y=best_0.0_, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/priors/all.csv};
+                \addplot[red, ylabel near ticks, line width=3pt] table[x=t, y=best_0.1_, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/priors/all.csv};
+                \addplot[blue, ylabel near ticks, line width=3pt] table[x=t, y=med_0.1_, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/priors/all.csv};
+                \addplot[green, ylabel near ticks, line width=3pt] table[x=t, y=worst_0.1_, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/priors/all.csv};
+                \legend{Uniforme, Meilleur, Médian, Pire}
+            \end{axis}
+        \end{tikzpicture}
+    \end{center}
+    \caption{Impact de la similarité de distributions à priori avec une distribution uniforme, selon le nombre $t$ de rondes effectuées.}
+    \label{fig:bandit_combi_lin_prior_choice}
+\end{figure}
+
+
 
 \section{LinCombiSum}
 \label{section:lincombisum}
 
-À l'inférence, on prédit le super-bras pour lequel on a le produit
-maximal entre le $\omega$ prédit et les représentations des 3 bras.
-Le LinUCB génère des targets $\omega$ qu'on apprend par perte cosine.
-On prend la perte cosine pcq on ne s'intéresse pas à l'amplitude du vecteur.
-On s'en sert essentiellement comme discriminant pour déterminer quelles phrases choisir.
-
-On doit modifier légèrement le réseau: au lieu d'avoir un MLP qui prend en entrée
-les sentence embeddings et traduit ça en valeur estimée, on doit avoir une
-tête qui prédit un $\omega$.
-Deux têtes considérées :(1) un MLP qui prend en entrée le hidden state final du LSTM au niveau
-des phrases et sort $\omega$.
-(2) Un autre LSTM qui prend en entrée toutes les représentations de phrase de retourne $\theta$.
-
-On peut encore produire les priors à partir du $\omega$ inféré et des représentations de phrases,
-en prenant encore une fois la fraction des scores prédits pour chaque phrase comme sa proba.
+On propose maintenant un système de génération de résumés complet nommé LinCombiSum,
+qui se veut identique à CombiSum (\ref{sec:combisum}) mais qui utilise LinUCB
+au lieu de UCB pour générer ses cibles.
+Aussi, comme les expériences ont démontré que l'introduction de connaissances
+a priori ne permet pas d'améliorer les cibles générées par LinUCB, on considère 
+seulement les cibles avec prior uniforme.
+Pour LinCombiSum, les cibles supervisées utilisées sont donc les valeurs
+$\langle \hat{\omega}, \tilde{a}_i \rangle$ retournées par LinUCB, 
+que l'on peut naturellement apprendre via une fonction de perte quadratique.
+À l'inférence, le résumé est encore une fois généré en regroupant les 3 phrases pour lesquelles 
+la prédiction de LinCombiSum est maximale.
 
 \subsection{Expériences}
-
-Pour les expériences, on explore encore une fois un nombre $T$ de ronde fixé et un qui scale linéairement
-avec le nombre de phrases.
-On explore aussi l'impact de la présence et de l'absence de priors.
 
 On roule le système sur le jeu de données CNN/DailyMail.
 Le pseudocode décrivant le système se trouve dans l'algorithme \ref{alg:systeme_ucb}.
 
 \begin{algorithm}
-    \caption{Système utilisant un bandit combinatoire linéaire}
+    \caption{LinCombiSum}
     \begin{algorithmic}[1]
-        \Require  $\mathcal{D}$ (jeu de données), $h_\theta$ (modèle neuronal), $T$ (nombre de rondes UCB), $\alpha$ (taux d'apprentissage), $\beta$ (taux d'exploration LinUCB), $B$ (taille de minibatch).
+        \Require  $\mathcal{D}$ (jeu de données), $h_\theta$ (modèle neuronal), $T$ (nombre de rondes UCB), $\alpha$ (taux d'apprentissage), $\beta$ (taux d'exploration UCB), $B$ (taille de minibatch).
         \While{vrai}
         \State{batch $\sim \mathcal{D}^B$} \Comment{On pige la minibatch du jeu de données}
         \State $\nabla = \mathbf{0}$
         \ForAll{$(d,s) \in $ batch}
-        \State $\hat{\omega}, \tilde{a} = h_\theta(d)$
-        \For{$i=1,...,|d|$}
-        \State $\mathbf{P}_i = \frac{\hat{\omega} \tilde{a}_i}{\lVert \hat{\omega^\intercal} \tilde{a} \rVert}$
-        \EndFor
-        \State $\mathbf{\omega} = $ Cible\_LinUCB($d$, $\beta$, $s$, $T$, $\tilde{a}$, $\mathbf{P}$)\Comment{On passe le prior à Cible\_UCB}
-        \State $\nabla = \nabla + \nabla_\theta \frac{\omega^\intercal \hat{\omega}}{\lVert \omega \rVert \lVert \hat{\omega} \rVert}$
+        \State $x = h_\theta(d)$
+        \State Obtenir les représentations $\tilde{a}_i$ des phrases de $d$
+        \State Générer les cibles $\hat{x}_i = \langle \hat{\omega}_T, \tilde{a}_i \rangle$ après $T$ rondes de LinUCB
+        \State $\nabla = \nabla + \nabla_\theta \lVert x - \hat{x} \rVert^2$
         \EndFor
         \State $\theta = \theta - \alpha \nabla$
         \EndWhile
     \end{algorithmic}
-    \label{alg:systeme_linucb}
+    \label{alg:systeme_ucb}
 \end{algorithm}
+
+Pour les expériences, on teste de faire varier le nombre de rondes de LinUCB utilisées en fonction 
+du nombre de phrases ou de le fixer à $T=50$ selon les expériences de LinUCB.
 
 \subsection{Résultats}
 
-\todo{}
+\todo{Idem à CombiSum}
 
 \section{Conclusion}
 
-\todo{}
+\todo{Idem à CombiSum}

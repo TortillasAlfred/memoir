@@ -2,15 +2,15 @@
 \label{chap:bandit_contextuel}
 
 La première approche explorée est celle qui formule la génération de
-résumés comme un bandit contextuel, initialement proposée par \citep{dong2018banditsum}
-Dans ce chapitre, on présentera la formulation en bandit contextuel et
-on évaluera son applicabilité en fonction de ses hypothèses sur un jeu de données
-de développement.
-On montrera ensuite comment la formulation en bandit contextuel peut
+résumés comme un bandit contextuel, telle qu'initialement proposée par \citep{dong2018banditsum}.
+Dans ce chapitre, on présente la formulation en bandit contextuel, on présente 
+comment elle s'applique à la génération de résumés et on valide son applicabilité 
+sur un jeu de données de développement.
+On montre ensuite comment la formulation en bandit contextuel peut
 naturellement être utilisée avec l'algorithme REINFORCE \cite{williams1992simple}
 pour obtenir une performance représentant l'état de l'art.
 
-\section{Formulation}
+\section{Formulation contextuelle}
 
 Un bandit contextuel est un problème de bandit où un contexte $c_t$ est perçu
 avant de prendre une action $a_t$ et de percevoir une récompense $X_t$
@@ -22,114 +22,136 @@ que ce n'est pas nécessairement une bonne stratégie de toujours sélectionner
 les mêmes index de phrases d'un document pour bâtir son résumé.
 
 Concrètement, pour une paire document-résumé $(d, s)$, on définit le contexte
-comme étant le document ($c=d$), les actions sont les groupes non-ordonnés de 3 phrases
+comme étant le document ($c=d$), les actions $\mathcal{A}$ sont les groupes non-ordonnés de 3 phrases
 possibles à partir de $d$ et les récompenses représentent la valeur de $R(\hat{s}, s)$,
 où $\hat{s}$ est le résumé bâti à partir de l'action retenue.
 On ne s'intéresse pas à l'ordre des 3 phrases d'une action car, tel que mentionné
 à la section \ref{sec:rouge}, le score $R$ utilisé est presque totalement invariant à l'ordre.
-Ainsi, on choisit de générer le résumé $\hat{s}$ en fonction de $a$ en insérant les phrases
+Ainsi, on choisit de générer le résumé $\hat{s}$ en fonction de $a \in \mathcal{A}$ en insérant les phrases
 dans l'ordre dans lequel elles apparaissent dans le document original.
-Selon le formalisme de génération de résumés défini à le section \ref{sec:extractive},
-on se retrouve donc avec un bandit $\pi$ qui, pour un document $d$ en entrée, retourne
-une distribution $\pi(d) \in [0,1]^{|d|}$.
-On choisit aussi le processus de génération de résumés $\phi$ stochastique,
-qui pige 3 phrases sans remise selon $\pi(d)$.
+
 
 \section{Approximation de la performance par échantillonnage}
 
+Selon le formalisme de génération de résumés défini à le section \ref{sec:extractive},
+on peut donc dire que l'on a un bandit $\pi$ qui, pour un document $d$ en entrée, retourne
+une distribution $\pi(d) \in [0,1]^{|d|}$.
 Si l'on considère un bandit $\pi_\theta$ doté d'une certaine paramétrisation $\theta$,
-l'algorithme REINFORCE (\ref{sec:extractive}) peut être utilisé pour faire une ascension
+l'algorithme REINFORCE (\ref{subsec:rl_summ}) peut être utilisé pour faire une ascension
 de gradient pour la fonction de récompense $J(\theta)$ selon \eqref{eq:REINFORCE_sample}.
+Rappelons ici que $J(\theta)$ représente la récompense espérée en pigeant un document $d$
+et en utilisant $\pi_\theta$ pour générer son résumé.
+En générant les résumés de manière stochastique, on permet à $J$ de tenir compte
+de tous les résumés possibles de $d$ pondérés par leur probabilité selon $\pi_\theta(d)$,
+permettant de distinguer des distributions qui accordent une plus grande probabilité aux
+meilleurs résumés.
+On emploie donc le processus $\xi$ de génération de résumé stochastique
+qui pige sans répétition 3 phrases selon $\pi_\theta(d)$.
+
 En pratique, les approximations de $\nabla J(\theta)$ générées en utilisant un seul
-échantillon de $J$ sont très instables pour un processus stochastique $\phi$
-et rendent l'apprentissage difficile (\todo{source}).
-Une solution simple et peu coûteuse pour stabiliser l'entraînement est de piger plusieurs
-résumés $\hat{s_t}$ pour bâtir un meilleur estimateur selon
+échantillon de $J$ sont très instables pour un processus stochastique $\psi$
+et rendent l'apprentissage difficile.
+Une solution simple et peu coûteuse pour stabiliser l'entraînement est de piger $N$
+résumés $\hat{s_t}$ en fonction de $\xi(\pi)$ pour bâtir un meilleur estimateur selon
 
 \begin{equation}
-    \nabla J(\theta) = \frac{1}{N} \sum_{t=1}^N R(\hat{s_t}, s) \nabla \ln \pi_\theta(\hat{s_t}).
+    \nabla J(\theta) = \frac{1}{N} \sum_{t=1}^N R(\hat{s_t}, s) \nabla \ln \xi\left( \pi_\theta(\hat{s_t})\right).
     \label{eq:REINFORCE_batch}
 \end{equation}
 
 \subsection{Expériences}
 
-Dans l'équation \eqref{eq:REINFORCE_batch}, la dérivée de $\pi$ est bien définie et n'est pas
-sensible à la portion stochastique du processus de génération.
+On s'intéresse à savoir combien d'échantillons sont requis pour obtenir une représentation 
+adéquate de la valeur de $\nabla J(\theta)$.
+On note d'abord que, dans l'équation \eqref{eq:REINFORCE_batch}, la dérivée de $\xi(\pi)$ est déterministe
+et n'est pas sensible à la portion stochastique du processus de génération de résumés.
+Pour mesurer la qualité de l'approximation, il faut donc seulement s'intéresser
+à la différence entre la véritable valeur de $J(\theta)$ et son estimation 
+basée sur des échantillons selon $\xi(\pi)$.
+Enfin, comme la pige d'un document $d$ dans le calcul de $J$ est uniforme, on
+peut simplement s'intéresser à l'estimation de $J$ sur un seul document à la fois.
 
-Pour justifier l'utilisation de l'échantillonnage, il faut donc seulement s'intéresser
-à la différence entre l'approximation de la fonction de récompense et sa véritable valeur
-pour un document donné.
-On prend $J$ défini selon \eqref{eq:REINFORCE_expectation}, on pose $\bar{J_N}(\theta) =  \frac{1}{N} \sum_{t=1}^N R(\hat{s_t}, s)$,
-son approximation par échantillonnage.
-La qualité de l'échantillonnage dépend de la proximité entre $J$ et $\hat{J_N}$, que
+
+On prend donc $J$ comme étant l'espérance de récompense de $\xi(\pi)$ sur une paire 
+document résumé $(d, s)$ quelconque et on pose
+ $\bar{J_N}(\theta) =  \frac{1}{N} \sum_{t=1}^N R(\hat{s_t}, s)$, son approximation par échantillonnage.
+La qualité de l'échantillonnage dépend de la proximité entre $J$ et $\bar{J_N}$, que
 nous nommons l'erreur d'échantillonnage $\Delta_N$ pour
 
 \begin{equation}
     \Delta_N = \left| J(\theta) - \bar{J}_N(\theta) \right|.
 \end{equation}
 
-Le pseudocode permettant de générer les échantillonnages se trouve
+Le pseudocode permettant de générer l'approximation $\bar{J_N}$ se trouve 
 dans l'algorithme \ref{alg:approx_J}.
-Pour approximer $\hat{J_N}$, il suffit de prendre la moyenne de
-la liste d'échantillons retournés.
 
-\begin{algorithm}
-    \caption{Échantillonnage de $J$}
+\begin{algorithm}[!h]
+    \caption{Calcul de $\bar{J_N}$}
     \begin{algorithmic}[1]
-        \Require $\pi$ (distribution de phrases), $\phi$ (processus de génération de résumés), $N$ (nombre d'échantillons), $s$ (résumé cible).
-        \Procedure {Echantillonnage}{$\pi$, $\phi$, $N$, $s$}
-        \For{$i=1, ..., N$}
-        \State Piger $\hat{s_i}\sim \phi\left(\pi\right)$
-        \State Recevoir la récompense $r_i = R(\hat{s_i}, s)$
+        \Require $\pi(d)$ (distribution de phrases), $N$ (nombre d'échantillons), $s$ (résumé cible).
+        \For{$t=1, ..., N$}
+        \State Piger $\hat{s_t}\sim \xi\left(\pi(d)\right)$
         \EndFor
-        \State \textbf{retourner}  $\{r_i\}_{i=1}^N, \{s_i\}_{i=1}^N$
-        \EndProcedure
+        \State $\hat{J_N} = \frac{1}{N} \sum_{t=1}^N R(\hat{s_t}, s)$
     \end{algorithmic}
     \label{alg:approx_J}
 \end{algorithm}
 
-\subsubsection*{Pré-calcul des scores ROUGE}
+\subsubsection*{Pré-calcul des scores $R$}
 
 Les méthodes présentées dans ce mémoire utilisent toutes
-un grand nombre de scores $R$ dans leur procédure d'entraînement.
-
-Or, le calcul du ROUGE entre deux résumés est lent et il est possible de calculer,
-pour un document $d$ donné, tous les résumés de 3 phrases possibles.
-
-On a donc, dans un premier temps, précalculé tous les scores ROUGE
+un grand nombre de scores $R$ dans leur procédure d'entraînement, dont le calcul
+est plutôt lent.
+Or, pour un document $d$ donné, on sait que tous les résumés que l'on doit considérer sont 
+l'ensemble des combinaisons des phrases ordonnées selon leur position dans 
+le document initial.
+Il est donc possible de calculer le score $R(\hat{s}, s)$ de tous les résumés $\hat{s}$
+dans un premier temps et de simplement aller lire la valeur dans 
+un tableau correspondant lorsque nécessaire.
+On a donc, dans un premier temps, précalculé tous les scores $R$
 associés à tous les résumés pour chaque document du jeu de données.
-Pour un groupe de 3 phrases, $R$ est seulement calculé pour la version
-où l'ordre des phrases dans les résumé est le même que celui dans le document original.
 
 \subsubsection*{Méthodologie}
 
 On valide la rapidité de la convergence de $\bar{J}$ vers $J$ en les comparant
-directement sur un sous-ensemble du jeu de données CNN/DailyMail.
-
-Pour les tests, on prend 25 000 documents d'entraînement du jeu de données.
+directement sur un sous-ensemble de 25 000 documents d'entraînement du jeu 
+de données CNN/DailyMail.
+Ce jeu de développement, qui sera réutilisé pour les chapitres suivants, 
+se veut aussi varié que possible.
+Notamment, il contient 8 674 documents de 20 phrases ou moins, 10 490
+documents contenant entre 20 et 35 phrases exclusivement et 5 796 documents 
+de 35 phrases ou plus.
 
 On pige aléatoirement des distributions $\pi(d)$ sur les phrases de chacun des documents.
 Pour assurer une bonne variété dans les distributions explorées, on choisit des
 distributions représentant une moyenne pondérée entre une distribution uniforme
-$U(d)$ et une distribution \textit{3-hot} $G(d)$ :
+$U(d)$ et une distribution vorace $G(d)$ :
 
 \begin{equation}
     \pi(d) = (1 - \tau) U(d) + \tau G(d).
 \end{equation}
 
-On explore $\tau \in \{\frac{n}{100}: 0 \leq n \leq 100\}$ en repigeant les 3
-index non-nuls de $G(d)$ à chaque fois.
-On ajoute un bruit gaussien sur chaque $\pi(d)$.
+La distribution vorace employée $G(d)$ représente un vecteur de taille $|d|$ où trois indices 
+pigés aléatoirement ont la valeur de $1/3$ et les autres indices sont nuls.
+On explore $\tau$ variant de 0 à 1 en incréments de 0.01 et en repigeant les indices 
+non-nuls de $G(d)$ à chaque fois.
 
 Les expériences consistent à calculer la valeur de $\Delta_N$ pour différentes valeurs
-de $N$ allant jusqu'à 100.
+de $N$ allant jusqu'à 100 sur tous les documents du jeu de développement.
 L'approximation $\hat{J_N}$ est obtenue en suivant l'algorithme \ref{alg:approx_J}.
-On calcule analytiquement $J$ grâce au fait que l'on possède tous les scores
-ROUGE de tous les résumés possibles pour les documents du jeu de données.
+On calcule analytiquement la véritable valeur de $J$ grâce au fait que l'on possède tous les scores
+$R$ de tous les résumés possibles pour les documents du jeu de données.
 
 \subsection{Résultats}
 
-\todo{Ajouter 95 conf int sur les graphes? Probablement juste sur \ref{fig:bandit_contextuel_top3}}
+Les résultats obtenus sont rapportés dans les figures \ref{fig:bandit_contextuel_overall}
+et \ref{fig:bandit_contextuel_top3}.
+
+Tout d'abord, sur la figure \ref{fig:bandit_contextuel_overall}, on remarque que le nombre de phrases dans un document n'est pas un
+facteur déterminant sur la rapidité de convergence de l'approximation par échantillonnage.
+Ce résultat n'est pas surprenant: on peut s'attendre à ce que la difficulté
+de convergence soit davantage qualifiée par une mesure sur la distribution
+des résumés.
 
 \tikzsetnextfilename{bandit_contextuel_overall}
 \begin{figure}[h!]
@@ -148,11 +170,17 @@ ROUGE de tous les résumés possibles pour les documents du jeu de données.
     \label{fig:bandit_contextuel_overall}
 \end{figure}
 
+Une mesure naturelle sur la distribution des résumés est la valeur maximale de
+la distribution des résumés.
+La figure \ref{fig:bandit_contextuel_top3} nous montre une courbe à la tendance logarithmique,
+où plus la probabilité maximale de la distribution augmente, plus rapide est la convergence
+de notre processus d'échantillonnage.
+
 \tikzsetnextfilename{bandit_contextuel_top3}
 \begin{figure}[h!]
     \begin{center}
         \begin{tikzpicture}
-            \begin{axis}[title={Erreur de l'échantillonnage selon la plus grande probabilité présente}, grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, name=plot0, xshift=-.1\textwidth, y tick label style={/pgf/number format/fixed zerofill}, ylabel={$\Delta_t$}, xlabel={Probabilité maximale de $\phi(\pi(d))$}, width=0.95\textwidth, height=0.4\textwidth, smooth, yticklabel style={/pgf/number format/.cd,fixed,precision=3},, scaled y ticks = false, ymin=0.0, ytick={0.005, 0.010, 0.015, 0.020}, xmin=0.05]
+            \begin{axis}[title={Erreur de l'échantillonnage selon la plus grande probabilité présente}, grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, name=plot0, xshift=-.1\textwidth, y tick label style={/pgf/number format/fixed zerofill}, ylabel={$\Delta_t$}, xlabel={Probabilité maximale de $\xi(\pi(d))$}, width=0.95\textwidth, height=0.4\textwidth, smooth, yticklabel style={/pgf/number format/.cd,fixed,precision=3},, scaled y ticks = false, ymin=0.0, ytick={0.005, 0.010, 0.015, 0.020}, xmin=0.05]
                 \addplot[blue, ylabel near ticks, line width=3pt] table[x=x, y=t8, col sep=comma]{bandit_contextuel/bandit_contextuelExpResults/top3/all.csv};
                 \addplot[red, ylabel near ticks, line width=3pt] table[x=x, y=t16, col sep=comma]{bandit_contextuel/bandit_contextuelExpResults/top3/all.csv};
                 \addplot[green, ylabel near ticks, line width=3pt] table[x=x, y=t32, col sep=comma]{bandit_contextuel/bandit_contextuelExpResults/top3/all.csv};
@@ -165,92 +193,158 @@ ROUGE de tous les résumés possibles pour les documents du jeu de données.
     \label{fig:bandit_contextuel_top3}
 \end{figure}
 
-Les résultats obtenus sont rapportés dans les figures \ref{fig:bandit_contextuel_overall}
-et \ref{fig:bandit_contextuel_top3}.
-
-Tout d'abord, sur la figure \ref{fig:bandit_contextuel_overall}, on remarque que le nombre de phrases dans un document n'est pas un
-facteur déterminant sur la rapidité de convergence de l'approximation par échantillonnage.
-Ce résultat n'est pas surprenant: on peut s'attendre à ce que la difficulté
-de convergence soit davantage qualifiée par une mesure sur la distribution
-des résumés.
-
-\todo{Préciser nb de documents dans chaque bracket de nombre de phrases}.
-
-Une mesure naturelle sur la distribution des résumés est la valeur maximale de
-la distribution.
-La figure (\ref{fig:bandit_contextuel_top3}) nous montre une courbe à la tendance logarithmique,
-où plus la grande probabilité de la distribution augmente, plus rapide est la convergence
-de notre processus d'échantillonnage.
-
 Globalement, on remarque aussi que la convergence est rapide.
-Une différence de moins de 1 $R$ est définitivement suffisante pour faire un
-apprentissage.
-Les résultats indiquent que piger 16 échantillons semble être un bon compromis
-performance-temps d'exécution.
-C'est d'ailleurs cette valeur qui est utilisée dans les articles de \citep{dong2018banditsum}
-et \citep{luo-etal-2019-reading}.
+Une différence de moins de 0.01 $R$ est définitivement suffisante pour justifier 
+l'utilisation de $\hat{J_N}$ au lieu de $J$.
+Aussi, les résultats indiquent que la rapidité de la convergence ralentit progressivement autour 
+de $N=16$.
+Comme il est plus coûteux en temps de calcul de faire plus d'échantillons, il
+appraît naturel de considérer $N=16$ comme un excellent compromis entre 
+le temps de calcul et la rapidité de l'estimation.
+Notons que les articles de \citep{dong2018banditsum} et \citep{luo-etal-2019-reading},
+qui utilisent cet échantillonnage, utilisent $N=20$ dans leurs expériences.
 
 \section{BanditSum}
 
 Maintenant que l'on sait que l'on peut avoir des approximations très justes pour
-$J$ - et donc $\nabla_\theta J$, on peut utiliser l'algorithme REINFORCE pour apprendre
+$J$ (donc $\nabla_\theta J$), on peut utiliser l'algorithme REINFORCE pour apprendre
 les paramètres $\theta$ d'un système complet.
-En effet, on peut considérer un réseau de neurones $h_theta$ prenant en entrée un document et produisant
+En effet, on peut considérer un réseau de neurones $h_\theta$ prenant en entrée un document et produisant
 une distribution sur les phrases comme un bandit contextuel, que l'on peut apprendre
 efficacement avec REINFORCE.
 
-On prend le même réseau que BanditSum.
-\todo{Figure de l'architecture de BanditSum. }
+\subsection{Description}
 
-Quelques détails techniques en pratique pour faciliter l'entraînement:
+Le système présenté est attributé à \citep{dong2018banditsum}, qui l'ont nommé 
+BanditSum.
+Dans BanditSum, on considère un réseau de neurones $h_\theta$ comme un bandit contextuel,
+lequel a pour objectif de maximiser le score des résumés qu'il produit pour l'ensemble 
+des documents $d$ d'un jeu de données.
 
-\begin{itemize}
-    \item Ajout d'une baseline pour limiter la variance. La baseline est le $R$ obtenu par
-          le processus de sélection vorace sur $\pi$.
-    \item Ajout d'une probabilité $\epsilon_t$ de piger aléatoirement au $\phi$ stochastique
-          utilisé. Ce $\epsilon_t$ force le système à explorer. On le fait décroître vers une
-          valeur près de 0 avec le temps pour que le modèle puisse exploiter ses apprentissages
-          quand il devient bon.
-\end{itemize}
+L'architecture retenue pour $h$ est séparée en un encodeur de phrases et une tête 
+de prédiction d'affinités.
+Pour l'encodeur de phrases, un LSTM bidirectionnel à une couche prend en entrée
+la séquence des plongements de mots de chaque phrase et retourne une représentation de 
+chaque phrase par rapport aux mots qu'elle contient.
+Ces représentations sont par la suite fournies à un LSTM bidirectionnel à deux couches qui 
+produit une représentation $\tilde{d_i}$ de chaque phrase par rapport aux autres phrases du même 
+document.
+La tête de prédiction est constituée d'un réseau pleinement connecté prenant en entrée 
+les représentations $\tilde{d_i}$ et produisant une affinité entre 0 et 1 pour chaque phrase.
+Les affinités liées à chaque phrase sont enfin regroupées et divisées par leur somme 
+pour produire la distribution $\pi_\theta(d)$ sur les phrases du document.
+À l'entraînement, les paramètres $\theta$ sont appris via REINFORCE en générant 
+les résumés avec le processus de génération stochastique $\xi$.
+À l'inférence, c'est le processus vorace $\psi$ qui est employé, sélectionnant les 
+3 phrases avec la plus grande affinité.
+
+\todo{Figure de l'architecture de BanditSum.}
+
+Banditsum incorpore aussi deux artefacts techniques pour faciliter la convergence.
+Ceux-ci sont énumérés plus bas et accompagnés de l'intuition justifiant leur 
+utilisation.
+
+D'abord, BanditSum utilise la version de REINFORCE incorporant une \textbf{baseline} $b(d)$:
+\begin{equation}
+    \nabla J(\theta) = \frac{1}{N} \sum_{t=1}^N\left(R(\hat{s_t}, s) - b(d)\right)\nabla \ln \xi\left(\pi_\theta (\hat{s_t})\right).
+    \label{eq:REINFORCE_baseline}
+\end{equation}
+La baseline retenue est $b(d) = R\left(\psi(\pi), s\right)$, représentant le score associé au résumé
+le plus probable document $d$.
+L'introduction de $b$ peut être vue comme assignant un scalaire positif 
+aux résumés meilleurs que le résumé actuellement privilégié et un sclaire négatif à ceux qui 
+sont moins bons.
+En pratique, l'introduction de baseline est fréquemment utilisée pour réduire la variance 
+élevée dans l'entraînement avec REINFORCE et permettre un apprentissage plus stable.
+
+Le second artefact employé par BanditSum est celui de l'ajout d'une exploration artificielle
+$\epsilon$ dans le processus de pige de résumé $\xi$.
+Afin d'assurer une exploration satisfaisante des résumés possibles d'un document, le processus 
+de génération stochastique $\xi$ qu'ils utilisent pige une phrase au hasard dans une 
+proportion $\epsilon=0.1$ du temps.
+L'introduction de $\epsilon$ a pour effet d'assurer que les résumés pigés selon $\xi(\pi, \epsilon)$ seront 
+suffisamment variés pour assurer une bonne exploration de l'espace des résumés possibles lors de
+l'entraînement.
+Enfin, notons que la probabilité de générer un résumé $\hat{s}$, représentée par
+ $\xi \left(\pi_\theta(\hat{s_t}), \epsilon \right)$ dans l'équation
+ \ref{eq:REINFORCE_baseline}, s'écrit alors sous la forme close
+\begin{equation}
+    \xi \left(\pi_\theta(\hat{s_t}), \epsilon \right) = \displaystyle \prod_{i=1}^3 \left(\dfrac{\epsilon}{|d| -i + 1}  + \dfrac{(1 - \epsilon)\pi(d)_{s_i}}{\sum_{k=1}^{j-1} \pi(d)_{s_j}}\right),
+    \label{eq:Xi}
+\end{equation}
+où $s_i$ représente l'index de la $i$-ème phrase du résumé $\hat{s}$. 
+Ainsi, le gradient de \eqref{eq:Xi}, nécessaire dans la mise à jour des paramètres 
+par REINFORCE, est facilement calculable avec les logiciels de différentiation automatique
+habituellement utilisés pour les réseaux de neurones.
 
 \subsection{Expériences}
 
-On roule notre propre implémentation de BanditSum sur le jeu de données.
-Le pseudocode se trouve plus bas, à la seule exception près qu'on omet
-le $\epsilon$ pour éviter d'alourdir l'algorithme inutilement.
+On roule notre propre implémentation de BanditSum, dont le pseudocode se trouve à l'algorithme 
+\ref{alg:Banditsum}, sur le jeu de données CNN/DailyMail complet.
+Pour les expériences, on fait varier $N$, pour explorer
+l'importance que peut avoir un meilleur estimé du gradient sur le temps de calcul
+vs la rapidité de convergence.
 
 \begin{algorithm}
     \caption{Système utilisant un bandit contextuel}
     \begin{algorithmic}[1]
-        \Require  $\mathcal{D}$ (jeu de données), $h_\theta$ (modèle neuronal), $\phi$ (processus de génération de résumés stochastique), $\phi'$ (processus de génération de résumés baseline), $N$ (nombre d'échantillons), $\alpha$ (taux d'apprentissage).
+        \Require  $\mathcal{D}$ (jeu de données), $h_\theta$ (modèle neuronal), $N$ (nombre d'échantillons), $\alpha$ (taux d'apprentissage), $\epsilon$ (taux d'exploration).
         \While{vrai}
         \State{$(d, s) \sim \mathcal{D}$} \Comment{On pige un document du jeu de données}
         \State $\pi = h_\theta(d)$
-        \State $\textbf{r}, \textbf{s} = $ Echantillonnage($\pi, \phi, N, s$)
-        \State $s' = \phi'(\pi)$
-        \State $b = R(s', s)$ \Comment{Valeur de baseline}
-        \State $\theta = \theta + \alpha \frac{1}{N} \sum_{i=1}^N (\textbf{r}_i - b) \nabla_\theta \ln \pi(\textbf{s}_i)$
+        \State Piger $N$ résumés $\hat{s_i} \sim \xi(\pi, \epsilon)$
+        \State Calculer les $N$ scores associés $r_i = R(\hat{s_i}, s)$
+        \State $b = R(\psi(\pi), s)$
+        \State $\nabla = \frac{1}{N} \sum_{i=1}^N (r_i - b) \nabla_\theta \ln \xi \left(\pi(\hat{s_i}), \epsilon \right)$ \Comment{Mise à jour REINFORCE avec baseline}
+        \State $\theta = \theta + \alpha \nabla$
         \EndWhile
     \end{algorithmic}
-    \label{alg:approx_J}
+    \label{alg:Banditsum}
 \end{algorithm}
 
-Détails techniques: GLoVe taille 100 comme embeddings, params d'optimiseur,
-GPU et CPU utilisés pour mes expés, decaying de $\epsilon$ retenu.
+\subsubsection*{Détails d'implémentation}
 
-Pour les expériences, on roule BanditSum, en faisant varier $N$, pour explorer
-l'importance que peut avoir un meilleur estimé du gradient sur le temps de calcul
-vs la rapidité de convergence.
+Nous reprenons exactement les mêmes paramètres d'entraînement que \citep{dong2018banditsum},
+que nous énumérons.
+
+Pour les LSTMs, la dimension cachée est fixée à 200.
+La tête de prédiction est un réseau pleinement connecté avec une seule couche cachée
+de taille 100, activation ReLU \citep{agarap2018learning} et sortie sigmoïde.
+
+Les plongements de mots utilisés sont les plongements GLoVe \citep{pennington2014glove} de taille 100 
+pré-entraînés sur la langue anglaise.
+L'optimiseur employé est Adam \citep{kingma2014method}, pour lequel on fixe 
+$\beta = [0, 0.999]$.
+On utilise un taux d'apprentissage $\alpha=5e^{-5}$ et une pénalité sur la norme 
+des poids $\theta$ de $1e^{-6}$.
+Un \textit{gradient clipping} de 1 est aussi appliqué.
+\todo{GPU et CPU utilisés.}
 
 \subsection{Résultats}
 
+
 Rapporter graphe de l'évolution de $R$ en validation selon le nombre de documents vus.
+En validation et en test, on calcule le vrai ROUGE pour éviter toute possibilité 
+d'erreur introduite dans le pré-calcul.
+On garde quand même l'heuristique que l'ordre des phrases du résumé est le même que celui 
+dans le document, car c'est l'ordre qui risque le moins d'introduire des incohérences
+syntaxiques (références mal-définies).
 Rapporter une courbe pour chaque $N$ parmi $\{8,16,32\}$, qui sont les valeurs les plus
 pertinentes selon les expés plus haut.
+Pour chacune des valeurs de $N$ à l'essai, on roule l'algorithme à 5 reprises 
+en faisant varier le générateur de nombres aléatoires et on rapporte la 
+moyenne et déviation standard.
+Rapporter la courbe que BanditSum dit obtenir pour $N=20$.
+Rouler 4 epochs, selon ce que BS rapporte comme meilleur modèle.
 
 Dans un tableau, rapporter performance en test de Banditsum (nous) vs Banditsum (paper) et
 SOTA extractif.
-Rapporter $R-1, R-2, R-L$ et le $R$ utilisé à l'entraînement.
+Rapporter ROUGE-1, ROUGE-2, ROUGE-L et leur moyenne.
+
+Dans un autre tableau, rapporter temps d'entraînement et architecture de calcul 
+utilisée pour montrer l'impact de $N$ sur le temps de calcul.
+Discussion sur non-nécessité de vrai gradient de $J$ pour l'apprentissage, mais que
+ça stabilise naturellement.
 
 \section{Conclusion}
 

@@ -1,0 +1,121 @@
+\chapter{Graphiques avec variance}     % numérotée
+\label{chap:variance_graphs}                   % étiquette pour renvois (à compléter!)
+
+\commentaire{Je présente ici seulement les graphiques avec variance pour 
+le chapitre sur LinUCB, mais je vais éventuellement avoir tous les graphiques.
+La grosse variance est surtout dûe au fait que mon jeu de développement 
+a 25 000 documents, avec chacun sa propre distribution des scores.}
+
+\section*{Graphiques du chapitre \ref{chap:bandit_combi_lin}}
+
+\tikzsetnextfilename{bandit_combi_lin_alpha_std}
+\begin{figure}[h!]
+    \begin{center}
+        \begin{tikzpicture}
+            \begin{axis}[title={Impact de l'exploration, avec déviation standard}, grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, name=plot0, y tick label style={/pgf/number format/fixed zerofill}, ylabel={$\Delta_t$}, xlabel={$t$}, width=0.95\textwidth, height=0.4\textwidth, smooth, xmin=0, xmax=100, y tick label style={/pgf/number format/fixed}, ymax=0.25, ymin=0.0, ytick={0.00, 0.05, 0.10, 0.15, 0.20, 0.25}]
+                \addplot[green, ylabel near ticks, line width=3pt] table[x=t, y=10000000.0_, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/alpha/all.csv};
+                \addplot[blue, ylabel near ticks, line width=3pt] table[x=t, y=100000000.0_, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/alpha/all.csv};
+                \addplot[black, ylabel near ticks, line width=3pt] table[x=t, y=q_1e1, col sep=comma]{bandit_combi/bandit_combiExpResults/alpha/all.csv};
+                \addplot[forget plot, name path=uppergreen, draw=none] table[x=t, y=10000000.0_+, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/alpha/all.csv};
+                \addplot[forget plot, name path=lowergreen, draw=none] table[x=t, y=10000000.0_-, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/alpha/all.csv};
+                \addplot[fill=green!10] fill between[of=uppergreen and lowergreen];
+                \addplot[forget plot, name path=upperblue, draw=none] table[x=t, y=100000000.0_+, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/alpha/all.csv};
+                \addplot[forget plot, name path=lowerblue, draw=none] table[x=t, y=100000000.0_-, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/alpha/all.csv};
+                \addplot[fill=blue!10] fill between[of=upperblue and lowerblue];
+                \legend{$\beta = 10^7$, $\beta = 10^8$, UCB}
+            \end{axis}
+        \end{tikzpicture}
+    \end{center}
+    \caption{Impact du paramètre d'exploration $\beta$ utilisé par LinUCB sur la convergence.}
+    \label{fig:bandit_combi_lin_alpha_std}
+\end{figure}
+
+\begin{figure}[h!]
+    \tikzsetnextfilename{bandit_combi_lin_less20_std}
+    \begin{tikzpicture}[baseline]
+        \begin{axis}[grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\Large}, width=0.33\textwidth,
+                height=0.4\textwidth, name=plot0, y tick label style={/pgf/number format/fixed zerofill}, xmin=0.0, xmax=100.0, ymin=0.01, ymax=0.30, ylabel={$\Delta_t$}, xlabel={$t$}, smooth, title={$|d| \leq 20$}]
+            \addplot[red, ylabel near ticks, line width=3pt] table[x=t, y=less20_10000000.0_, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/doc_len/all.csv};
+            \addplot[blue, ylabel near ticks, line width=3pt] table[x=t, y=less20_100000000.0_, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/doc_len/all.csv};
+            \addplot[forget plot, name path=upperred, draw=none] table[x=t, y=less20_10000000.0_+, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/doc_len/all.csv};
+            \addplot[forget plot, name path=lowerred, draw=none] table[x=t, y=less20_10000000.0_-, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/doc_len/all.csv};
+            \addplot[fill=red!10] fill between[of=upperred and lowerred];
+            \addplot[forget plot, name path=upperblue, draw=none] table[x=t, y=less20_100000000.0_+, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/doc_len/all.csv};
+            \addplot[forget plot, name path=lowerblue, draw=none] table[x=t, y=less20_100000000.0_-, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/doc_len/all.csv};
+            \addplot[fill=blue!10] fill between[of=upperblue and lowerblue];
+            \legend{$\beta = 10^7$, $\beta = 10^8$}
+        \end{axis}
+    \end{tikzpicture}
+    \tikzsetnextfilename{bandit_combi_lin_20to35_std}
+    \begin{tikzpicture}[baseline]
+        \begin{axis}[grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, width=.33\textwidth,
+                height=0.4\textwidth, name=plot0, xshift=.0\textwidth, y tick label style={/pgf/number format/fixed zerofill},xmin=0.0, xmax=100.0, ymin=0.01, ymax=0.30, xlabel={$t$}, legend style={at={(0.9,0.1)},anchor=south east}, smooth, title={$20 < |d| < 35$}, ymajorticks=false]
+            \addplot[red, ylabel near ticks, line width=3pt] table[x=t, y=20to35_10000000.0_, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/doc_len/all.csv};
+            \addplot[blue, ylabel near ticks, line width=3pt] table[x=t, y=20to35_100000000.0_, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/doc_len/all.csv};
+            \addplot[forget plot, name path=upperred, draw=none] table[x=t, y=20to35_10000000.0_+, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/doc_len/all.csv};
+            \addplot[forget plot, name path=lowerred, draw=none] table[x=t, y=20to35_10000000.0_-, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/doc_len/all.csv};
+            \addplot[fill=red!10] fill between[of=upperred and lowerred];
+            \addplot[forget plot, name path=upperblue, draw=none] table[x=t, y=20to35_100000000.0_+, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/doc_len/all.csv};
+            \addplot[forget plot, name path=lowerblue, draw=none] table[x=t, y=20to35_100000000.0_-, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/doc_len/all.csv};
+            \addplot[fill=blue!10] fill between[of=upperblue and lowerblue];
+        \end{axis}
+    \end{tikzpicture}
+    \tikzsetnextfilename{bandit_combi_lin_more35_std}
+    \begin{tikzpicture}[baseline]
+        \begin{axis}[grid style={dashed,gray!50}, axis y line*=right, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, width=.33\textwidth,
+                height=0.4\textwidth, name=plot0, xshift=.0\textwidth, y tick label style={/pgf/number format/fixed zerofill}, xmin=0.0, xmax=100.0, ymin=0.01, ymax=0.30, xlabel={$t$}, legend style={at={(1,0.1)},anchor=south east}, smooth, title={$35 \leq |d|$}]
+            \addplot[red, ylabel near ticks, line width=3pt] table[x=t, y=more35_10000000.0_, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/doc_len/all.csv};
+            \addplot[blue, ylabel near ticks, line width=3pt] table[x=t, y=more35_100000000.0_, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/doc_len/all.csv};
+            \addplot[forget plot, name path=upperred, draw=none] table[x=t, y=more35_10000000.0_+, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/doc_len/all.csv};
+            \addplot[forget plot, name path=lowerred, draw=none] table[x=t, y=more35_10000000.0_-, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/doc_len/all.csv};
+            \addplot[fill=red!10] fill between[of=upperred and lowerred];
+            \addplot[forget plot, name path=upperblue, draw=none] table[x=t, y=more35_100000000.0_+, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/doc_len/all.csv};
+            \addplot[forget plot, name path=lowerblue, draw=none] table[x=t, y=more35_100000000.0_-, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/doc_len/all.csv};
+            \addplot[fill=blue!10] fill between[of=upperblue and lowerblue];
+        \end{axis}
+    \end{tikzpicture}
+    \caption{Impact de la taille du document sur la convergence, avec variance.}
+    \label{fig:bandit_combi_lin_doc_len_std}
+\end{figure}
+
+\tikzsetnextfilename{bandit_combi_lin_prior_tau_std}
+\begin{figure}[h!]
+    \begin{center}
+        \begin{tikzpicture}
+            \begin{axis}[title={Impact de $\tau$ $(\beta = 10^8$, résumé médian), avec déviation standard}, grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, name=plot0, y tick label style={/pgf/number format/fixed zerofill}, ylabel={$\Delta_t$}, xlabel={$t$}, width=0.95\textwidth, height=0.4\textwidth, smooth, xmin=1, xmax=100, ymin=0.0, ymax=0.35, y tick label style={/pgf/number format/fixed}]
+                \addplot[black, ylabel near ticks, line width=3pt] table[x=t, y=best_0.0_, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/priors/all.csv};
+                \addplot[red, ylabel near ticks, line width=3pt] table[x=t, y=med_0.1_, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/priors/all.csv};
+                \addplot[blue, ylabel near ticks, line width=3pt] table[x=t, y=med_0.2_, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/priors/all.csv};
+                \addplot[forget plot, name path=upperblack, draw=none] table[x=t, y=best_0.0_+, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/priors/all.csv};
+                \addplot[forget plot, name path=lowerblack, draw=none] table[x=t, y=best_0.0_-, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/priors/all.csv};
+                \addplot[fill=black!10] fill between[of=upperblack and lowerblack];
+                \addplot[forget plot, name path=upperred, draw=none] table[x=t, y=med_0.1_+, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/priors/all.csv};
+                \addplot[forget plot, name path=lowerred, draw=none] table[x=t, y=med_0.1_-, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/priors/all.csv};
+                \addplot[fill=red!10] fill between[of=upperred and lowerred];
+                \addplot[forget plot, name path=upperblue, draw=none] table[x=t, y=med_0.2_+, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/priors/all.csv};
+                \addplot[forget plot, name path=lowerblue, draw=none] table[x=t, y=med_0.2_-, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/priors/all.csv};
+                \addplot[fill=blue!10] fill between[of=upperblue and lowerblue];
+                \legend{$\tau=0.0$, $\tau=0.1$, $\tau=0.2$}
+            \end{axis}
+        \end{tikzpicture}
+    \end{center}
+    \caption{Impact de la similarité de distributions a priori avec une distribution uniforme, selon le nombre $t$ de rondes effectuées.}
+    \label{fig:bandit_combi_lin_prior_tau_std}
+\end{figure}
+
+\tikzsetnextfilename{bandit_combi_lin_prior_choice_std}
+\begin{figure}[h!]
+    \begin{center}
+        \begin{tikzpicture}
+            \begin{axis}[title={Impact de la qualité de la distribution \textit{a priori} $(\beta = 10^8, \tau=0.1)$, avec déviation standard}, grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, name=plot0, y tick label style={/pgf/number format/fixed zerofill}, ylabel={$\Delta_t$}, xlabel={$t$}, width=0.95\textwidth, height=0.4\textwidth, smooth, xmin=1, xmax=100, ymin=0.0, y tick label style={/pgf/number format/fixed}]
+                \addplot[black, ylabel near ticks, line width=3pt] table[x=t, y=best_0.0_, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/priors/all.csv};
+                \addplot[red, ylabel near ticks, line width=3pt] table[x=t, y=best_0.1_, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/priors/all.csv};
+                \addplot[blue, ylabel near ticks, line width=3pt] table[x=t, y=med_0.1_, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/priors/all.csv};
+                \addplot[green, ylabel near ticks, line width=3pt] table[x=t, y=worst_0.1_, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/priors/all.csv};
+                \legend{Uniforme, Meilleur, Médian, Pire}
+            \end{axis}
+        \end{tikzpicture}
+    \end{center}
+    \caption{Impact de la similarité de distributions à priori avec une distribution uniforme, selon le nombre $t$ de rondes effectuées.}
+    \label{fig:bandit_combi_lin_prior_choice_std}
+\end{figure}

@@ -1,151 +1,189 @@
 \chapter{Bandit combinatoire}
 \label{chap:bandit_combi}                   % étiquette pour renvois (à compléter!)
 
-Les deux prochaines approches sont nouvelles.
-L'idée principale est celle d'utiliser la puissance et rapidité de convergence
-des approches supervisées en retirant la limite de performance imposée
-par l'heuristique des génération de cibles binaires.
+Ce chapitre et le prochain représentent des contributions entièrement
+nouvelles au domaine de la génération de résumés.
+L'idée principale qui se répète dans les deux chapitres est celle d'utiliser
+les approches par bandits pour générer des cibles plus riches
+pour la génération de résumés que les cibles binaires habituellement
+employées dans les formulations supervisées.
 
-Dans ce chapitre, on définit comment un bandit combinatoire peut être utilisé
-pour générer des cibles au cours de l'entraînement.
-On valide ensuite que cette alternative est viable en effectuant des tests sur
-le jeu de données de développement.
-Enfin, on présente comment ces cibles générées par bandit combinatoire peuvent
-être intégrées dans un système complet de génération de résumés.
-Le système entier est comparé aux performances du SOTA et l'approche par bandit
-contextuel.
+Dans ce chapitre, on présente la formulation en bandit combinatoire et
+comment elle s'applique à la génération du résumé d'un document.
+On décrit ensuite l'algorithme UCB \citep{ucb} qui minimise le regret du bandit combinatoire
+proposé et comment il peut être employé pour générer des cibles pour un système
+de génération de résumés.
+L'applicabilité des cibles proposées est par la suite validée en montrant la
+progression de leur qualité sur des documents issus d'un jeu de données de développement.
+Enfin, on présente comment ces cibles peuvent être intégrées dans un système complet de
+génération de résumés, que l'on compare aux performances de l'état-de-l'art et l'approche par bandit
+contextuel présentée au chapitre précédent.
 
-\section{Formulation}
+\section{Formulation combinatoire}
 \label{section:formulation_combi}
 
-Un bandit combinatoire peut être vu comme un méta-problème de bandit où l'espace
-d'actions $\mathcal{A}'$ devient le power set des bras d'un MAB $\mathscr{P}(\mathcal{A})$.
-Formellement, on considère la possibilité de tirer un \textit{super-bras} $\mathcal{M} = [a_i, ..., a_n]$.
-Les super-bras ne sont pas nécessairement de taille fixe.
-Dans cette formulation, une récompense est perçue pour le super-bras tiré.
-Aucune hypothèse n'est faite sur le nature de la relation entre la récompense associable à
-chaque bras et la récompense reçue pour le super-bras.
+Le bandit combinatoire est une approche par bandit qui vise à étendre
+la formulation MAB à des environnements où plusieurs actions peuvent être sélectionnées
+en même temps par l'apprenant.
+Nous nous intéresserons seulement à la variante dite multitâche \citep{banditalgs}, où
+il y a un nombre fixé $m$ d'actions sélectionnées à
+chaque pas de temps, créant une \textit{super-action} $\mathcal{M} = \{a_1, ..., a_m\}$
+pour laquelle l'environnement retourne une récompense $X_{\mathcal{M}, t}$.
+L'objectif demeure de minimiser le regret \eqref{eq:regret_cumulatif}, mais celui-ci est désormais calculé entre
+le \textit{super-bras} optimal $\mathcal{M}^*$ et les \textit{super-bras} tirés
+$\mathcal{M}_t$.
 
-Pour nos besoin, on considère seulement les super-bras composées de 3 phrases.
-Comme on considère $R$ comme invariante à l'ordre, l'ordre n'est pas important non
-plus dans les super-bras.
-On fait une hypothèse sur les récompenses associées à un super-bras: on dit que
-la récompense du super-bras est la moyenne des récompenses associables à tous
-les bras.
+Tout l'intérêt de cette formulation vient de l'éventuelle relation entre les \textit{super-actions}.
+Bien qu'il serait possible de formuler le bandit multitâche comme un MAB où l'ensemble des
+actions possibles est l'ensemble des \textit{super-actions} $\mathcal{M}$, cette formulation
+risque d'être très peu efficace.
+En effet, comme les actions $a_i$ sont partagées entre les divers \textit{super-actions},
+il est possible d'utiliser la récompense associée à une \textit{super-action} pour
+déduire de l'information sur la récompense associée aux actions qui la composent.
+Cette information sur les actions $a_i$ peut alors être utilisée pour guider le choix des
+prochaines \textit{super-actions} et accélérer l'apprentissage.
 
-\commentaire{Il faut que j'y réfléchisse, mais j'ai l'impression que je me perds inutilement
-    dans les formulations. Je présente le bandit contextuel à la manière de Banditsum, avec la
-    portion sampling exclue du problème de bandit, un peu comme si ça faisait partie des dynamiques
-    de l'environnement. Mais quand on y pense, la seule différence avec le bandit combinatoire que je
-    présente ici revient essentiellement à dire que j'incorpore le processus de génération
-    de résumés dans le bandit. Mais comme il est fixé à sélectionner 3 phrases et qu'il sert
-    essentiellement juste à donner des estimés de valeur de chaque phrase, je pense que je suis
-    juste en train d'alourdir le contenu pour rien. Je vais réfléchir à ce qui serait une approche
-    plus claire et naturelle et qui expliquerait bien mes 3 chapitres.}
+La génération du résumé d'un document $d$ peut être vue comme un bandit combinatoire où
+les actions de base sont les phrases $d_i$ et les \textit{super-bras} $\mathcal{M}$
+sont les résumés de 3 phrases possibles.
+En tirant un \textit{super-bras} $\mathcal{M}_{\hat{s}}$ associé au résumé $\hat{s}$,
+le bandit perçoit $R(\hat{s}, s)$ comme récompense et peut mettre à jour ses
+croyances sur les phrases $d_i$ de $\hat{s}$.
+
+Notons d'abord que, comme on ne tient pas compte de l'ordre dans nos expériences,
+il est naturel de considérer que chaque phrase d'un résumé contribue à part égale
+au score observé.
+Implicitement, cela revient à faire l'hypothèse que la récompense associée à un résumé
+$\mathcal{M}$ est la moyenne de la récompense associable à chaque phrase.
+Or, comme le score $R$ est basé sur un score F1 sur le résumé complet, cette hypothèse
+n'est pas strictement vraie mais elle est intuitivement valide.
+En effet, les phrases qui résument bien le document généreront des résumés aux scores
+plus élevés et donc leur présence à elle seule doit contribuer à augmenter le score
+associé à un résumé.
+
+Aussi, contrairement à la formulation contextuelle du chapitre \ref{chap:bandit_contextuel},
+la formulation combinatoire présentée ici s'applique à la génération du résumé d'un seul document $d$.
+Ainsi, au lieu d'attaquer le problème large de la génération de n'importe quel document,
+on pose la génération du résumé de chaque document comme une instance de bandit séparée.
+On ne peut donc pas utiliser directement cette formulation combinatoire de pair avec
+un algorithme comme REINFORCE pour apprendre un système complet de génération de résumés.
+La prochaine section décrit comment c'est plutôt la solution du bandit combinatoire
+qui pourrait être utilisée comme cible dans un contexte d'apprentissage supervisé.
 
 \section{Upper Confidence Bound (UCB)}
 
-L'objectif est de générer des cibles: on s'intéresse donc essentiellement à la solution
-du problème de bandit combinatoire.
-À cette fin, un algorithme fort utilisé en pratique est UCB \citep{ucb}.
-UCB jongle entre l'exploration d'actions moins visitées et l'exploitation d'actions
-ayant été payantes en maintenant une borne supérieure sur l'espérance $\mu_i$ de chaque
-bras.
-Pour un bras $i$ au temps $t$, la borne supérieure est définie comme
+L'algorithme UCB \citep{ucb} est un algorithme de minimisation du regret pour les
+bandits stochastiques qui peut facilement être généralisé au cas combinatoire.
+UCB est basé sur le principe de l'optimisme en cas d'incertitude, qui permet de
+résoudre de manière élégante le dilemme exploration-exploitation décrit à la section \ref{sec:bandits}.
+Pour une action $i$ au temps $t$, l'algorithme définit une borne supérieure
 
 \begin{equation}
     \text{UCB}_i(t) = \bar{x_i}(t) + \beta \sqrt{\frac{2\ln t}{n_i(t)}},
+    \label{eq:UCB}
 \end{equation}
 
-où $\bar{x_i}(t)$ est la moyenne des récompenses reçues jusqu'au temps $t$ quand l'action $i$ faisait partie des actions
-du super-bras tiré, $\beta$ est un hyperparamètre d'exploration, $t$ est le nombre de pas
-effectués sur le problème de bandit et $n_i(t)$ est le nombre de fois que l'action $i$ a été
-sélectionnée jusqu'à présent.
+où $\bar{x_i}(t)$ est la moyenne des récompenses reçues jusqu'au temps $t$ par l'action $i$,
+$n_i(t)$ est le nombre de fois que l'action $i$ a été sélectionnée et $\beta$ est un
+hyperparamètre régulant l'exploration.
+La borne supérieure ainsi définie garantit avec une forte probabilité que la valeur $\mu_i$ espérée
+pour l'action $i$ soit inférieure à UCB$_i$ au temps $t$.
 
-Bien que UCB est conçu pour les problèmes de bandit stochastique, il peut être naturellement
-étendu au problème de bandit combinatoire à taille fixe comme nous avons.
+L'équation \eqref{eq:UCB} peut être visualisée comme résolvant directement le dilemme
+exploitation-exploration.
+En effet, le terme $\bar{x_i}(t)$ présente l'estimation actuelle de la récompense
+associée au bras $i$ et permet donc d'exploiter les connaissances acquises
+avant le temps $t$.
+À gauche, le terme $\sqrt{\frac{2 \ln t}{n_i(t)}}$ est proportionnel à l'inverse
+des visites relatives du bras $i$.
+Il s'agit donc d'un terme qui sera plus élevé pour les actions moins visitées,
+incitant ainsi l'exploration d'actions sous-visitées.
+
+\subsection{Application au bandit combinatoire}
+
+Bien que UCB est conçu pour les problèmes de bandits stochastiques, l'algorithme peut être 
+naturellement étendu au problème de bandit combinatoire.
 En effet, il suffit alors de choisir à chaque ronde le super-bras maximisant
 la borne supérieure définie par UCB.
-Dans notre cas, comme on ne tient pas compte de l'ordre dans le super-bras,
-il suffit donc de sélectionner le super-bras composé des trois actions avec la borne
-supérieure maximale, i.e.
+Dans notre cas, cela revient à sélectionner le super-bras composé des trois actions
+avec la borne supérieure maximale, i.e.
 
 \begin{equation*}
     \mathcal{M}_t = \text{3-}\argmax_{i \in \mathcal{A}} \text{UCB}_i(t).
 \end{equation*}
+pour lequel le score $R(\mathcal{M}_t, s)$, associé au résumé $\hat{s}_t$ correspondant aux indices de $\mathcal{M}$,
+est perçu.
 
-Formellement, on dira qu'on a un $\phi$ trivial, qui ne fait que sélectionner
-les phrases de $d$ correspondant aux index de $\mathcal{M}$.
-\commentaire{C'est pas naturel ça, c'est en train de devenir juste encombrant cette
-    notation là.}
+Une question demeure toutefois: comment peut-on utiliser UCB pour générer des cibles 
+pour la génération du résumé d'un document ?
+Nous proposons naturellement d'utiliser les quantités $\bar{x_i}(T)$ et $n_i(T)$ 
+générées par UCB après $T$ rondes pour chaque phrase $i$.
 
-Première intuition clé: les réseaux de neurones sont capables de prédire des cibles denses
-sans problème (\todo{source ou exemple empirique}).
-On n'est donc pas obligés de se limiter à utiliser un algorithme de bandit pour trouver
-le super-bras optimal et retomber sur les vecteurs binaires utilisés habituellement en
-supervisé.
-On peut demander de prédire les $\bar{x}_i(N)$ ou encore la distribution représentée
-par les $n_i(N)$.
-On va explorer les deux dans nos expériences.
-
-Deuxième intuition: les $\hat{x}_i$ et $\hat{n}_i$ générés par UCB sont des estimés de
-la politique optimale.
+Intuitivement, $\hat{x}_i$ et $\hat{n}_i$ peuvent être vus comme des estimations 
+de la solution optimale.
 Comme la récompense associée à un bras $i$ au temps $t$ dépend des autres bras présents dans
-le super-bras $\mathcal{M}_t$, on a que éventuellement UCB identifierait le super-bras optimal
-et qu'avec un nombre infini de samples, la distribution induite par $\hat{n}_i$ tenderait
-vers le vecteur binaire représentant le résumé.
-Similairement, les $\hat{x}_i$ convergeraient éventuellement à $R^*$, le meilleur score de
-résumé extractif d'un document, pour les phrases faisant partie du bras optimal.
-Comment savoir quand on approche de ce stade ?
-Quand le score du résumé le plus prometteur selon UCB, nommons le $R_t$, commence à converger vers $R^*$.
-On peut donc étudier l'évolution $\Delta_t = R^* - R_t$ pour
-savoir à quel moment les cibles produites par UCB seraient satisfaisantes.
+le super-bras $\mathcal{M}_t$ et que UCB identifierait éventuellement le super-bras optimal
+et qu'avec un nombre infini de samples, la distribution induite par $\hat{n}_i$ tendrait
+vers le vecteur binaire représentant le résumé optimal.
+Similairement, les $\hat{x}_i$ convergeraient éventuellement à $R^*$, le meilleur score de 
+résumé extractif d'un document, pour les phrases faisant partie du résumé optimal.
 
+Mentionnons aussi que, par sa structure inhérente, la formulation extractive de la génération 
+de résumés donne lieu à bon nombre de phrases aux scores similaires (quelques mots correspondant
+au résumé cible) et peu d'excellentes phrases, difficiles à discerner.
+En minimisant le regret, UCB va donc naturellement obtenir plus d'échantillons de résumés contenant 
+les excellentes phrases.
+Or, comme les excellentes phrases sont limitées, il faut échantillonner plus de résumés les contenant
+avant d'obtenir une bonne estimation de leur valeur, contrairement aux phrases insatisfaisantes 
+dont la valeur est rapidement estimée après quelques échantillons.
+Il est donc justifié d'utiliser les quantités mesurées par UCB pour obtenir de l'information 
+sur toutes les phrases d'un document, pas seulement pour trouver le résumé optimal.
 
 \subsection{Expériences}
 
-On reprend le jeu de 25 000 documents pour faire des tests.
+Si l'intuition de l'utilisation des quantités calculées par UCB comme cibles est naturelle
+pour le cas où le nombre de rondes effectué est immense, il demeure néanmoins important
+de vérifier comment ces cibles sont adéquates sur un nombre de rondes plus restreint.
+Mais, comment savoir quand on approche de ce stade d'optimalité et que 
+l'on peut considérer les cibles comme adéquates ?
+Réponse: quand le score du résumé le plus prometteur selon UCB, nommons le $R_t$,
+commence à converger vers le score $R^*$ du résumé optimal.
+En mesurant la sous-optimalité $\Delta_t = R^* - R_t$ des cibles générées
+par UCB, on peut donc savoir à partir de quel moment les cibles seraient satisfaisantes
+pour être utilisées en entraînement.
+
+On reprend donc le jeu de 25 000 documents pour mener des expériences 
+sur la rapidité de l'obtention de cibles satisfaisante par UCB.
 Les résultats des figures \ref{fig:bandit_combi_q_argmax}, \ref{fig:bandit_combi_alpha}
-et \ref{fig:bandit_combi_doc_len} sont obtenus en calculant les $\Delta_t$ à partir de
+et \ref{fig:bandit_combi_doc_len} sont obtenus\footnote{Les résultats sont en fait obtenus 
+en utilisant la version de UCB avec connaissances a priori uniformes de la section suivante.
+Les deux versions sont fondamentalement équivalentes et on utilise le prior uniforme 
+seulement pour garder des valeurs de $\beta$ cohérentes entre les figures.} en calculant les $\Delta_t$ à partir de
 l'algorithme \ref{alg:cible_ucb}.
 
 \begin{algorithm}
-    \caption{Génération de la cible pour un document $d$ avec UCB}
+    \caption{UCB combinatoire pour génération de résumé}
     \begin{algorithmic}[1]
-        \Require $d$ (document), $\phi$ (processus de génération de résumés), $\beta$ (paramètre d'exploration), $s$ (résumé cible), $T$ (nombre de rondes de UCB).
-        \Procedure{Cible\_UCB}{$d$, $\phi$, $\beta$, $s$, $T$}
-        \For{$i=1, ..., |d|$}
-        \State $\bar{x}_i = 0$
-        \State $n_i = 0$
-        \EndFor
+        \Require $d$ (document), $s$ (résumé cible), $\beta$ (paramètre d'exploration), $T$ (nombre de rondes).
+        \State Initialiser $\bar{x_i} =0$ et $n_i = 0$ pour $i = 1, ..., |d|$
         \For{$t=1, ..., T$}
         \For{$i=1, ..., |d|$}
-        \State UCB$_i = \bar{x}_i + \beta \sqrt{\frac{2 \ln t}{n_i}}$\Comment{Si $n_i=0$, on pose UCB$_i$ à une grande constante.}
+        \State UCB$_i = \bar{x}_i + \beta \sqrt{\frac{2 \ln t}{n_i}}$\Comment{Si $n_i=0$, on pose UCB$_i = \infty$}
         \EndFor
-        \State $\mathcal{M} =$ 3-$\argmax$ UCB$_i$
-        \State $\hat{s} = \phi(\mathcal{M})$
-        \State $r_t = R(\hat{s}, s)$
-        \ForAll{$i \in \mathcal{M}$}
-        \State $\bar{x}_i = r + \frac{n_i}{n_i + 1} \bar{x}_i$ \Comment{Mise à jour incrémentale de la moyenne}
-        \State $n_i = n_i + 1$
+        \State $\mathcal{M}_t =$ 3-$\argmax$ UCB$_i$
+        \State $r_t = R(\mathcal{M}_t, s)$
+        \State Mettre à jour $\bar{x_i}$ et $n_i$ pour {$i \in \mathcal{M}_t$}
         \EndFor
-        \EndFor
-        \EndProcedure
-        \State \textbf{retourner}  $\{\bar{x}_i\}_{i=1}^{|d|}, \{n_i\}_{i=1}^{|d|}$
     \end{algorithmic}
     \label{alg:cible_ucb}
 \end{algorithm}
-
-\todo{Les figures ont été générées avec un $3t$ au lieu de $t$ dans UCB. Je dois les rerouler (devrait
-    pas changer grand chose).
-    Je dois aussi rajouter les intervalles de confiance.}
 
 \subsection{Résultats}
 \label{subsec:ucb_resultats}
 
 La figure \ref{fig:bandit_combi_q_argmax} présente l'importance du critère de sélection
 utilisé pour trouver le résumé optimal selon UCB au temps $t$.
-Deux approches envisageables: considérer les phrases $i$ où la moyenne des récompenses reçues
+Deux approches sont envisageables: considérer les phrases $i$ où la moyenne des récompenses reçues
 $\bar{x}_i$ est maximale ou encore celles où le nombre de sélections $n_i$ est maximal.
 Les résultats rapportés donnent un net avantage aux résumés sélectionnés selon la moyenne des
 récompenses perçues.
@@ -153,7 +191,9 @@ C'est normal: les $n_i$ prennent beaucoup plus de temps à distinguer les bonnes
 car ils sont issus d'une distribution uniforme pour la sélection des $|d|$ premières phrases.
 Remarquons aussi que les deux approches convergent éventuellement au même résumé optimal,
 comme c'était à prévoir.
-Enfin, la conclusion à tirer est que les $\bar{x}_i$ forment de meilleurs cibles que les $n_i$.
+Enfin, la conclusion retenue est que les $\bar{x}_i$ forment de meilleurs cibles que les $n_i$.
+Pour les prochaines figures, les résultats rapportés seront donc seulement ceux obtenus 
+selon le critère de sélection basés sur $\bar{x}_i$.
 
 \tikzsetnextfilename{bandit_combi_q_argmax}
 \begin{figure}[h!]
@@ -162,18 +202,18 @@ Enfin, la conclusion à tirer est que les $\bar{x}_i$ forment de meilleurs cible
             \begin{axis}[title={Critère de sélection du résumé retenu}, grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, name=plot0, y tick label style={/pgf/number format/fixed zerofill}, ylabel={$\Delta_t$}, xlabel={$t$}, width=0.95\textwidth, height=0.4\textwidth, smooth, xmin=0, xmax=100, y tick label style={/pgf/number format/fixed}]
                 \addplot[green, ylabel near ticks, line width=3pt] table[x=t, y=arg_1e1, col sep=comma]{bandit_combi/bandit_combiExpResults/alpha/all.csv};
                 \addplot[blue, ylabel near ticks, line width=3pt] table[x=t, y=q_1e1, col sep=comma]{bandit_combi/bandit_combiExpResults/alpha/all.csv};
-                \legend{$N_i$, $\bar{x_i}$}
+                \legend{$n_i$, $\bar{x_i}$}
             \end{axis}
         \end{tikzpicture}
     \end{center}
     \caption{Impact du critère de sélection utilisé pour choisir le résumé retenu au temps $t$.}
-        
+    \label{fig:bandit_combi_q_argmax}
 \end{figure}
 
-La figure \ref{fig:bandit_combi_alpha} présente comment le paramètre $\beta$ influe sur la
+La figure \ref{fig:bandit_combi_alpha} présente comment l'hyperparamètre $\beta$ influence la
 convergence de UCB.
-On remarque que $\beta=10$ semble être le bon compromis entre exploration et exploitation,
-réussissant à converger à $\Delta_t \approx 0.05$ après 200 rondes de UCB.
+On remarque que $\beta=10$ (courbe verte sur la figure) semble être le bon compromis entre exploration et exploitation,
+réussissant à converger à $\Delta_t \approx 0.05$ après 250 rondes de UCB.
 
 \tikzsetnextfilename{bandit_combi_alpha}
 \begin{figure}[h!]
@@ -192,17 +232,19 @@ réussissant à converger à $\Delta_t \approx 0.05$ après 200 rondes de UCB.
 \end{figure}
 
 La figure \ref{fig:bandit_combi_doc_len} évalue dans quelle mesure la taille des documents
-influe sur la qualité du processus de génération de cible présenté.
+influe sur la sous-optimalité des cibles générées par UCB.
 On remarque d'abord que $\beta=10$ est la meilleure configuration pour toutes les tailles
 de document.
 Il est donc adéquat de prendre la même valeur de $\beta$ pour tous les documents.
-Aussi, on remarque que l'apprentissage stagne plus tôt pour les documents qui sont
+Aussi, on remarque que l'apprentissage converge plus tôt pour les documents qui sont
 plus courts.
 Il serait donc pertinent de faire croître le nombre de rondes de UCB en fonction du nombre de
 phrases dans un document.
-Un bon point de départ serait de prendre $t(|d|) = 4 |d| + 50$.
-Cette fonction assure un minimum de 50 rondes et va augmenter de manière linéaire
-le nombre de rondes jusqu'à 250 pour les documents de 50 phrases, la taille maximale
+À cette fin, on remarque que la performance stagne autour de 100 rondes pour les documents 
+courts mais continue à augmenter jusqu'à 250 rondes pour les longs documents.
+Un bon point de départ serait donc de prendre $t(|d|) = 4 |d| + 50$ pour atteindre s'assurer 
+d'effectuer toujours au moins 50 rondes de UCB et progressivement augmenter le nombre de rondes 
+jusqu'à 250 pour les documents de 50 phrases, la taille maximale
 allouée par notre régularisation.
 
 \begin{figure}[h!]
@@ -242,13 +284,14 @@ allouée par notre régularisation.
 
 Si on se fie exclusivement à la règle UCB déterminée plus haut, on pourrait simplement
 utiliser UCB comme heuristique pour générer des cibles fixes pour l'apprentissage
-supervisé, comme c'est habituellement fait pour les vecteurs binaires.
-Or, il est intéressant de considérer la possibilité d'introduire une connaissance a priori
+supervisé, comme c'est habituellement fait avec les vecteurs binaires.
+À la manière de \citep{alphago}, il est intéressant de considérer
+ la possibilité d'introduire une connaissance a priori (prior)
 dans le calcul de UCB.
-En effet, si on possède une certaine information sur la distribution optimale d'un
+En effet, si l'on possède une certaine intuition sur la distribution optimale d'un
 document, on peut l'utiliser pour accélérer la convergence de l'algorithme en privilégiant
 certaines actions.
-Une manière assez directe d'introduire une connaissance a prior $P_i$ sur une action
+Une manière assez directe d'introduire une connaissance a priori $P_i$ sur une action
 $i$ dans le calcul de UCB est de prendre
 
 \begin{equation}
@@ -258,67 +301,130 @@ $i$ dans le calcul de UCB est de prendre
 Il est alors possible de modifier naturellement l'algorithme \ref{alg:cible_ucb} pour y
 incorporer la nouvelle règle incorporant les connaissances a priori.
 
+L'introduction de $P_i$ aura pour effet de forcer UCB à concentrer son échantillonnage autour des 
+phrases où $P_i$ est plus élevé.
+Intuitivement, cela peut éviter d'explorer des phrases que l'on sait peu prometteuses
+et forcer UCB à se concentrer sur quelques phrases d'intérêt.
+
+\subsection{Expériences}
+\label{sec:experiences_ucb_priors}
+
+On s'intéresse à voir comment l'introduction de connaissances a prior permet d'améliorer 
+la convergence de UCB.
+Sur un même document, on évalue l'impact d'un prior basé sur (1) le meilleur résumé, (2)
+le résumé médian et (3) le pire résumé.
+Pour chacun des résumés retenus, on bâtit une distribution a prior $P(d)$ sur les phrases 
+basée sur une moyenne pondérée entre une distribution uniforme
+$U(d)$ et la distribution vorace $G(d)$ associée au résumé:
+
+\begin{equation}
+    P(d) = (1 - \tau) U(d) + \tau G(d),
+\end{equation}
+
+où on explore $\tau \in \{0.0, 0.1, 0.2, 0.3\}$.
+On évalue, pour chacun des priors générés, l'évolution $\Delta_t$ en fonction du temps,
+comme à la section précédente.
+L'expérience est répétée pour tous les 25 000 documents du jeu de développement.
+
 \subsection{Résultats}
 
-Les expériences ont été reprises dans le même cadre qu'à la section \ref{subsec:ucb_resultats}.
-\commentaire{Les graphes ici sont à retravailler.
-    Je veux prouver la propriété d'amélioration de connaissances a prior que je suppose
-    du processus UCB.
-    Je devrais donc établir que la convergence est (1) plus rapide avec un prior informatif qu'avec
-    le prior uniforme et (2) définir à quel point un prior est trop contraignant pour être utilisé
-    (i.e. quand il est trop près d'être greedy et bloque l'exploration).}
+Les résultats des expériences sont rapportés dans les figures \ref{fig:bandit_combi_prior_tau}
+et \ref{fig:bandit_combi_prior_choice}.
 
-\tikzsetnextfilename{bandit_combi_prior_score}
+Sur la figure \ref{fig:bandit_combi_prior_tau}, commençons par noter que le cas $\tau=0.0$
+correspond exactement aux expériences sans prior de la section précédente.
+On remarque ainsi que l'introduction d'un
+prior accélère l'apprentissage, mais seulement dans le cas où le prior est assez près 
+d'une distribution uniforme pour permettre une exploration suffisante.
+Notons aussi que ces résultats sont obtenus à partir du résumé médian et qu'ils représentent 
+donc le cas où la connaissance a prior n'est pas particulièrement bonne.
+Comment alors expliquer le gain de performance ? 
+On fait l'hypothèse que le prior permet en pratique de diminuer la taille du problème 
+de bandit combinatoire à résoudre.
+En effet, en forçant UCB à se concentrer sur certaines phrases, le prior permet intuitivement à UCB 
+de passer de la recherche difficile du résumé optimal à la recherche du résumé optimal 
+contenant une phrase identifiée comme pertinente par le prior.
+Asymptotiquement, l'introduction de prior sera donc néfaste sur la convergence mais, en pratique,
+elle peut accélérer l'apprentissage de manière appréciable.
+
+\tikzsetnextfilename{bandit_combi_prior_tau}
 \begin{figure}[h!]
     \begin{center}
         \begin{tikzpicture}
-            \begin{axis}[title={Amélioration d'une distribution à priori}, grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, name=plot0, y tick label style={/pgf/number format/fixed zerofill}, ylabel={$R_t - p_t$}, xlabel={$t$}, width=0.95\textwidth, height=0.4\textwidth, smooth, xmin=0, xmax=250, y tick label style={/pgf/number format/fixed}, legend style={at={(1,0.1)},anchor=south east}]
-                \addplot[blue, ylabel near ticks, line width=3pt] table[x=t, y=1e1, col sep=comma]{bandit_combi/bandit_combiExpResults/prior_alpha/all.csv};
-                \addplot[red, ylabel near ticks, line width=3pt] table[x=t, y=1e2, col sep=comma]{bandit_combi/bandit_combiExpResults/prior_alpha/all.csv};
-                \addplot[black, dotted, ylabel near ticks, line width=3pt] table[x=t, y=max_room, col sep=comma]{bandit_combi/bandit_combiExpResults/prior_alpha/all.csv};
-                \legend{$\beta=10$, $\beta=100$, maximum}
+            \begin{axis}[title={Impact de $\tau$ $(\beta = 10$, résumé médian)}, grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, name=plot0, y tick label style={/pgf/number format/fixed zerofill}, ylabel={$\Delta_t$}, xlabel={$t$}, width=0.95\textwidth, height=0.4\textwidth, smooth, xmin=1, xmax=250, ymin=0.0, y tick label style={/pgf/number format/fixed}]
+                \addplot[black, ylabel near ticks, line width=3pt] table[x=t, y=best_0.0_, col sep=comma]{bandit_combi/bandit_combiExpResults/entropy/all.csv};
+                \addplot[red, ylabel near ticks, line width=3pt] table[x=t, y=med_0.1_, col sep=comma]{bandit_combi/bandit_combiExpResults/entropy/all.csv};
+                \addplot[blue, ylabel near ticks, line width=3pt] table[x=t, y=med_0.2_, col sep=comma]{bandit_combi/bandit_combiExpResults/entropy/all.csv};
+                \addplot[green, ylabel near ticks, line width=3pt] table[x=t, y=med_0.3_, col sep=comma]{bandit_combi/bandit_combiExpResults/entropy/all.csv};
+                \legend{$\tau=0.0$, $\tau=0.1$, $\tau=0.2$, $\tau=0.3$}
             \end{axis}
         \end{tikzpicture}
     \end{center}
-    \caption{Évolution de l'amélioration de distributions à priori selon le nombre $t$ de rondes effectuées.}
-    \label{fig:bandit_combi_prior_score}
+    \caption{Impact de la similarité de distributions a priori avec une distribution uniforme, selon le nombre $t$ de rondes effectuées.}
+    \label{fig:bandit_combi_prior_tau}
 \end{figure}
 
+La figure \ref{fig:bandit_combi_prior_choice} présente l'impact de la qualité du prior sur l'évolution
+de $\Delta_t$.
+On y remarque, sans surprise, que le prior basé sur le meilleur résumé converge nettement plus rapidement.
+La portion intéressante se situe dans le constat que les priors basés sur le résumé médian et le pire résumé 
+se comportent de manière similaires, dépassant tous deux la performance obtenue avec une connaissance a priori 
+uniforme.
+La performance surprenante du mauvais prior, celui basé sur le pire résumé, est probablement explicable 
+encore une fois par la diminution de la taille du problème à résoudre.
+En effet, même si le résumé est mauvais, cela n'écarte pas qu'une phrase décente puisse s'y trouver 
+et être utilisée pour converger rapidement à un résumé de qualité satisfaisante.
+En perspective, on peut donc dire que le processus UCB avec prior présenté semble appliquer un raffinement
+du prior.
 
-\tikzsetnextfilename{bandit_combi_prior_proba}
+\tikzsetnextfilename{bandit_combi_prior_choice}
 \begin{figure}[h!]
     \begin{center}
         \begin{tikzpicture}
-            \begin{axis}[title={Amélioration d'une distribution à priori}, grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, name=plot0, y tick label style={/pgf/number format/fixed zerofill}, ylabel={$\Delta_t$}, xlabel={Résumé avec la probabilité maximale selon $p$}, width=0.95\textwidth, height=0.4\textwidth, smooth, xmin=0, xmax=1, y tick label style={/pgf/number format/fixed}, legend style={at={(1,0.1)},anchor=south east}]
-                \addplot[blue, ylabel near ticks, line width=3pt] table[x=proba, y=t8, col sep=comma]{bandit_combi/bandit_combiExpResults/prior_proba/all.csv};
-                \addplot[red, ylabel near ticks, line width=3pt] table[x=proba, y=t32, col sep=comma]{bandit_combi/bandit_combiExpResults/prior_proba/all.csv};
-                \addplot[yellow, ylabel near ticks, line width=3pt] table[x=proba, y=t128, col sep=comma]{bandit_combi/bandit_combiExpResults/prior_proba/all.csv};
-                \legend{$t=8$, $t=32$, $t=128$}
+            \begin{axis}[title={Impact de la qualité de la distribution \textit{a priori} $(\beta = 10, \tau=0.1)$}, grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, name=plot0, y tick label style={/pgf/number format/fixed zerofill}, ylabel={$\Delta_t$}, xlabel={$t$}, width=0.95\textwidth, height=0.4\textwidth, smooth, xmin=1, xmax=250, ymin=0.0, y tick label style={/pgf/number format/fixed}]
+                \addplot[black, ylabel near ticks, line width=3pt] table[x=t, y=best_0.0_, col sep=comma]{bandit_combi/bandit_combiExpResults/entropy/all.csv};
+                \addplot[red, ylabel near ticks, line width=3pt] table[x=t, y=best_0.1_, col sep=comma]{bandit_combi/bandit_combiExpResults/entropy/all.csv};
+                \addplot[blue, ylabel near ticks, line width=3pt] table[x=t, y=med_0.1_, col sep=comma]{bandit_combi/bandit_combiExpResults/entropy/all.csv};
+                \addplot[green, ylabel near ticks, line width=3pt] table[x=t, y=worst_0.1_, col sep=comma]{bandit_combi/bandit_combiExpResults/entropy/all.csv};
+                \legend{Uniforme, Meilleur, Médian, Pire}
             \end{axis}
         \end{tikzpicture}
     \end{center}
-    \caption{Évolution de l'amélioration de distributions à priori selon le nombre $t$ de rondes effectuées.}
-    \label{fig:bandit_combi_prior_proba}
+    \caption{Impact de la similarité de distributions à priori avec une distribution uniforme, selon le nombre $t$ de rondes effectuées.}
+    \label{fig:bandit_combi_prior_choice}
 \end{figure}
+
 
 \section{CombiSum}
+\label{sec:combisum}
+On propose maintenant un système de génération de résumés complet nommé CombiSum.
+CombiSum réutilise exactement la même architecture que BanditSum, mais fait son 
+apprentissage à partir des cibles générées par UCB plutôt que par REINFORCE.
+La procédure d'entraînement correspond alors davantage aux approches supervisées,
+où l'on pige une minibatch de documents, on obtient les cibles associées que l'on
+entraîne un réseau de neurones à prédire.
+Dans notre cas, les cibles sont donc les valeurs $\bar{x_i}$ retournées par UCB, 
+que l'on peut naturellement apprendre via une fonction de perte quadratique.
+À l'inférence, CombiSum génère le résumé en regroupant les 3 phrases pour lesquelles 
+sa prédiction est maximale.
 
-Dans un système complet, on veut piger une batch de documents, obtenir leurs cibles
-$\mathbf{\bar{x}_d}$ et apprendre une réseau de neurones qui prédit la valeur
-associable à chacune des phrases.
-Le réseau est donc apprenable avec une perte MSE standard sur les cibles générées
-par UCB.
+Inspirés par les bons résultats obtenus avec une connaissance a priori, on considère 
+aussi l'utilisation de priors basés sur la prédiction de notre réseau.
+Pour ce faire, on applique une fonction softmax $\sigma$ de température $\tau$ aux 
+affinités $x_i$ prédites par le réseau:
 
-Le plan est d'utiliser les valeurs prédites pour générer des priors qui aideront à
-accélérer le processus UCB.
-Comme je soupçonne que les priors devront être relativement près de la distribution
-uniforme, je ne fais pas de softmax, je prends juste la fraction des valeurs prédites
-comme prior.
-Probablement possible d'explorer plutôt un softmax avec température qui décroît au courant
-de l'apprentissage.
+\begin{equation*}
+    \sigma(x, \tau)_i = \dfrac{e^{x_i / \tau}}{\sum_{j=1}^{|d|}e^{x_j / \tau}}.
+\end{equation*}
 
-Aucune modification à l'architecture de BanditSum: on garde des sigmoid comme sortie
-pour le MLP passé sur chaque sentence embedding.
+Plus la température $\tau$ augmente, plus la distribution générée par $\sigma$ sera près de la distribution 
+uniforme.
+On propose donc de faire décroître $\tau$ progressivement jusqu'à 1, permettant d'avoir un prior 
+presque uniforme au début de l'apprentissage où le réseau est encore mauvais et progressivement 
+accorder plus d'importance au prior au fur et à mesure que le réseau s'améliore.
+On garde toujours une température d'au moins 1 pour assurer que le prior permettra toujours 
+une exploration satisfaisante.
+
 
 \subsection{Expériences}
 
@@ -326,19 +432,17 @@ On roule le système sur le jeu de données CNN/DailyMail.
 Le pseudocode décrivant le système se trouve dans l'algorithme \ref{alg:systeme_ucb}.
 
 \begin{algorithm}
-    \caption{Système utilisant un bandit combinatoire}
+    \caption{CombiSum}
     \begin{algorithmic}[1]
-        \Require  $\mathcal{D}$ (jeu de données), $h_\theta$ (modèle neuronal), $T$ (nombre de rondes UCB), $\alpha$ (taux d'apprentissage), $\beta$ (taux d'exploration UCB), $B$ (taille de minibatch).
+        \Require  $\mathcal{D}$ (jeu de données), $h_\theta$ (modèle neuronal), $T$ (nombre de rondes UCB), $\alpha$ (taux d'apprentissage), $\beta$ (taux d'exploration UCB), $B$ (taille de minibatch), $\tau$ (température).
         \While{vrai}
         \State{batch $\sim \mathcal{D}^B$} \Comment{On pige la minibatch du jeu de données}
         \State $\nabla = \mathbf{0}$
         \ForAll{$(d,s) \in $ batch}
-        \State $\mathbf{\hat{x}} = h_\theta(d)$
-        \For{$i=1,...,|d|$}
-        \State $\mathbf{P}_i = \frac{\mathbf{\hat{x}_i}}{\lVert \mathbf{\hat{x}} \rVert}$
-        \EndFor
-        \State $\mathbf{x} = $ Cible\_UCB($d$, $\phi$, $\beta$, $s$, $T$, $\mathbf{P}$)\Comment{On passe le prior à Cible\_UCB}
-        \State $\nabla = \nabla + \nabla_\theta \lVert \mathbf{x} - \mathbf{\hat{x}} \rVert^2$
+        \State $x = h_\theta(d)$
+        \State $P = \sigma(x, \tau)$
+        \State Générer les cibles $\hat{x}$ après $T$ rondes de UCB avec prior $P$.
+        \State $\nabla = \nabla + \nabla_\theta \lVert x - \hat{x} \rVert^2$
         \EndFor
         \State $\theta = \theta - \alpha \nabla$
         \EndWhile
@@ -346,10 +450,11 @@ Le pseudocode décrivant le système se trouve dans l'algorithme \ref{alg:system
     \label{alg:systeme_ucb}
 \end{algorithm}
 
-Pour les expériences, on fait une gridsearch sur le fait d'utiliser
-un nombre fixe $T=150$ et le $T$ linéaire selon le nombre de phrases et sur l'utilisation
-ou non de priors.
-Ça nous fait 4 configurations au total
+Pour les expériences, on teste l'impact de l'utilisation ou non de priors.
+On explore aussi de faire varier le nombre de rondes de UCB utilisées en fonction 
+du nombre de phrases ou de le fixer à $T=150$.
+Cela fait donc un total de 4 configurations, que l'on roulera chacune 5 fois pour 
+estimer la moyenne et la variance.
 
 \subsection{Résultats}
 
@@ -358,7 +463,8 @@ Rapporter une courbe pour chacune des configurations.
 
 Dans un tableau, rapporter performance en test de Combisum vs Banditsum (nous) et
 SOTA extractif.
-Rapporter $R-1, R-2, R-L$ et le $R$ utilisé à l'entraînement.
+
+Idem au chapitre précédent.
 
 \section{Conclusion}
 
