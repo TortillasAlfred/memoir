@@ -3,5 +3,26 @@
 \phantomsection\addcontentsline{toc}{chapter}{\nameref{chap:abstract}} % inclure dans TdM
 
 \begin{otherlanguage*}{english}
-  <Text of English abstract. Optional, but recommended.>
+  This thesis discusses the use of bandit methods to solve 
+the problem of training extractive abstract generation models.
+The extractive models, which build summaries by selecting sentences from an 
+original document, are difficult to train because the target summary of a document is usually not built in an extractive way.
+It is for this purpose that we propose to see the production of an extractive summary
+as different bandit problems, for which there exist algorithms that can be used for training.
+
+In this document, we first see how the generation of the summary 
+of any document can be formulated as a contextual bandit problem
+to achieve excellent computational efficiency.
+Next, we propose to see the generation of the abstract 
+of a single document like a combinatorial bandit.
+We present a method for obtaining targets 
+for training a model from the resolution 
+of the combinatorial bandit.
+We present two algorithms, UCB and LinUCB, which can 
+be used for this purpose.
+UCB, the first algorithm presented, is characterized by 
+its universality while LinUCB is computationally
+more efficient, at the added cost of an assumption of the existence 
+a linear relationship between a sentence and the quality of abstracts 
+it produces. 
 \end{otherlanguage*}

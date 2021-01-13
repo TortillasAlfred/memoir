@@ -3,5 +3,30 @@
 \phantomsection\addcontentsline{toc}{chapter}{\nameref{chap:resume}} % inclure dans TdM
 
 \begin{otherlanguage*}{french}
-  <Texte du résumé en français. Obligatoire.>
+
+Ce mémoire aborde l'utilisation des méthodes par bandit pour résoudre 
+la problématique de l'entraînement de modèles de générations de résumés extractifs.
+Les modèles extractifs, qui bâtissent des résumés en sélectionnant des phrases d'un 
+document original, sont difficiles à entraîner car le résumé cible 
+correspondant à un document n'est habituellement pas constitué de 
+manière extractive.
+C'est à cet effet que nous proposons de voir la production d'un résumé
+extractif comme différents problèmes de bandit, lesquels sont 
+accompagnées d'algorithmes pouvant être utilisés pour l'entraînement.
+
+Dans ce document, nous voyons d'abord comment la génération du résumé 
+de n'importe quel document peut être formulée comme un problème de bandit 
+contextuel pour atteindre une excellente efficacité computationnelle.
+Ensuite, nous proposons de voir la génération du résumé 
+d'un seul document comme un bandit combinatoire.
+Nous présentons une méthode permettant d'obtenir des cibles 
+pour l'entraînement d'un modèle à partir de la résolution 
+du bandit combinatoire.
+On présente deux algorithmes, UCB et LinUCB, qui peuvent 
+être utilisés à cet effet.
+UCB, le premier algorithme présenté, se caractérise par 
+son universalité alors que LinUCB se veut computationnellement
+plus efficace, au prix ajouté d'une hypothèse de l'existence 
+d'une relation linéaire entre phrase et la qualité des résumés 
+qu'elle produit. 
 \end{otherlanguage*}

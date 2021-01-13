@@ -2,20 +2,76 @@
 \label{chap:conclusion}         % étiquette pour renvois
 \phantomsection\addcontentsline{toc}{chapter}{\nameref{chap:conclusion}} % inclure dans TdM
 
-\section*{Synthèse}
+Dans ce mémoire, nous avons abordé la problématique de 
+l'entraînement de modèles de génération de résumés de documents.
+Nous avons considéré les résumés dits extractifs, qui sont bâtis 
+en sélectionnant des phrases du document initial.
+Pour mener nos expérimentations, nous nous sommes intéressés 
+au jeu de données du CNN/DailyMail \citep{hermann2015teaching}, 
+regroupant plus de 300 000 articles de journaux et leurs résumés.
 
-\todo{Comparaison des méthodes entre elles et avec l'état de l'art.
-    Les angles à aborder sont la perfomance $R$, la vitesse en temps de calcul
-    ainsi que la vitesse en nombre de documents.}
+Notre intérêt était de démontrer comment les approches par bandit \citep{Robbins:1952}
+peuvent être mises à profit dans des algorithmes d'entraînement 
+pour la génération de résumés.
+Nous avons commencé par présenter BanditSum \citep{dong2018banditsum}, qui voit la génération 
+du résumé de n'importe quel document comme un bandit contextuel.
+BanditSum représente l'état de l'art en termes 
+d'efficacité computationnelle, atteignant une performance inférieure de seulement 
+2 points ROUGE à l'état de l'art tout en ayant un entraînement plusieurs ordres 
+de magnitude moins coûteux computationnellement.
+
+Nous avons ensuite présenté comment la génération du résumé d'un document peut être vue 
+comme un bandit combinatoire \citep{CESABIANCHI20121404}.
+En modifiant légèrement l'algorithme UCB \citep{ucb}, nous avons démontré 
+qu'il est possible d'apprendre de manière efficace à résoudre le problème 
+de la génération de résumé d'un document.
+Nous avons alors introduit le premier volet de notre contribution 
+en proposant des cibles d'entraînement basées sur l'exécution de UCB.
+Les cibles proposées sont utilisées par un nouvel algorithme d'entraînement 
+nommé CombiSum.
+
+Pour poursuivre, on a démontré que l'on pouvait encore accélérer 
+la convergence sur le problème de bandit combinatoire en utilisant 
+les relations linéaires entre les phrases.
+À cet effet, on fait appel à une version modifiée de l'algorithm LinUCB 
+\citep{Li_2010} pour résoudre le nouveau problème.
+Nous avons montré comment des cibles d'entraînement peuvent aussi être 
+extraites de l'éxécution de LinUCB, ce qui représente le second volet de 
+notre contribution.
+Les cibles proposées sont utilisées par un nouvel algorithme d'entraînement 
+nommé LinCombiSum.
+
+Pour finir, on a évalué en détails comment les 
+cibles obtenues avec UCB et LinUCB influent sur la convergence 
+des procédures d'entraînement de génération de résumés.
+Pour ce faire, on les a comparées avec les cibles d'entraînement 
+binaires issues d'un oracle, représentant les cibles 
+utilisées par les modèles de l'état de l'art.
+Notre analyse a permis d'identifier que les mauvaises performances 
+obtenus avec les cibles que nous proposons sont probablement explicables 
+par la faible expressivité de l'architecture neuronale retenue.
 
 \section*{Travaux futurs}
 
-On résout seulement une instance très limitée de bandit combinatoire: celle où la taille est
-fixée.
-On pourrait étudier comment des formulations plus souples comme \citep{luo-etal-2019-reading}
-seraient envisageables avec les formulations par bandit explorées dans les deux derniers chapitres.
-Autre point: on n'a utilisé aucun algo de bandit combinatoire dédié, on a juste utilisé
-une généralisation des algos de MAB habituels pour les transformer en mode combinatoire
-comme on avait une formulation facile.
-Ce serait intéressant de voir la différence de performance quand on utilise les algorithmes
-dédiés spécifiquement à cette tâche.
+Plusieurs modifications pourraient être apportées à nos travaux afin 
+de les améliorer.
+
+Premièrement, les approches abordées considèrent toujours 
+que les résumés extractifs d'un document contiennent un nombre 
+fixe de phrases.
+Il serait intéressant d'incorporer des formulations plus souples 
+comme \citet{luo-etal-2019-reading} qui permettent de sélectionner 
+un nombre variable de phrases d'un document.
+
+Deuxièmement, on n'a utilisé aucun algorithme de bandit combinatoire dédié,
+on s'est plutôt contenté d'utiliser des modifications aux algorithmes 
+UCB et LinUCB.
+Il serait intéressant de voir la différence de performance quand on utilise les algorithmes
+dédiés spécifiquement à cette tâche comme \citet{10.5555/2969442.2969476} par exemple.
+
+Troisièmement, il serait intéressant de voir comment les approches 
+par bandit présentées performent pour l'entraînement de modèles 
+bien plus imposants, comme celui utilisé par \citet{liu2019text}.
+En effet, peut-être qu'avec un modèle plus expressif, les cibles 
+proposées pourraient être apprises plus efficacement et mener à des 
+modèles rivalisant avec l'état de l'art.

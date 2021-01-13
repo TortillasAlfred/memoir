@@ -1,0 +1,145 @@
+\chapter{Impact des cibles extractives}
+\label{chap:analyse_convergemce}   
+
+Les nouvelles cibles riches proposées dans les chapitres 
+\ref{chap:bandit_combi} et \ref{chap:bandit_combi_lin}
+n'ont pas permis d'obtenir des résultats dépassant 
+la référence représentée par les cibles binaires d'un oracle.
+En effet, peu importe les cibles utilisées, les modèles entraînés
+semblaient toujours converger à des modèles dont les prédictions 
+étaient extrêmement près de celles l'heuristique Lead-3.
+
+Dans ce chapitre, nous commençons par analyser 
+en profondeur les différences entre les cibles que nous proposons 
+et les cibles binaires traditionnelles.
+On présente ensuite comment les cibles employées influencent 
+l'entraînement, en termes de modèle produit et de 
+perte empirique.
+
+\section{Différences entre les cibles considérées}
+
+On rapporte à la figure \ref{fig:distro_cibles} la distribution moyenne
+des cibles évaluées dans ce mémoire pour le jeu d'entraînement.
+Pour les cibles riches basées sur UCB et LinUCB, on présente seulement la version 
+basée sur une augmentation linéaire du nombre de pas de temps $T$ effectués, car
+les résultats empiriques n'ont pas démontré de différence significative avec la
+version fixe.
+Notons aussi que, pour que les cibles soient toutes à la même échelle, on 
+normalise les cibles $y$ issues de UCB et LinUCB pour que leur somme soit égale à 
+3 comme les cibles binaires.
+
+\tikzsetnextfilename{distro_targets}
+\begin{figure}[h!]
+  \centering
+  \begin{tikzpicture}
+    \begin{axis}[
+      title={Distribution moyenne des cibles sur les phrases d'un document},
+      xlabel=Phrase $i$,
+      ylabel=$y_i$,
+      xtick=data,
+      axis y line*=left, axis x line*=bottom,
+      ybar,
+      width=0.95\textwidth, 
+      height=0.4\textwidth,
+      xmax=5.5,
+      legend cell align={left},
+      every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}]
+      \addplot[red!40,fill, draw=red] table[x=t,y=binary_linear_targets, col sep=comma] {bandit_combi/graham_results/cs_distros.csv};
+      \addplot[blue!40,fill, draw=blue] table[x=t,y=sit_linear_targets, col sep=comma] {bandit_combi/graham_results/cs_distros.csv};
+      \addplot[green!40,fill,draw=green] table[x=t,y=linsit_linear_targets, col sep=comma] {bandit_combi/graham_results/cs_distros.csv};
+      \legend{Oracle, UCB linéaire, LinUCB linéaire}    
+    \end{axis}
+  \end{tikzpicture}
+  \caption{Distribution moyenne des cibles sur les phrases 
+  d'un document sur du jeu d'entraînement du jeu de données CNN/DailyMail.}
+  \label{fig:distro_cibles}
+\end{figure}
+
+La figure \ref{fig:distro_cibles} témoigne de l'emphase mise par les cibles sur les 
+phrases se situant au début d'un document. 
+En moyenne, les cibles riches issues de UCB et LinUCB accordent une 
+importance plus faible aux premières phrases que les cibles générées par l'oracle.
+
+\section{Différences à l'entraînement}
+
+La figure \ref{fig:loss_curve} montre que la perte empirique 
+progresse de manière similaire peu importe la cible.
+
+\tikzsetnextfilename{loss_curve}
+\begin{figure}[h!]
+    \begin{center}
+        \begin{tikzpicture}
+            \begin{axis}[title={Évolution de la perte empirique selon la cible utilisée}, grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, name=plot0, y tick label style={/pgf/number format/fixed zerofill}, ylabel={$\bar{\mathcal{L}}(\theta)$}, xlabel={Nombre de mises à jour (en milliers)}, width=0.95\textwidth, height=0.4\textwidth, smooth, xmin=0.5, legend cell align={left}, xmax=22.5, y tick label style={/pgf/number format/fixed}, ymax=0.5]
+                \addplot[blue, ylabel near ticks, line width=2pt] table[x=t, y=sit_linear, col sep=comma]{bandit_combi/graham_results/cs_loss_curve.csv};
+                \addplot[forget plot, name path=upperblue, draw=none] table[x=t, y=sit_linear_+, col sep=comma]{bandit_combi/graham_results/cs_loss_curve.csv};
+                \addplot[forget plot, name path=lowerblue, draw=none] table[x=t, y=sit_linear_-, col sep=comma]{bandit_combi/graham_results/cs_loss_curve.csv};
+                \addplot[red, ylabel near ticks, line width=2pt] table[x=t, y=linsit_linear, col sep=comma]{bandit_combi/graham_results/cs_loss_curve.csv};
+                \addplot[forget plot, name path=upperred, draw=none] table[x=t, y=linsit_linear_+, col sep=comma]{bandit_combi/graham_results/cs_loss_curve.csv};
+                \addplot[forget plot, name path=lowerred, draw=none] table[x=t, y=linsit_linear_-, col sep=comma]{bandit_combi/graham_results/cs_loss_curve.csv};
+                \addplot[green, ylabel near ticks, line width=2pt] table[x=t, y=binary_linear, col sep=comma]{bandit_combi/graham_results/cs_loss_curve.csv};
+                \addplot[forget plot, name path=uppergreen, draw=none] table[x=t, y=binary_linear_+, col sep=comma]{bandit_combi/graham_results/cs_loss_curve.csv};
+                \addplot[forget plot, name path=lowergreen, draw=none] table[x=t, y=binary_linear_-, col sep=comma]{bandit_combi/graham_results/cs_loss_curve.csv};
+                \addplot[fill=blue!20, fill opacity=0.5] fill between[of=upperblue and lowerblue];
+                \addplot[fill=red!20, fill opacity=0.5] fill between[of=upperred and lowerred];
+                \addplot[fill=green!20, fill opacity=0.5] fill between[of=uppergreen and lowergreen];
+                \legend{UCB linéaire, LinUCB linéaire, Oracle}
+            \end{axis}
+        \end{tikzpicture}
+    \end{center}
+    \caption{Courbe d'évolution de la perte empirique selon la cible utilisée.
+             Un intervalle de confiance à 95 \% calculé à partir de 5 entraînements distincts
+             est rapporté pour chaque cible.}
+    \label{fig:loss_curve}
+\end{figure}
+
+La figure \ref{fig:distro_predict} montre clairement que l'entraînement
+avec les cibles issues de UCB et LinUCB converge très fortement
+à une distribution favorisant les premières phrases d'un document.
+Nous faisons l'hypothèse qu'une première cause de ce comportement est l'attractivité 
+du minimum local qui consiste à prédire les phrases seulement en fonction 
+de leur index.
+Or, les modèles entraînés avec les cibles binaires de l'oracle souffrent aussi
+(dans une moindre mesure) de ce problème.
+Cela fait contraste avec la performance rapportée par BertSumExt \citep{liu2019text}
+qui représente l'état de l'art extractif et qui utilise exactement la même procédure 
+d'entraînement que nous.
+La seule différence entre nos expériences et BertSumExt est dans le modèle neuronal:
+on utilise un modèle léger basé sur deux LSTM alors qu'ils utilisent un modèle BERT, 
+un ordre de magnitude plus gros.
+Notre hypothèse est donc que les mauvaises performances obtenues 
+avec nos cibles sont dues à un manque d'expressivité du réseau de neurones utilisé.
+Ainsi, en utilisant nos cibles avec le modèle BertSumExt, il n'y a pas de réelle 
+raison pour que la performance ne soit pas au minimum similaire.
+
+\tikzsetnextfilename{distro_predicts}
+\begin{figure}[h!]
+    \centering
+    \begin{tikzpicture}
+    \begin{axis}[
+        title={Distribution de l'inclusion des phrases dans les résumés selon la cible utilisée},
+        xlabel=Phrase $i$,
+        ylabel=Inclusion dans les résumés (\%),
+        xtick=data,
+        axis y line*=left, axis x line*=bottom,
+        ybar,
+        width=0.95\textwidth, 
+        height=0.4\textwidth,
+        xmax=5.5,
+        legend cell align={left},
+        every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}]
+      \addplot[red!40,fill, draw=red] table[x=t,y=binary_linear_predicts, col sep=comma] {bandit_combi/graham_results/cs_distros.csv};
+      \addplot[blue!40,fill, draw=blue] table[x=t,y=sit_linear_predicts, col sep=comma] {bandit_combi/graham_results/cs_distros.csv};
+      \addplot[green!40,fill,draw=green] table[x=t,y=linsit_linear_predicts, col sep=comma] {bandit_combi/graham_results/cs_distros.csv};
+      \legend{Oracle, UCB linéaire, LinUCB linéaire}    
+    \end{axis}
+  \end{tikzpicture}
+  \caption{Distribution moyenne des phrases retenues
+  sur le jeu de test jeu de données CNN/DailyMail.}
+  \label{fig:distro_predict}
+\end{figure}
+
+\section{Conclusion}
+
+Cibles générées par UCB et LinUCB ont moins de variance (comme attendu).
+Les modèles entraînés prédisent dans une très grande proportion des 
+résumés issus du début du document.

@@ -52,10 +52,11 @@
 
 
 \usepackage{tikz}
-
+\usepackage{ctable}
+\usepackage{graphicx}
 \usetikzlibrary{intersections}
 \usetikzlibrary{external}
-\usetikzlibrary{shapes.misc, positioning, fit, arrows.meta, arrows, shapes}
+\usetikzlibrary{shapes.misc, positioning, fit, arrows.meta, arrows, shapes, backgrounds, calc}
 \tikzexternalize[prefix=figures/]
 
 \usepackage{pgfplots}
@@ -81,6 +82,9 @@
 \newcommand\ngrams{\textit{n}-grammes }
 
 \usepackage{mathtools}
+
+\DisemulatePackage{setspace}
+\usepackage{setspace}
 
 \addto\captionsfrench{\def\tablename{Tableau}}
 
@@ -129,7 +133,7 @@
 \listofalgorithms
 \cleardoublepage
 
-\dedicace{<Dédicace si désiré>}
+\dedicace{À Samantha.}
 \cleardoublepage
 
 \epigraphe{"<Texte de l'épigraphe>"}{<Source ou auteur>}
@@ -144,6 +148,7 @@
 \include{bandit_contextuel/chap}
 \include{bandit_combi/chap}
 \include{bandit_combi_lin/chap}
+\include{analyse_convergence/chap}
 \include{conclusion/chap}
 
 \appendix                       % annexes le cas échéant

@@ -2,9 +2,9 @@
 \label{chap:introduction}
 
 Lors d'une entrevue en 2018, le président de la multinationale Siemens 
-mentionnait que "Data is the oil, some say the gold, of the 21st century
-— the raw material that our economies, societies and democracies are 
-increasingly being built on”. 
+mentionnait que (traduction libre) "Les données sont le nouveau pétrole, ou or,
+du 21ème siècle - la matière première sur laquelle nos économies,
+sociétés et démocraties sont de plus en plus bâties".
 Son affirmation, partagée par bon nombre d'experts dans le domaine de la
 technologie, décrit ce que l'on appelle communément l'ère du \textit{Big Data}.
 Cette appellation vise à décrire la quantité immense de données maintenant 
@@ -35,9 +35,9 @@ Une option qui peut s'avérer facilement attrayante est l'idée de condenser un 
 documents en un texte concis contenant seulement l'information requise pour procéder à la
 tâche à exécuter.
 On dit alors que l'on fait appel à un système de génération automatique de résumés de textes.
-Ces systèmes sont le sujet principal du présent document.
+Ces systèmes sont le sujet d'étude principal du présent document.
 
-Plus particulièrement, on s'intéresse à une nouvelle approche basée sur une formulation 
+Plus particulièrement, on s'intéresse à la formulation 
 de la génération de résumé comme un problème de bandit.
 Les problèmes de bandit sont des problèmes étudiés depuis le début du 20ème
 siècle, dont la résolution est basée sur l'obtention rapide d'une bonne solution.
@@ -51,11 +51,12 @@ possibles.
 Concrètement, ce document a pour objectifs de répondre aux questions suivantes:
 
 \begin{itemize}
-      \item Comment peut-on formuler la génération de résumés comme un problème de bandit multi-bras(MAB) ?
-            Comment les algorithmes utilisés habituellement pour résoudre les MAB peuvent
-            alors être appliqués à la génération de résumés ?
-      \item Dans quelle mesure ces algorithmes de bandit sont-ils performants dans le contexte de résumés?
-            Sont-ils plus rapides en temps de calcul ? En nombre d'échantillons requis pour une
+      \item Comment peut-on formuler la génération de résumés comme un problème de bandit stochastique ?
+            Comment les algorithmes utilisés habituellement pour résoudre ces problèmes peuvent
+            alors être appliqués à l'entraînement de modèles de génération de résumés ?
+      \item Dans quelle mesure ces algorithmes de bandit sont-ils performants dans le contexte de 
+            la génération de résumés?
+            Sont-ils plus rapides en nombre d'échantillons requis pour une
             bonne performance ? Est-ce que les solutions auxquelles ils convergent sont meilleures ?
       \item Comment l'introduction de ces artefacts bandits a-t-elle affecté la performance ?
             Est-ce que les systèmes produits génèrent des résumés de meilleure qualité ?

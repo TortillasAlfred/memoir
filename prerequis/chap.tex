@@ -5,22 +5,20 @@ Ce chapitre vise à présenter les concepts de base clés à la compréhension d
 présentés dans le reste du document.
 Les concepts abordés ici sont accompagnés d'une explication aussi dénuée de notions
 non-nécessaires que possible aux travaux de ce mémoire, afin de garder leur présentation
-aussi digeste que possible.
-À cette fin, les concepts des algorithmes de bandits, des réseaux de neurones et de la
+digeste.
+À cette fin, les concepts des approches par bandits, des réseaux de neurones et de la
 génération automatique de résumés, tous essentiels à la compréhension de ce document,
 sont donc présentés dans ce chapitre.
-À la fin de ce chapitre, le lecteur trouvera ainsi une présentation formelle du
-problème exploré dans ce document, sous toutes les contraintes et hypothèses retenues.
 
 \section{Approches par bandits}
 \label{sec:bandits}
 
-On définit un bandit \citep{banditalgs} comme étant un apprenant qui interagit
-avec un environnement séquentiel.
-À chaque pas de temps, le bandit sélectionne une action à effectuer et
+On définit un bandit \citep{banditalgs} comme étant un problème où un 
+apprenant interagit avec un environnement de manière séquentielle.
+À chaque pas de temps, l'apprenant sélectionne une action à effectuer et
 reçoit une récompense de l'environnement associée à l'action.
-L'objectif du bandit est maximiser les récompenses obtenues sur un horizon
-fini $n$ d'interactions avec l'environnement.
+L'objectif de l'apprenant est alors de maximiser les récompenses obtenues sur un horizon
+fini d'interactions avec l'environnement.
 Notons que cet objectif est différent des approches d'apprentissage automatique
 supervisées: au lieu de s'intéresser seulement à la performance finale de
 l'apprenant, on s'intéresse aussi à ce que sa performance s'améliore
@@ -32,208 +30,596 @@ les domaines des essais cliniques \citep{kuleshov2014algorithms}, de
 la gestion de portfolios financiers \citep{10.5555/2832249.2832384} et
 de la suggestion personnalisée d'articles de journaux \citep{Li_2010}.
 
+Nous présentons ici le bandit multi-bras stochastique et sa déclinaison linéaire,
+qui représentent les versions du problème bandit que nous appliquons tout au long du document.
+Pour chacune des versions, un algorithme permettant de le résoudre est aussi présenté.
+
 \subsection{Bandit multi-bras stochastique}
 
-Un bandit multi-bras stochastique (MAB) est un problème pour lequel on a un ensemble
-$\mathcal{A}$ de $k$ actions disponibles (bras).
-À chaque action $a$ est associée une récompense $X_{a,t}$ pour la $t$-ème fois qu'elle
-est choisie.
-Dans le contexte stochastique, les récompenses ne sont pas nécessairement identiques pour tout $t$, mais on suppose
-qu'il existe $\mu_a$ tel que $\mu_a = \mathbb{E} \left[X_{a,t} \right]$.
+Un bandit multi-bras stochastique est un problème pour lequel on a un ensemble
+$\mathcal{A}$ de $K$ actions disponibles.
+À chaque action $a$ est associée une récompense $X_{a,t}$ pour le $t$-ème 
+pas de temps effectué.
+Dans le contexte stochastique, il est supposé que les récompenses $X_{a,t}$
+d'une action sont indépendantes et identiquement distribuées (i.i.d.) 
+et qu'il existe une espérance fixe $\mu_a$ pour chaque action $a$,
+i.e. $\mu_a = \mathbb{E} \left[X_{a,t} \right]$.
 
-On définit alors l'action optimale $a^* = \underset{a \in \mathcal{A}}{\argmax} \; \mu_a$.
-Conjointement, on a aussi $\mu^* = \mu_{a^*}$, l'espérance du bras optimal.
-L'objectif d'un algorithme visant à résoudre le MAB est de sélectionner
-successivement des actions $a_t$ et de maximiser les récompenses $X_t$ perçues.
-Pour normaliser la formulation à des récompenses d'amplitude variée, la métrique de performance
-utilisée est le regret cumulatif après $T$ interactions :
+Dans ce contexte, l'objectif de l'apprenant de maximiser les récompenses perçues 
+devient celui de maximiser l'espérance de ses récompenses.
+On définit alors $a^* = \underset{a \in \mathcal{A}}{\argmax} \; \mu_a$
+et $\mu^* = \mu_{a^*}$, respectivement l'action et l'espérance de récompense optimales.
+Un algorithme visant à résoudre le problème de bandit sélectionnera
+successivement des actions $a_t$ dans le but de  maximiser l'espérance de ses
+récompenses $X_{{a_t},t}$.
+Afin de mesurer la performance d'un algorithme sur un bandit stochastique, la métrique de performance
+habituellement utilisée est le pseudo-regret cumulatif après $T$ interactions :
 
 \begin{equation}
-    \rho_T = T \mu^* -  \sum_{t=1}^T  X_t.
+    R_T = T \mu^* -  \sum_{t=1}^T  \mu_{a_t}.
     \label{eq:regret_cumulatif}
 \end{equation}
 
-Ici, $\rho_T$ représente donc la différence entre les récompenses obtenues en sélectionnant
+Ici, $R_T$ représente donc la différence entre les récompenses attendues en sélectionnant
 l'action optimale et les actions sélectionnées par l'apprenant.
 Il s'agit donc d'une mesure de la sous-optimalité de l'apprenant.
-En minimisant le regret cumulatif, un apprenant maximise donc les récompenses perçues
-et satisfait l'objectif bandit.
+En minimisant le regret cumulatif, un apprenant maximise donc, en espérance, 
+les récompenses perçues et résout le problème de bandit.
 
-L'objectif de minimisation du regret cumulatif fait intervenir un principe fondamental
-dans la littérature bandit: le dilemme exploration-exploitation.
+L'objectif de minimisation du pseudo-regret cumulatif fait intervenir un 
+principe fondamental dans les problèmes où un apprenant interagit avec 
+un environnement: le dilemme entre l'exploration et l'exploitation.
 En effet, afin de minimiser le regret, un bandit doit limiter la sous-optimalité de
-la récompense associée à l'action qu'il choisit en s'assurant qu'elle exploite
-les informations perçues par le passé mais explore aussi suffisamment les actions
-susceptibles d'être meilleures.
+la récompense associée à l'action qu'il choisit.
+Pour ce faire, il doit s'assurer que l'action sélectionnée à chaque 
+pas de temps \textbf{exploite} les informations perçues par le passé 
+mais \textbf{explore} aussi suffisamment les actions susceptibles 
+d'être meilleures.
+
+\subsection{Upper Confidence Bound (UCB)}
+\label{subsec:ucb}
+
+L'algorithme UCB \citep{ucb} est un algorithme de minimisation du pseudo-regret cumulatif pour les
+bandits stochastiques.
+UCB est basé sur le principe de l'optimisme en cas d'incertitude, qui permet de
+résoudre de manière élégante le dilemme exploration-exploitation décrit à la section \ref{sec:bandits}.
+Pour une action $a$ au temps $t$, l'algorithme définit une borne supérieure
+
+\begin{equation}
+    \text{UCB}_a(t) = \bar{x}_a(t) + \beta \sqrt{\frac{2\ln t}{n_a(t)}},
+    \label{eq:ucb}
+\end{equation}
+
+où $\bar{x}_a(t)$ est la moyenne des récompenses reçues jusqu'au temps $t$ par l'action $a$,
+$n_a(t)$ est le nombre de fois que l'action $a$ a été sélectionnée et $\beta$ est un
+hyperparamètre régulant l'exploration.
+Quand une action n'a pas encore été sélectionnée i.e. $n_a(t)=0$, on 
+lui assigne UCB$_a = \infty$, forçant l'apprenant à sélectionner au moins 
+une fois chaque action avant d'exploiter les moyennes $\bar{x}_a(t)$
+dans son choix d'action.
+La borne supérieure ainsi définie garantit avec une forte probabilité que la valeur $\mu_a$ espérée
+pour l'action $a$ soit inférieure à UCB$_a$ au temps $t$.
+
+L'équation \eqref{eq:ucb} peut être visualisée comme résolvant directement le dilemme
+exploitation-exploration.
+En effet, le terme $\bar{x}_a(t)$ présente l'estimation actuelle de la récompense
+associée à l'action $a$ et permet donc d'exploiter les connaissances acquises
+avant le temps $t$.
+À gauche, le terme $\sqrt{\frac{2 \ln t}{n_a(t)}}$ est proportionnel à l'inverse
+des visites relatives.
+Il s'agit donc d'un terme qui sera plus élevé pour les actions moins visitées,
+incitant ainsi l'exploration d'actions sous-visitées.
+
+\subsection{Bandit stochastique linéaire}
+\label{subsec:bandit_lineaire}
+
+La formulation en bandit linéaire reprend exactement le même
+cadre formel que la bandit stochastique.
+La seule nouvelle notion est la présence de représentations vectorielles
+$\tilde{a} \in \tilde{\mathcal{A}} \subseteq \mathbb{R}^n$
+pour les actions du problème et l'introduction de l'hypothèse linéaire.
+Cette dernière suppose qu'il existe un vecteur de récompense unique $\omega_*$
+permettant de relier chaque action $\tilde{a}$ à sa récompense espérée $\mu_a$, i.e. 
+$\langle \omega_*, \tilde{a}\rangle \approx \mu_a$ pour tout $a$.
+Sous cette formulation, le pseudo-regret cumulatif après $T$ interactions
+devient :
+
+\begin{equation}
+    R_T = \sum_{t=1}^T  \langle \omega_*, \tilde{a}_t - \tilde{a}^*\rangle,
+    \label{eq:regret_cumulatif_lineaire}
+\end{equation}
+
+pour $\tilde{a}^*$, l'action avec l'espérance $\mu_a$ la plus élevée, dite action optimale.
+
+\subsection{Linear Upper Confidence Bound (LinUCB)}
+\label{subsec:pr_linucb}
+
+L'algorithme LinUCB \citep{chu2011contextual} représente une application 
+du principe de l'optimisme face à l'incertitude sur le problème de bandit stochastique linéaire
+qui vise la minimisation du pseudo-regret cumulatif \eqref{eq:regret_cumulatif_lineaire}.
+
+Rappelons que ce principe consiste à avoir, pour chaque action $a$, un estimé optimiste UCB$_a$
+de sa valeur espérée $\mu_a$, lequel est plus élevé que $\mu_a$ avec forte probabilité.
+Dans le contexte linéaire, comme on souhaite faire usage des représentations vectorielles 
+des actions, on cherche à avoir UCB$_a$ qui fait usage des relations linéaires entre les 
+actions.
+Nous présentons plus bas l'intuition derrière la construction de bonnes bornes supérieures
+UCB$_a$ en omettant certains détails techniques pour alléger la lecture.
+Le lecteur plus curieux pourra se référer à \citet{chu2011contextual} ou \citet{abbasi2011improved}
+pour des descriptions techniques complètes.
+
+Une première intuition clé pour bâtir une bonne borne supérieure est celle d'exploiter 
+les observations faites aux pas de temps précédentes pour bâtir un estimé $\hat{\omega}_N$ de 
+$\omega_*$.
+Cet estimé devrait naturellement viser 
+à combiner aussi bien que possible les paires actions-récompenses $(\tilde{a}_t, X_T)$
+observées aux pas de temps précédentes, i.e.
+\begin{equation}
+    \langle \hat{\omega}_N, \tilde{a}_t\rangle \approx X_t.    
+    \label{eq:omega_n_assumption}
+\end{equation}
+
+L'équation \eqref{eq:omega_n_assumption} peut être vue comme un problème 
+de moindres carrés, où l'on souhaite trouver
+\begin{equation}
+    \hat{\omega}_N = \argmin_{\omega \in \mathbb{R}^n} \sum_{t=1}^{N-1} \left( \langle \omega, \tilde{a}_{t} \rangle - X_t \right)^2.
+    \label{eq:lstsq}
+\end{equation}
+
+Or, le problème \eqref{eq:lstsq} n'admet pas nécessairement de solution exacte ou unique.
+LinUCB emploie donc la régularisation de Tikhonov \citep{tikhonov1963solution} 
+avec $\lambda=1$ pour garantir une solution et son unicité.
+L'estimé $\hat{\omega}_N$ est alors choisi selon la solution analytique connue du
+problème
+
+\begin{equation}
+    \hat{\omega}_N = \mathbf{V_N}^{-1}\mathbf{b_N}, \quad \text{pour} \quad \mathbf{V_N} = (\mathbf{A^\top_N} \mathbf{A_N} + \lambda \mathbf{I}) \quad \text{et} \quad \mathbf{b_N}=\mathbf{A_N^\top} \mathbf{X_N},
+    \label{eq:omega_N}
+\end{equation}
+
+où $\mathbf{A_N}$ est la matrice dont les lignes sont les actions $\tilde{a}_{t}$ sélectionnées,
+$\mathbf{X_N}$ est le vecteur composé des récompenses $X_t$ et $\mathbf{I}$ est la matrice identité.
+
+En pratique, $\mathbf{V_N}$ et $\mathbf{b_N}$ peuvent tous deux être calculés de manière 
+itérative selon 
+
+\begin{equation}
+\mathbf{V_N} = \lambda \mathbf{I} + \displaystyle \sum_{t=1}^N \tilde{a}_{t} \tilde{a}_{t}^\top, \qquad \mathbf{b_N} = \displaystyle \sum_{t=1}^N \tilde{a}_{t} X_t.
+\label{eq:linucb_iteratif}
+\end{equation}
+
+Maintenant que l'on possède une bonne estimation $\hat{\omega}_N$ qui exploite l'expérience 
+des pas de temps précédentes, on cherche à introduire un terme garantissant une exploration 
+satisfaisante des actions possibles.
+LinUCB propose à cet effet d'utiliser 
+\begin{equation*}
+    \beta\sqrt{\tilde{a}^\top \mathbf{V_N}^{-1} \tilde{a}},
+    \label{eq:explo_linucb}
+\end{equation*}
+un terme qui base l'exploration liée à une action $a$ à sa différence par rapport 
+aux actions précédentes représentées par $\mathbf{V_N}$ et un hyperparamètre 
+d'exploration $\beta$.
+Les détails techniques complets permettant d'arriver au terme pour l'exploration sont 
+donnés dans \citep{abbasi2011improved}.
+
+En regroupant les termes d'exploitation et d'exploration, on obtient encore une fois 
+une borne supérieure résolvant de manière élégante le compromis exploration-exploitation: 
+
+\begin{equation}
+    \text{UCB}_a = \langle \omega_N^\top, \tilde{a} \rangle +  \beta\sqrt{\tilde{a}^\top \mathbf{V_N}^{-1} \tilde{a}},
+    \label{eq:linucb}
+\end{equation}
+
+où $\beta$ représente encore un hyperparamètre balançant l'exploration.
+
+\subsubsection*{Connexions avec UCB}
+
+Nous prenons un moment ici pour mettre l'emphase sur les connexions entre UCB et 
+LinUCB, qui peut être vu comme une généralisation linéaire directe de UCB,
+tel que présenté dans \citet{banditalgs}. 
+En effet, si l'on considère les vecteurs d'action correspondant aux vecteurs unitaires,
+i.e. $\tilde{a} = e_a$ et une régularisation de Tikhonov avec $\lambda = 0$, on 
+a que $\mathbf{V_N}$ est une matrice diagonale, où la $a$-ème entrée est le nombre 
+de fois où l'action $a$ a été sélectionnée.
+À ce moment, le terme $\tilde{a}^\top \mathbf{V_N}^{-1} \tilde{a}$ n'est 
+donc que l'inverse du nombre $n_a$ de fois que l'action $a$ a été sélectionnée et le 
+terme d'exploration devient
+\begin{equation*}
+\beta\sqrt{\frac{1}{n_a(N)}},
+\end{equation*}
+un terme proportionnel à celui présent dans UCB si l'on pose $\beta = \sqrt{2\log(N)}$.
+
+Aussi, $\hat{\omega}_N$ devient simplement le vecteur où l'entrée $a$ correspond 
+à la moyenne des récompenses perçues pour l'action $i$.
+Le produit vectoriel $\langle \hat{\omega}_N, e_a \rangle$ ne fait donc qu'aller
+chercher la moyenne $\bar{x}_a$ utilisée dans UCB.
+
+Ainsi, si l'on se positionne dans le cas où aucune information n'est partagée par 
+les vecteurs d'action $\tilde{a}$, LinUCB est équivalent à UCB.
+On peut donc considérer que, si l'hypothèse linéaire est respectée, LinUCB 
+obtiendra toujours une performance supérieure ou égale à UCB.
 
 \section{Réseaux de neurones}
 
-\todo{Cette section va être à retoucher selon les commentaires de Luc.
-    Pas encore modifié car pas prioritaire pour le moment.}
+L'apprentissage supervisé est un problème dans lequel on tente 
+d'apprendre la relation se cachant entre des données en entrée 
+et une valeur en sortie qui leur est associée.
+Concrètement, on dit que l'on dispose d'un jeu de données 
+$\mathcal{D} = \{(x_i, y_i) \}_{i=1}^N$ pour lequel on souhaite apprendre 
+une fonction $f$ reliant chaque entrée à sa sortie, i.e. $f(x_i) \approx y_i$.
+Cette formulation est très générale et polyvalente: elle peut être appliquée 
+à des tâches très variées allant de la classification d'images 
+à la traduction de textes. 
 
-Classe de fonctions $h_\theta$ paramétrées par des poids $\theta \in \mathbb{R}^n$ qui peuvent être appliquées pour apprendre
-virtuellement n'importe quelle fonction $f$ à l'étude.
-Pour apprendre, les réseaux de neurones utilisent des approches de
-descente de gradient sur une fonction de perte $\mathcal{L}(\theta)$.
-Le fonction de perte, dont la forme dépend de celle de la fonction
-à l'étude, sert de guide d'apprentissage au réseau.
-Essentiellement, pour des paramètres $\theta$ et $\theta'$
-pour lesquels on a $\mathcal{L}(\theta) < \mathcal{L}(\theta')$, on a
-que les paramètres $\theta$ produisent une approximation $h_\theta$
-plus près de la fonction cible $f$.
-Éventuellement, l'apprentissage d'un réseau de neurones a pour objectif
-ultime de trouver les paramètres optimaux
+En pratique, on résout habituellement un problème d'apprentissage 
+supervisé en commençant par sélectionner une classe de fonctions munie de 
+paramètres $\theta$.
+On tente alors de trouver les paramètres 
+$\theta^*$ produisant l'approximateur paramétré $f_{\theta^*}$
+reliant le mieux chaque entrée à sa sortie pour le problème.
+Les réseaux de neurones (RN) \citep{10.5555/3086952} forment l'une de ces classes 
+de fonctions paramétrées et leur utilisation a récemment explosé 
+suite à leur excellente performance empirique et leur application 
+à vraisemblablement n'importe quel problème supervisé (voir \cite{LIU201711}
+pour un récapitulatif détaillé).
+
+Les RN ne sont utilisés dans ce document
+que pour permettre l'application de nos contributions.
+Nous nous limitons donc à présenter le processus de 
+descente de gradient que les RN utilisent ainsi 
+que les cas d'utilisation pertinents à notre étude.
+
+\subsection{Descente de gradient}
+
+Pour trouver de bons paramètres $\theta$, les réseaux de neurones 
+emploient une fonction de perte $l$ qui mesure la proximité entre 
+une valeur prédite $\hat{y}=f_{\theta}(x)$ et la cible $y$ pour 
+un exemple $(x,y)$ du jeu de données.
+Hors mis la nécessité de représenter la proximité entre 
+$y$ et $\hat{y}$, $l$ est seulement soumise 
+à la contrainte d'être dérivable, i.e. le gradient $\nabla_y l(\hat{y}, y)$ 
+existe et est bien défini.
+Par exemple, pour des problèmes de classification binaire 
+où les cibles $y$ sont des nombres entre 0 et 1,
+une fonction de perte utilisable est l'entropie croisée binaire
+
 \begin{equation*}
-    \theta^* = \underset{\theta \in \mathbb{R}^n}{\argmin} \; \mathcal{L}(\theta).
+    l(\hat{y}, y) = y \log(\hat{y}) + (1 - y)\log(1 - \hat{y}).
 \end{equation*}
 
+L'objectif de l'entraînement d'un RN est alors de trouver 
+la paramétrisation $\theta^*$ minimisant la perte espérée, 
+c'est à dire obtenir
+
+\begin{equation}
+    \theta^* = \argmin_{\theta} \mathcal{L}(\theta), \text{\quad où \quad} \mathcal{L}(\theta) =  \mathop{\mathbb{E}}_{(x, y) \sim \mathcal{D}} l\left(f_{\theta}(x), y\right).
+    \label{eq:perte_esperee}
+\end{equation}
+
+On nomme généralement $\mathcal{L}$ la perte espérée, en raison de l'espérance faite 
+sur les exemples du jeu de données.
+En pratique, avec un jeu de données de taille raisonnable,
+cette espérance ne peut toutefois pas être calculée efficacement et 
+on utilise son estimation basée sur une \textit{minibatch} de 
+$B$ exemples du jeu de données:
+
+\begin{equation}
+    \bar{\mathcal{L}}(\theta) =  \frac{1}{B} \displaystyle\sum_{i=1}^B l\left(f_{\theta}(x_i), y_i\right),
+    \label{eq:perte_stochastique}
+\end{equation}
+
+où $\bar{\mathcal{L}}(\theta)$ est appelée la perte empirique.
+Naturellement, plus la taille $B$ de la \textit{minibatch} est importante,
+meilleure est l'estimation de la perte espérée et c'est pour cela 
+que l'on choisit habituellement $B$ aussi grand que possible selon les 
+ressources computationnelles à disposition.
+
+Le problème d'optimisation \eqref{eq:perte_esperee} peut être résolu en
+utilisant la perte empirique définie en \eqref{eq:perte_stochastique}
+en appliquant une descente de gradient.
+En effet, comme nous le verrons bientôt, un réseau de neurones 
+est entièrement dérivable par rapport à ses paramètres et 
+on peut donc optimiser les paramètres $\theta$ selon la 
+règle de mise à jour 
+
+\begin{equation}
+    \theta = \theta - \alpha \nabla \bar{\mathcal{L}}(\theta),
+    \label{eq:gradient_descent}
+\end{equation}
+
+où $\alpha$ est un hyperparamètre appelé taux d'apprentissage.
+En pratique, on utilise des optimiseurs, notamment SGD \citep{robbins1951stochastic}
+et Adam \citep{kingma2014method}, qui implémentent des variantes 
+de l'équation \eqref{eq:gradient_descent} pour trouver les paramètres $\theta^*$.
+
+
 \subsection{Réseaux pleinement connectés}
+\label{subsec:FC}
 
-Présentation haut niveau de leur utilité prouvée empiriquement
-sur à peu près n'importe quel type de problème d'apprentissage
-supervisé.
+Un réseau pleinement connecté est la forme la plus simple 
+de réseau de neurones.
+Au niveau le plus fondamental, un réseau pleinement connecté
+est composé d'un ensemble de couches $c_i$ consécutives.
+Chaque couche est constituée d'une matrice $\mathbf{W}_i$ de poids 
+et d'une fonction non-linéaire d'activation $\sigma_i$.
+Pour un vecteur $h_i$ en entrée, une couche $c_i$ produit en sortie 
+un autre vecteur $h_{i+1}$ qui sert d'entrée à la prochaine couche selon 
 
+\begin{equation*}
+    h_{i+1} = \sigma_i \left( \mathbf{W}_i h_i\right),
+\end{equation*}
+
+où $\mathbf{W}_i h_i$ est un produit matriciel et $\sigma_i$ 
+est appliquée sur toutes les composantes du vecteur $\mathbf{W}_i h_i$.
+Les seuls cas particuliers sont ceux de la première couche $c_1$, qui
+prend le vecteur $x$ comme entrée, et de la dernière couche $c_n$ qui 
+produit une valeur prédite $\hat{y}$.
+Enfin, notons que l'on définit les paramètres $\theta$ d'un RN comme 
+l'ensemble des matrices $\mathbf{W}$ qui le composent.
+
+Pour être admissible, une fonction d'activation $\sigma$ doit seulement 
+être non-linéaire et dérivable.
+Cela fait en sorte que les fonctions d'activation sont nombreuses 
+dans la litérature.
+Celles qui sont utilisées dans ce document sont:
 \begin{itemize}
-    \item Unité de base: le neurone. Neurone prend entrée un vecteur de caractéristiques numériques.
-          Le neurone fait une somme pondérée sur les caractéristiques en entrée et applique une
-          fonction d'activation pour obtenir une couche de non-linéarité.
-    \item Fonction d'activations: ReLU \citep{xu2015empirical} et sigmoïde.
-    \item Les neurones sont regroupés ensemble en couches, où un vecteur de caractéristiques
-          est passé à travers une séquence de couches, où la sortie d'une couche représente l'entrée
-          de la prochaine.
-    \item $\theta$ est un ensemble de matrices, où chaque matrice représente les poids
-          reliant le neurone $i$ d'une couche à la caractéristique $j$ en sortie de la couche précédente.
-    \item Fonction de perte quadratique: permet une convergence rapide en pénalisant sévèrement
-          les erreurs graves et peu les erreurs très faibles.
+    \item ReLU \citep{xu2015empirical}: $\sigma(z) = \text{max}(0, z)$. Fonction dont la sortie 
+    est toujours positive et non bornée.
+    \item tanh: $\sigma(z) = \frac{e^z - e^{-z}}{e^z + e^{-z}}$. Fonction dont la 
+    sortie est entre -1 et 1.
+    \item sigmoïde : $\sigma(z) = \frac{1}{1 + e^{-z}}$. Fonction dont la sortie est entre 
+    0 et 1.
 \end{itemize}
 
-\subsection{Réseaux récurrents}
+Le choix de la fonction d'activation utilisée à chaque couche dépend 
+du comportement souhaité. 
+Notamment, on utilise habituellement les fonctions ReLU et tanh pour les
+transitions entre deux couches consécutives alors que la fonction sigmoïde 
+est habituellement employée en sortie quand les cibles sont entre 0 et 1.
 
-Cas où les données sont des séquences de tailles variables (i.e. données
-textuelles).
-Présenter RNN \citep{schuster1997bidirectional}, puis LSTM \citep{iet:/content/conferences/10.1049/cp_19991218}.
-Architecture qui incorpore les notions de mémoire à court et à long termes pour
-exploiter les relations séquentielles courtes et longues présentes dans une même
-séquence en entrée.
-Important à noter: pour une séquence $[x_1, ..., x_n]$ en entrée, un LSTM produit une
-séquence $[\hat{y_1}, ..., \hat{y_n}]$ de vecteurs $\hat{y_i}$ pour chacun des éléments.
+\subsection{Réseaux récurrents}
+\label{subsec:RNN}
+
+Les réseaux pleinement connectés présentés à la section \ref{subsec:FC}
+ne permettent pas d'exploiter la nature séquentielle de certains problèmes
+comme ceux basés sur des données textuelles.
+En effet, pour ces problèmes où l'entrée $x$ et la sortie $y$ associée sont 
+des séquences $[x_1, ..., x_n]$ et $[y_1, ..., y_n]$, les réseaux 
+pleinement connectés ne peuvent pas utiliser les potentielles 
+relations entre les éléments des séquences.
+C'est à cet effet qu'ont été proposés les réseaux récurrents (RNN)
+\citep{schuster1997bidirectional}.
+
+Sous sa forme la plus simple, un RNN est représenté par trois matrices
+de poids $\mathbf{U}$, $\mathbf{V}$ et $\mathbf{W}$ et deux fonctions 
+d'activation $\sigma_h$ et $\sigma_o$.
+Pour chaque élément $x_i$ et représentation cachée $h_i$ en entrées, le RNN produit un vecteur 
+en sortie $o_i$ et une représentation cachée $h_{i+1}$ qui sera utilisée pour 
+le prochain élément selon 
+
+\begin{equation*}
+    h_{i+1} = \sigma_h\left(\mathbf{U}x_i + \mathbf{V}h_i\right) \text{\quad et \quad}
+    o_i = \sigma_o\left(\mathbf{W}h_i\right).
+\end{equation*}
+L'idée d'un réseau récurrent est donc de générer une représentation cachée $h$
+qui est utilisée et incrémentée à chaque nouvel élément de la séquence $x$ en entrée.
+
+En pratique, les réseaux récurrents peuvent être rendus bidirectionnels en incorporant 
+trois nouvelles matrices $\mathbf{U}'$, $\mathbf{V}'$ et $\mathbf{W}'$ utilisées 
+pour parcourir la séquence $x$ dans le sens contraire (de $x_n$ à $x_1$).
+Il est aussi possible d'empiler plusieurs RNN, en utilisant les sorties $o$
+produites par un RNN comme séquence en entrée à un prochain RNN.
+On dit alors que l'on a un réseau récurrent à $n$ couches, pour le nombre 
+$n$ de RNN empilés.
+Une illustration contenant un réseau récurrent bidirectionnel à deux couches est disponible
+à la figure $\ref{fig:archi}$.
+
+Plus récemment, la plupart des bons résultats empiriques obtenus avec 
+des réseaux récurrents ont été obtenus en utilisant une variante plus 
+complexe que celle présentée: le LSTM \citep{iet:/content/conferences/10.1049/cp_19991218}.
+Les LSTM incorporent explicitement dans leur architecture 
+une représentation cachée plus riche 
+permettant une meilleure circulation de l'information 
+dans une séquence et un entraînement plus facile.
+Ils ont notamment été appliqués avec succès sur la traduction 
+de phrase \citep{wu2016googles} et la génération de description
+d'image \citep{xu2016show}.
 
 \subsection{Plongements de mots}
-On peut utiliser des réseaux pour apprendre des représentations
-vectorielles de mots \citep{NIPS2013_9aa42b31,pennington2014glove}.
 
-Ces représentations vectorielles permettent d'exprimer certaines
-relations linéaire entre les mots ("roi" - "homme" + "femme" = "reine").
+Un cas d'utilisation particulièrement intéressant 
+des réseaux de neurones est celui de la génération de plongements 
+de mots \citep{NIPS2013_9aa42b31,pennington2014glove,joulin2016bag}.
+En entraînant un RN à prédire les mots dans une phrase,
+il est possible d'obtenir des représentations vectorielles (plongements)
+de mots.
 
-Les plongements de mots sont à la base de l'explosion de performance dans les
-tâches liées aux données textuelles grâce à leur utilisation avec des réseaux de
-neurones.
+Les plongements ainsi obtenus incorporent des relations 
+présentes entre les mots qu'ils représentent.
+Par exemple, si on définit $p(m)$ comme le plongement 
+associé au mot $m$, \citet{NIPS2013_9aa42b31} démontrent 
+que la relation 
+\begin{equation*}
+    p(\text{”King”}) - p(\text{"Man"}) + p(\text{"Woman"}) \approx p(\text{"Queen"})
+\end{equation*}
+est respectée par les plongements de mots générés par leur technique.
+La richesse des relations incorporées dans les plongements de mots 
+est un des principaux facteurs de l'explosion récente de la performance des 
+RN sur les tâches de traitement de la langue naturelle \citep{almeida2019word}.
 
 \section{Génération automatique de résumés}
 
-Quand on résume, on veut (1) compresser un ou des textes tout en
-s'assurant de (2) conserver la majeure partie de l'information contenue.
+Le sujet principal d'étude de ce document est la génération automatique 
+de résumés de textes.
+Formellement, un résumé est une version allégée d'un ou de plusieurs 
+documents originaux que l'on souhaite aussi compressée que 
+possible mais qui doit aussi conserver la majeure 
+partie de l'information contenue.
 
-On dit qu'il s'agit d'un dilemme compression-conservation.
-
-Deux techniques principales actuellement utilisées: extractive et abstractive.
-
-Nous nous intéresserons seulement au cas de la génération de résumés à partir
+Pour notre part, nous nous intéressons seulement au cas de la génération de résumés à partir
 d'un seul document $d$ pour lequel nous possédons un seul résumé cible $s$.
 Des approches existent spécifiquement pour la génération de résumés
 à partir d'un ensemble de documents en entrée, mais nous nous contentons
 de dire que le cas multi-documents se ramène grossièrement au cas de la génération d'un seul
 document en considérant la concaténation de l'ensemble de documents.
 
+Sous l'optique qui nous intéresse, la litérature peut actuellement être 
+séparée en deux formulations distinctes: extractive et abstractive.
+Nous présentons chacune de ces méthodes, apportant une attention 
+particulière à la formulation extractive qui fait l'objet 
+d'une investigation détaillée dans ce document.
+Nous en profitons aussi pour bien définir comment il est possible 
+d'évaluer la performance d'un système de génération de résumés 
+en fin de section.
+
 \subsection{Formulation extractive}
 \label{sec:extractive}
 
-On sélectionne des phrases du document initial.
+Dans la formulation extractive, un résumé est généré en sélectionnant 
+des phrases du document initial.
+Cette formulation est intéressante car elle permet 
+de (1) réduire drastiquement le nombre de résumés possibles, le faisant 
+seulement dépendre du nombre de phrases d'un document, et (2) éviter 
+toutes les difficultés en termes de syntaxe
+et de cohérence liées à avoir à générer des phrases de manière automatique.
+Actuellement, les approches extractives de l'état de l'art sont
+toutes basées sur l'obtention d'affinités pour chaque phrase, indiquant
+si elle devrait être inclue ou non dans un résumé extractif.
 
-Formulation simple à résoudre: la nombre de résumés possibles dépend maintenant seulement
-du nombre de phrases et on s'évite toute les difficultés en termes de syntaxe
-et de cohérence liées à avoir à générer du texte.
-
-Les approches de l'état de l'art sont toutes basées sur l'obtention
-d'une représentation vectorielle de chaque phrase.
-Ces représentations sont ensuite utilisées pour prédire un score
-associé à chaque phrase.
-Ces scores produisent une distribution sur les phrases, à partir
-de laquelle le résumé est bâti.
-
-Définition formelle: On a un document en entrée $d$ qui contient $|d|$ phrases $[d_1, ..., d_{|d|}]$
+Pour formaliser un peu les choses, on dit que l'on dispose de paires $(d,s)$,
+représentant un document $d$ qui contient $|d|$ phrases $[d_1, ..., d_{|d|}]$
 et pour lequel on a un résumé cible $s$.
-On dit qu'on a un modèle de génération de résumés à deux composantes $(\pi, \phi)$.
+Un modèle de génération de résumés extractifs est un système à deux composantes 
+$(\pi, \phi)$.
 Ici, $\pi$ prend en entrée un document $d$ et retourne
-$\pi(d) \in [0, 1]^{|d|}$, une distribution de probabilités de sélection sur les phrases
-de $d$.
+$\pi(d) \in [0, 1]^{|d|}$, un vecteur où chaque index représente à quel 
+point la phrase associée devrait faire partie d'un résumé extractif.
 On a ensuite $\phi$, qui est un processus de génération de résumé
-extractif à partir d'une distribution $\pi(d)$.
-Concrètement, en définissant $\mathscr{P}(d)$ comme étant le power set de l'ensemble
+extractif à partir des affinités $\pi(d)$.
+Formellement, en définissant $\mathscr{P}(d)$ comme étant l'ensemble puissance 
 des phrases de $d$ (i.e. $\mathscr{P}(d)$ contient tous les résumés extractifs possibles
 de $d$), on a la signature $\phi(\pi(d)) \in \mathscr{P}(d)$.
 Deux exemples intuitifs de $\phi$ sont les processus voraces et stochastiques,
 où on choisit les $n$ phrases avec la plus grande probabilité ou on en pige
-$n$ sans remise de $\pi(d)$, respectivement.
-On définit $\psi$ comme étant le processus vorace et $\xi$ le processus stochastique.
+$n$ sans remise selon $\pi(d)$, respectivement.
+Pour référence future, posons $\psi$ comme étant le processus vorace et
+$\xi$ le processus stochastique.
+Une illustration du process général de génération de résumé extractif décrit
+est disponible à la figure \ref{fig:summ}.
 
-Enfin, pour un problème de génération de résumés donnés, on fixe habituellement $\phi$.
+
+\tikzsetnextfilename{tikz_summ}
+\begin{figure}[h!]
+    \begin{center}
+        \begin{tikzpicture}[node distance=4.5cm, font=\large]
+            \tikzstyle{default} = [rectangle, rounded corners, minimum width=4cm, minimum height=1cm, text centered, draw=black, line width=1pt, fill=gray!5, inner sep=0.25cm];
+            \tikzstyle{sent} = [rectangle, minimum width=1.5cm, minimum height=1cm, text centered, draw=black, line width=1pt, fill=yellow!50, node distance=0.5cm];
+            \tikzstyle{arrow} = [very thick,->,>=stealth, line width=1.5pt];
+            
+            \node (doc_t) {\textbf{Document} $d$};
+            \node (d1) [sent, below=of doc_t] {$d_1$};
+            \node (dn) [sent, below=of d1, yshift=-1cm] {$d_n$};
+            \path (d1) -- (dn) node [font=\Huge, midway, sloped] {$\dots$};
+            \begin{scope}[on background layer]
+                \node (doc) [default, fit={(doc_t) (dn)}] {};
+            \end{scope}
+            
+            \node (distro_t) [right=of doc_t]  {\textbf{Affinités} $\pi(d)$};
+            \node (pi1) [node distance=0.5cm, minimum height=1cm, below=of distro_t] {\Large $\pi(d)_1$};
+            \node (pin) [node distance=0.5cm, minimum height=1cm, below=of pi1, yshift=-1cm] {\Large $\pi(d)_n$};
+            \path (pi1) -- (pin) node [font=\Huge, midway, sloped] {$\dots$};
+            \begin{scope}[on background layer]
+                \node (distro) [default, fit={(distro_t) (pin)}] {};
+            \end{scope}
+            
+            \node (resume_t) [node distance=2cm, below=of distro] {\textbf{Résumé produit} $\hat{s}$};
+            \node (di1) [sent, below=of resume_t] {$d_{i_1}$};
+        \node (dik) [sent, below=of di1, yshift=-1cm] {$d_{i_k}$};
+        \path (di1) -- (dik) node [font=\Huge, midway, sloped] {$\dots$};
+        \begin{scope}[on background layer]
+            \node (resume) [default, fit={(resume_t) (dik)}] {};
+        \end{scope}
+        
+        \node (cible_t) [node distance=2cm, below=of doc] {\textbf{Résumé cible} $s$};
+        \node (s1) [sent, fill=red!50, below=of cible_t] {$s_1$};
+        \node (sm) [sent, fill=red!50, below=of s1, yshift=-1cm] {$s_m$};
+        \path (s1) -- (sm) node [font=\Huge, midway, sloped] {$\dots$};
+        \begin{scope}[on background layer]
+            \node (cible) [default, fit={(cible_t) (sm)}] {};
+        \end{scope}
+        
+        \coordinate (milieu) at ($(cible)!0.5!(resume)$);
+        \node (eval_t) [below of = milieu, yshift=-2cm]  {\textbf{Évaluation}};
+        \node (R) [node distance=0.5cm, minimum height=0.5cm, below=of eval_t] {\Large $\text{ROUGE}(\hat{s}, s)$};
+        \begin{scope}[on background layer]
+            \node (eval) [default, fit={(eval_t) (R)}] {};
+        \end{scope}
+        
+        
+        \draw [arrow] (doc) -- node[anchor=south] {\Large $\pi_\theta$} (distro);
+        \draw [arrow] (distro) -- node[anchor=west] {\Large $\phi$} (resume);
+        \draw [arrow] (doc) -- node[anchor=west] {} (cible);
+        
+        \coordinate (milieu_bas) at ($(cible.south)!0.5!(resume.south)$);
+        \coordinate (y) at ($(milieu_bas)!0.5!(eval.north)$);
+        \draw [very thick,>=stealth, line width=1.5pt] (cible.south) -- (y);
+        \draw [very thick,>=stealth, line width=1.5pt] (resume.south) -- (y);
+        \draw [arrow] (y) -- (eval.north);
+    \end{tikzpicture}
+\end{center}
+\caption{Schéma des étapes de la génération de résumé extractif pour un document $d$ et 
+son résumé cible $s$. La couleur différente utilisée pour les phrases du résumé 
+cible sert à indiquer qu'elles ne sont habituellement pas des phrases du document
+en entrée.}
+\label{fig:summ}
+\end{figure}
+
+Enfin, pour un problème de génération de résumés donné, on fixe habituellement $\phi$.
 L'objectif d'apprentissage est alors de trouver des paramètres $\theta$
 qui permettent de maximiser la qualité des résumés produits par le modèle
-$(\pi_\theta, \phi)$ par rapport à des paires document-résumé cible $(d, s)$ contenues
+$(\pi_\theta, \phi)$ par rapport à des paires document-résumé cibles $(d, s)$ contenues
 dans un jeu de données $\mathcal{D}$.
-La forme habituellement retenue pour $\pi_\theta$ est celle d'un réseau de neurones
-récurrent LSTM.
-
-\todo{Figure tikz qui prend pas mal une page complète décrivant le processus de résumé extractif
-    selon la formalisation donnée. Les étapes sont:
-    \begin{itemize}
-        \item Document $d$ en entrée, visuellement séparé pour voir les phrases.
-        \item Application de $\pi_\theta$ sur le document: flèche indiquant
-              explicitement que l'entrée est le document $d$ et la sortie est une distribution.
-        \item Application de $\phi$ sur la distribution des phrases: flèche indiquant
-              explicitement que l'entrée est une distribution sur les phrases et la sortie est un
-              résumé.
-        \item Évaluation de la qualité: Comparaison entre le résumé produit et le résumé cible $s$.
-    \end{itemize}}
 
 \subsubsection*{Approches supervisées}
 
-La majorité des approches extractives sont supervisées.
-
-Comme le résumé correspondant à un document n'est habituellement pas obtenu de
+La majorité des approches extractives de l'état de l'art sont entraînées 
+de manière supervisée à partir de cibles pour les affinités d'un document.
+Or, comme le résumé $s$ correspondant à un document $d$ n'est habituellement pas obtenu de
 manière extractive (i.e. le résumé n'est pas une combinaison de phrases du document initial),
-les approches supervisées doivent utilisent des cibles basées sur des heuristiques pour
+il n'est pas trivial d'obtenir des cibles pour les affinités.
+En pratique, les approches supervisées doivent utiliser des cibles basées sur des heuristiques pour
 leur entraînement.
 
 Par exemple, \citet{10.5555/3298483.3298681} précalculent des cibles binaires $y_d \in \{0,1\}^{|d|}$
 utilisées comme cibles pour chaque document $d$.
-Leurs cibles binaires sont obtenues en sélectionnant de manière vorace
-les phrases $d_i$ permettant de générer un résumé extractif aussi près que possible
-du résumé cible $s$.
+Leurs cibles binaires représentent les phrases choisies par un oracle
+sélectionnant de manière vorace les phrases $d_i$ permettant de générer
+un résumé extractif aussi près que possible du résumé cible $s$.
 Après avoir sélectionné trois phrases, leur processus est arrêté et la cible $y_d$
-est fixée à un vecteur binaire où les index des trois phrases retenues ont une valeur
-de 1 et les autres index ont une valeur nulle.
+d'un document $d$ est fixée à un vecteur binaire où les index des trois phrases 
+retenues ont une valeur de 1 et les autres index ont une valeur nulle.
 
-L'emploi de cibles binaires permet un entraînement supervisé très efficace.
-Le réseau entraîné sur ces cibles ne peut toutefois pas obtenir une performance
-supérieure à celle de l'heuristique employée.
-Il s'agit du principal facteur limitant de la performance de ces approches supervisées.
-
-La performance est tout de même très bonne; \citep{zhong-etal-2020-extractive} est le SOTA
-actuel en extractive.
+L'emploi de cibles binaires permet un entraînement supervisé très efficace:
+\citet{liu2019text} représente actuellement l'état de l'art extractif 
+sur le jeu de données CNN/DailyMail \citep{hermann2015teaching}
+en utilisant seulement les cibles binaires.
+Notons toutefois qu'un réseau entraîné de manière supervisée à 
+imiter un oracle ne peut pas obtenir une performance supérieure 
+à celle de l'oracle.
+Ainsi, les approches supervisées sont plus difficilement applicables
+à des contextes où un bon oracle n'est pas disponible.
 
 \subsubsection*{Approches par renforcement}
 \label{subsec:rl_summ}
 
 Au lieu d'utiliser des cibles binaires, les approches par renforcement visent à
 optimiser directement une mesure numérique de la similarité entre deux résumés.
-Disons que l'on dispose d'une métrique numérique de performance $R(\hat{s}, s)$
+Disons que l'on dispose d'une métrique numérique de performance $G(\hat{s}, s)$
 permettant de quantifier la proximité entre un résumé produit $\hat{s}$ et un résumé
 cible $s$.
 Il est alors possible de définir la fonction objective à maximiser
 \begin{equation}
-    J(\theta) = \underset{(d,s) \sim \mathcal{D}}{\mathbb{E}} \; \underset{s \sim \phi(\pi_\theta(d))}{\mathbb{E}} \left[R(\hat{s}, s) \right],
+    J(\theta) = \underset{(d,s) \sim \mathcal{D}}{\mathbb{E}} \; \underset{s \sim \phi(\pi_\theta(d))}{\mathbb{E}} \left[G(\hat{s}, s) \right],
     \label{eq:REINFORCE_expectation}
 \end{equation}
 
@@ -248,7 +634,7 @@ L'algorithme REINFORCE \citep{williams1992simple} propose une
 solution élégante à ce problème, faisant une mise à jour des poids $\theta$ selon l'approximation du gradient
 de $J(\theta)$
 \begin{equation}
-    \nabla J(\theta) = R(\hat{s}, s)\nabla \ln \phi\left(\pi_\theta (\hat{s})\right),
+    \nabla J(\theta) = G(\hat{s}, s)\nabla \ln \phi\left(\pi_\theta (\hat{s})\right),
     \label{eq:REINFORCE_sample}
 \end{equation}
 
@@ -257,60 +643,63 @@ Le théorème du gradient de politique \citep{sutton1999policy} affirme que, en 
 l'approximation \ref{eq:REINFORCE_sample} correspond au véritable gradient \ref{eq:REINFORCE_expectation}
 et peut donc être utilisée pour une ascension de gradient.
 Les approches par renforcement basées sur REINFORCE \citep{dong2018banditsum,luo-etal-2019-reading}
-parviennent actuellement à atteindre des performances au niveau de l'état
-de l'art pour la génération automatique de résumés.
-
-Au niveau architectural, \citep{dong2018banditsum,luo-etal-2019-reading} emploient le
-même modèle de réseau de neurones.
-Deux LSTMs consécutifs sont utilisés pour générer les représentations des phrases, un travaillant au niveau
-des mots et l'autre au niveau des phrases.
-Les scores sont obtenus via une couche pleinement connectée avec sortie réelle, partagée pour toutes les
-phrases.
-Un schéma et davantage de détails sur ce modèle neuronal sont disponibles
-au chapitre \ref{chap:bandit_contextuel}.
-Nous reprendrons une architecture similaire de réseau de neurones pour toutes
-les expérimentations.
+parviennent actuellement à atteindre des performances très près de l'état
+de l'art pour la génération automatique de résumés à un coût computationnel 
+grandement inférieur aux approches de l'état de l'art.
 
 \subsection{Formulation abstractive}
 
-On écrit un résumé \textit{à la mitaine}.
+Sous cette formulation, on génère le résumé d'un texte en écrivant 
+le résumé mot à mot.
+Les résumés abstractifs peuvent donc potentiellement reproduire 
+de manière parfaite le résumé cible associé à un document.
+Cette performance potentielle vient toutefois à un coût:
+la formulation abstractive est naturellement plus difficile car elle nécessite de
+gérer la syntaxe et les fautes d'orthographe en plus de la tâche 
+de trouver les informations pertinentes du document.
+De surcroît, \citet{kryscinski2020evaluating} ont même 
+découvert que les modèles abstractifs peuvent être sujets à la génération 
+d'énoncés factuellement incorrects.
 
-Formulation difficile car nécessite de gérer la syntaxe et les fautes
-d'orthographe en plus de la gestion du dilemme compression-conversation.
-
-Récentes percées en NLG ont beaucoup boosté les performances ici.
-
-\citep{2020t5, unilm, zhang2019pegasus} sont le SOTA en abstractif.
+Comme nous nous intéressons aux méthodes extractives pour le reste du document,
+nous nous contentons de référer le lecteur aux approches abstractives
+représentant l'état de l'art \citep{dou2020gsum, 2020t5, unilm, zhang2019pegasus}.
+Au coeur de toutes ces approches se trouvent les architectures BERT 
+\citep{devlin-etal-2019-bert} et Transformer \citep{vaswani2017attention},
+auxquelles sont dues les percées récentes dans le domaine de la génération 
+de texte.
 
 \subsection{Évaluation de la performance}
 \label{sec:rouge}
 
-À la section \ref{sec:extractive}, on prenait pour acquis qu'une fonction $R$ existait
-pour distinguer quantitativement deux résumés candidats $s$ et $\hat{s}$.
+À la section \ref{sec:extractive}, on prenait pour acquis qu'une fonction $G$ existait
+pour mesurer la proximité entre un résumé cible $s$ et un résumé généré $\hat{s}$.
 Il en existe en fait plusieurs, notamment :
 
 \begin{itemize}
     \item ROUGE-$n$ \citep{lin-2004-rouge}: métrique basée sur le chevauchement entre les séquences de $n$ mots (\ngrams)
-          $s$ et $\hat{s}$;
+          de $s$ et $\hat{s}$. Par exemple, $\text{ROUGE-1}$ représente le chevauchement entre les unigrammes
+          et $\text{ROUGE-2}$ celui entre les bigrammes;
     \item ROUGE-L \citep{lin-2004-rouge}: métrique mesurant la plus longue sous-séquence commune
           entre $s$ et $\hat{s}$;
     \item ROUGE-WE \citep{ng-abrecht-2015-better}: métrique similaire à ROUGE-$n$, mais qui utilise
           le \textit{soft-matching} basé sur la similarité cosine entre les plongements de mots au lieu
-          du \textit{matching} exact.
+          de la correspondance exacte.
 \end{itemize}
+L'intuition ici est simple: plus le chevauchement est grand entre les 
+\ngrams d'un résumé généré et ceux du résumé cible, plus le résumé
+généré a conservé l'information recherchée.
+Notons aussi que toutes les métriques énoncées plus haut ne sont pas dérivables
+et ne peuvent donc pas être utilisées directement comme fonction de perte
+d'un réseau de neurones. 
 
-Intuition: Plus le overlap
-est grand entre les \ngrams d'un candidat et ceux de la cible, plus le résumé
-a conservé l'information recherchée.
+Or, si on se fie seulement au rappel sur les \textit{n}-grammes, le résumé optimal sera
+de conserver tout le texte original. 
+Pour pénaliser les résumés trop peu concis, on peut utiliser une métrique plus
+appropriée que le rappel comme le score F1 pour pénaliser les 
+\ngrams présents dans le résumé généré mais pas dans la cible.
 
-Un problème: si on se fie juste au rappel sur les \ngrams, le résumé optimal sera
-de conserver tout le texte original. Pour incorporer la portion compression du dilemme
-fondamental de la génération de résumé, on peut utiliser une métrique plus
-appropriée comme le score F1 pour ajouter une pénalité sur les \ngrams présents dans
-le candidat pas dans la cible.
-
-
-\citep{peyrard-2019-studying} démontre que, bien que ces métriques soient généralement
+\citet{peyrard-2019-studying} démontre que, bien que ces métriques soient généralement
 corrélées avec l'avis d'un expert humain, elles peuvent difficilement être considérées
 comme un remplacement de celui-ci.
 En effet, comme les métriques sont toutes similairement corrélées avec le jugement humain
@@ -319,52 +708,28 @@ ne peut être utilisée à elle seule comme un remplacement de l'avis humain.
 En utilisant une moyenne de plusieurs métriques, il est possible d'alléger quelque peu
 ce problème.
 Notons toutefois que même l'utilisation d'une moyenne ne suffit pas à régler le problème:
-\citep{DBLP:journals/corr/PaulusXS17} entraînent par
-renforcement sur la formulation abstractive mais finissent par ne pas
-utiliser le modèle avec le meilleure score employé (moyenne de ROUGE-1, ROUGE-2 et ROUGE-L).
+\citet{DBLP:journals/corr/PaulusXS17} entraînent plusieurs modèles abstractifs 
+mais finissent par déployer un modèle autre que celui atteignant la meilleure 
+moyenne de score ROUGE-1, ROUGE-2 et ROUGE-L.
 
-\section{Formulation du problème retenue}
 
-Pour les travaux présentés, il est choisi de s'intéresser exclusivement
-à la génération automatique de résumés à partir d'un document en entrée.
-Aussi, la formulation extractive est retenue en raison de la facilité avec
-laquelle les approches par bandit peuvent y être utilisées.
-Pour évaluer la performance des approches proposées, le jeu de données du
-CNN/DailyMail \citep{10.5555/3298483.3298681}, référence dans le milieu
-de la génération de résumés, sera utilisé.
-Celui-ci est composé de plus de 300 000 articles de journaux et
-leurs résumés écrits par un expert humain.
+\subsubsection*{Évaluation de la performance à partir d'un jeu de données}
 
-Nous emploierons aussi plusieurs des contraintes retenues par les approches
-de l'état-de-l'art sur le jeu de données du CNN/DailyMail.
-Notamment, comme \citep{dong2018banditsum}, nous considérerons seulement les résumés
-de 3 phrases en sortie.
-Cette contrainte, utilisée fréquemment sur le jeu de données du CNN/DailyMail,
-est basée sur le fait que la moyenne du nombre de phrases contenues dans les résumés cibles
-est près de 3.
-Aussi, une référence souvent utilisée pour ce jeu de données est l'heuristique \textit{Lead-3} \citep{10.5555/3298483.3298681}
-qui consiste à générer le résumé d'un document en retenant les 3 premières phrases.
-Les résultats obtenus par \textit{Lead-3} sont très bons aux yeux des métriques automatiques,
-justifiant encore une fois qu'avec 3 phrases on peut générer de bons résumés des documents du jeu
-de données.
-En vue des statistiques du jeu de données, nous considérerons aussi la régularisation du jeu de données
-qui consiste à conserver seulement les documents d'au moins 3 phrases, limiter la taille des documents à
-50 phrases au maximum et celle des phrases à 80 mots.
-En cas d'excès de mots ou de phrases, l'excédent est simplement retiré.
+On termine en mentionnant que, dans le contexte où l'on apprend à partir 
+d'un jeu de données $\mathcal{D}=\{(d_i, s_i)\}_{i=1}^N$, il est important 
+de faire l'évaluation sur un jeu de données différent de celui utilisé pour l'entraînement.
+En effet, comme on s'intéresse à la performance de notre modèle de génération 
+de résumés sur n'importe quel document en entrée, il est nécessaire de valider 
+la performance du modèle sur des documents qui n'ont pas encore été vus par 
+le modèle.
 
-Pour l'évaluation, on retient la métrique de similarité entre deux résumés
-utilisée par la plupart des travaux employant l'apprentissage par renforcement \citep{dong2018banditsum,luo-etal-2019-reading}:
-\begin{equation}
-    \label{eq:ROUGE}
-    R(\hat{s}, s) := \frac{1}{3} \left[ \text{ROUGE-1}(\hat{s}, s) + \text{ROUGE-2}(\hat{s}, s) + \text{ROUGE-L}(\hat{s}, s) \right].
-\end{equation}
-
-Ce choix de $R$ est motivé par:
-
-\begin{itemize}
-    \item Diversité de signal, comme expliqué plus haut.
-    \item $R$ est \textbf{presque} invariante à l'ordre des phrases dans un résumé (seulement ROUGE-2
-          n'est pas invariant, mais seulement au niveau de la jonction entre deux phrases). Cette propriété
-          permet d'éviter l'explosion combinatoire induite par la considération de l'ordre des phrases dans l'approche
-          multitâche.
-\end{itemize}
+À cet effet, on sépare habituellement le jeu de données $\mathcal{D}$ en trois
+sous-ensembles: un ensemble d'entraînement, un ensemble de validation et un ensemble 
+de test.
+L'ensemble d'entraînement est naturellement utilisé pour l'apprentissage du modèle
+alors que l'ensemble de validation est utilisé pour estimer la performance 
+sur des nouveaux documents pendant l'entraînement.
+À la fin de l'entraînement, le modèle retenu est celui ayant la meilleure performance 
+sur le jeu de validation.
+Enfin, l'ensemble de test est utilisé pour estimer la performance réelle 
+du modèle retenu. 
