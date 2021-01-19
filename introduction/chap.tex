@@ -2,9 +2,9 @@
 \label{chap:introduction}
 
 Lors d'une entrevue en 2018, le président de la multinationale Siemens 
-mentionnait que (traduction libre) "Les données sont le nouveau pétrole, ou or,
+mentionnait que\footnote{Traduction libre.} "Les données sont le nouveau pétrole, ou or,
 du 21ème siècle - la matière première sur laquelle nos économies,
-sociétés et démocraties sont de plus en plus bâties".
+sociétés et démocraties sont de plus en plus bâties."
 Son affirmation, partagée par bon nombre d'experts dans le domaine de la
 technologie, décrit ce que l'on appelle communément l'ère du \textit{Big Data}.
 Cette appellation vise à décrire la quantité immense de données maintenant 
@@ -28,61 +28,75 @@ Ce ne sont toutefois pas tous les domaines utilisant des données textuelles
 qui peuvent être automatisables en entièreté.
 Certains domaines, notamment en assurance, requièrent explicitement l'intervention 
 d'un humain pour des raisons de législation.
-Comment alors faire profiter du grand afflux de données dans ces systèmes où l'humain (et
-sa capacité de traitement limitée) sont essentiels ?
+Comment alors faire profiter du grand afflux de données dans ces systèmes où l'humain - et
+sa capacité de traitement limitée - sont essentiels ?
 
 Une option qui peut s'avérer facilement attrayante est l'idée de condenser un ou plusieurs
 documents en un texte concis contenant seulement l'information requise pour procéder à la
 tâche à exécuter.
 On dit alors que l'on fait appel à un système de génération automatique de résumés de textes.
-Ces systèmes sont le sujet d'étude principal du présent document.
+Une variante particulièrement intéressante de la génération de résumé est la variante 
+qui consiste à bâtir un résumé en sélectionnant des phrases du texte original.
+Les systèmes de génération de ces résumés, dits résumés extractifs, 
+sont le sujet d'étude principal du présent document.
 
 Plus particulièrement, on s'intéresse à la formulation 
-de la génération de résumé comme un problème de bandit.
-Les problèmes de bandit sont des problèmes étudiés depuis le début du 20ème
-siècle, dont la résolution est basée sur l'obtention rapide d'une bonne solution.
-En voyant le génération de résumé comme un bandit, on souhaite bâtir 
+de la génération de résumé comme un problème de bandit \citep{Robbins:1952}.
+Les problèmes de bandit sont des problèmes d'interaction séquentielle
+entre un apprenant et un environnement, où l'apprenant sélectionne 
+des actions dans le but de maximiser les récompenses 
+qui leur sont assignées par l'environnement.
+La résolution de tout problème de bandit est basée sur 
+l'identification rapide par l'agent d'actions près 
+de l'action optimale sur l'environnement.
+En voyant le génération de résumé comme un bandit, on souhaite ainsi bâtir 
 des systèmes de génération de résumés qui apprendront rapidement à générer 
-des résumés satisfaisants grâce à une exploration efficace du vaste espace de résumés 
+des résumés de haute qualité grâce à une exploration efficace du vaste espace de résumés 
 possibles. 
+
 
 \section*{Objectifs}
 
-Concrètement, ce document a pour objectifs de répondre aux questions suivantes:
+Pour analyser la viabilité des approches par bandit pour l'entraînement 
+de modèles de génération de résumés, ce document souhaite accomplir les objectifs suivants:
 
 \begin{itemize}
-      \item Comment peut-on formuler la génération de résumés comme un problème de bandit stochastique ?
-            Comment les algorithmes utilisés habituellement pour résoudre ces problèmes peuvent
-            alors être appliqués à l'entraînement de modèles de génération de résumés ?
-      \item Dans quelle mesure ces algorithmes de bandit sont-ils performants dans le contexte de 
-            la génération de résumés?
-            Sont-ils plus rapides en nombre d'échantillons requis pour une
-            bonne performance ? Est-ce que les solutions auxquelles ils convergent sont meilleures ?
-      \item Comment l'introduction de ces artefacts bandits a-t-elle affecté la performance ?
-            Est-ce que les systèmes produits génèrent des résumés de meilleure qualité ?
-            A-t-on besoin de moins d'exemples avant d'avoir un système de haute qualité ?
-            Est-ce que l'entraînement est plus rapide à effectuer ? Avec quelles ressources de calcul ?
-      \item Comment les performances de ces algorithmes se comparent-elles entre eux ? Et par rapport à l'état de l'art ?
+      \item Présenter BanditSum \citep{dong2018banditsum}, une approche 
+            modélisant la génération de résumés pour un ensemble de documents
+            comme un problème de bandit contextuel \citep{contextual_bandits}.
+            Avec la formulation contextuelle retenue, BanditSum 
+            parvient à entraîner un système de génération de résumés 
+            en optimisant l'espérance de sa performance sur un 
+            ensemble de documents.
+      \item Aborder la génération du résumé d'un seul document comme 
+            un problème de bandit combinatoire \citep{pmlr-v28-chen13a}.
+            Particulièrement, on s'intéresse à comment la formulation 
+            en bandit combinatoire peut être utilisée pour entraîner un système 
+            de génération résumés.   
+      \item Exploiter les similarités entre les phrases d'un même 
+            document pour formuler la génération du résumé d'un 
+            document comme un bandit linéaire combinatoire \citep{NEURIPS2018_207f8801}.
+            Spécifiquement, c'est l'application de cette formulation linéaire
+            à un algorithme d'entraînement de modèle de génération 
+            et son impact sur la rapidité de convergence auxquelles on s'intéresse.
+      \item Comparer la performance des approches par bandit 
+            aux modèles issus de l'état de l'art et à l'heuristique de
+            référence Lead-3 \citep{10.5555/3298483.3298681} sur le jeu de données 
+            du CNN/DailyMail \citep{hermann2015teaching}.
+            Notamment, on désire savoir si les approches par bandit 
+            permettent un entraînement plus rapide en nombre de documents
+            et produisent des modèles qui génèrent des résumés de meilleure qualité.
 \end{itemize}
-
-On atteint les objectifs en proposant 3 formulations de bandits applicables au processus
-de la génération de résumés.
-Une des approches proposée est présente dans la littérature mais les deux autres sont
-des nouveautés, du mieux de notre connaissance.
 
 \section*{Structure du mémoire}
 
 Ce mémoire débute par une introduction aux concepts de base essentiels à la compréhension
-du reste du document.
-Le document est ensuite divisé en trois chapitres pour les trois formulations de MAB explorées:
-bandit contextuel, bandit combinatoire et bandit combinatoire linéaire.
-
-Pour chacun des chapitres, on commence par définir le cadre bandit proposé.
-Des expériences empiriques sont effectuées pour justifier l'applicabilité
-du cadre au contexte de génération de résumés.
-On montre ensuite comment le cadre bandit peut utilisé dans un nouvel algorithme
-pour l'entraînement d'un système neuronal de génération automatique de résumés.
-Enfin, on valide le comportement de l'algorithme en l'utilisant pour
-entraîner plusieurs modèles de génération de résumés.
-Les algorithmes sont comparés en fonction de leur rapidité de convergence et
-de la qualité finale des modèles produits.
+du reste du document au chapitre \ref{chap:prerequis}.
+S'ensuit au chapitre \ref{chap:bandit_contextuel} une description détaillée 
+de la problématique à l'étude ainsi que la présentation d'un algorithme 
+basé sur le bandit contextuel: BanditSum.
+Au chapitre \ref{chap:bandit_combi}, la formulation en bandit combinatoire est employée
+afin d'obtenir des cibles riches pour l'entraînement de modèles de génération de résumé.
+Enfin, le chapitre \ref{chap:bandit_combi_lin} explore l'utilisation du bandit linéaire 
+combinatoire pour générer des cibles riches encore une fois, mais qui exploitent les similarités 
+entre les phrases d'un document pour une plus grande efficacité.

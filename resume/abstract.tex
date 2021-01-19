@@ -3,26 +3,24 @@
 \phantomsection\addcontentsline{toc}{chapter}{\nameref{chap:abstract}} % inclure dans TdM
 
 \begin{otherlanguage*}{english}
-  This thesis discusses the use of bandit methods to solve 
+This thesis discusses the use of bandit methods to solve 
 the problem of training extractive abstract generation models.
 The extractive models, which build summaries by selecting sentences from an 
 original document, are difficult to train because the target summary of a document is usually not built in an extractive way.
-It is for this purpose that we propose to see the production of an extractive summary
-as different bandit problems, for which there exist algorithms that can be used for training.
+It is for this purpose that we propose to see the production of extractive summaries
+as different bandit problems, for which there exist algorithms that can be leveraged for training summarization models.
 
-In this document, we first see how the generation of the summary 
-of any document can be formulated as a contextual bandit problem
-to achieve excellent computational efficiency.
-Next, we propose to see the generation of the abstract 
-of a single document like a combinatorial bandit.
-We present a method for obtaining targets 
-for training a model from the resolution 
-of the combinatorial bandit.
-We present two algorithms, UCB and LinUCB, which can 
-be used for this purpose.
-UCB, the first algorithm presented, is characterized by 
-its universality while LinUCB is computationally
-more efficient, at the added cost of an assumption of the existence 
-a linear relationship between a sentence and the quality of abstracts 
-it produces. 
+In this paper, BanditSum is first presented, an approach drawn from 
+the literature that sees the generation of the summaries 
+of a set of documents as a contextual bandit problem.
+Next, we introduce CombiSum, a new algorithm 
+which formulates the generation of the summary of a 
+single document as a combinatorial bandit.
+By exploiting the combinatorial formulation,
+CombiSum manages to incorporate the notion of the extractive potential 
+of each sentence of a document in its training.
+Finally, we propose LinCombiSum, the linear variant of CombiSum 
+which exploits the similarities between sentences in a document 
+and uses the linear combinatorial bandit formulation instead.
+ 
 \end{otherlanguage*}

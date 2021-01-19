@@ -1,62 +1,56 @@
 \chapter{Bandit combinatoire}
 \label{chap:bandit_combi}                   % étiquette pour renvois (à compléter!)
 
-Un problème fondamental de l'apprentissage de 
-systèmes de génération de résumés extractifs est l'indisponibilité
-de cibles naturelles.
-À cet effet, une façon de faire attrayante est de 
-calculer un oracle (\ref{sec:extractive}) 
-qui génère d'excellents résumés extractifs que 
-l'on utilise comme cibles pour un entraînement.
-Habituellement, ces cibles sont binaires et représentent 
-l'inclusion ou non d'une phrase dans le résumé produit 
-par l'oracle. 
-L'utilisation de cibles binaires n'est pas sans faute.
-Si 3 phrases peuvent constituer le résumé extractif optimal 
-selon un oracle, il est bien possible que certaines 
-autres phrases produisent tout de même d'excellents résumés 
-et se voient assigner une cible nulle.
-
-Nous proposons une approche basée sur un problème 
-de bandit combinatoire permettant de générer des cibles 
-plus riches que les cibles binaires.
-En pénalisant moins drastiquement les phrases qui ne font 
-pas partie du résumé extractif optimal mais qui 
-génèrent d'excellents résumés extractifs, nos cibles 
-permettent intuitivement de quantifier la \textit{qualité 
-extractive} d'une phrase.
-
 Dans ce chapitre, on présente comment la génération du résumé d'un document
-peut être interprétée un problème de bandit combinatoire \citep{CESABIANCHI20121404}.
-On monte ensuite comment l'algorithme Upper Confidence Bound (UCB) \citep{ucb} peut être utilisé 
-pour résoudre ce type de problème et comment il peut être employé pour 
-générer des cibles pour un système de génération de résumés.
-L'applicabilité des cibles proposées est par la suite validée empiriquement 
-à l'aide d'un jeu de données de développement.
-Enfin, on présente comment ces cibles peuvent être utilisées pour 
+peut être interprétée un problème de bandit combinatoire \citep{pmlr-v28-chen13a}.
+On montre ensuite comment l'algorithme Combinatorial Upper Confidence Bound (CUCB) 
+\citep{pmlr-v28-chen13a} peut être utilisé pour résoudre ce type de problème.
+Avec le jeu de développement, on établit empiriquement l'applicabilité 
+de CUCB pour l'identification du meilleur résumé d'un document.
+On s'intéresse alors à savoir comment la formulation combinatoire et sa résolution 
+par CUCB peuvent être employées pour générer des cibles d'entraînement 
+pour les phrases d'un document.
+À cette fin, on introduit le concept de potentiel extractif d'une phrase
+et on montre comment CUCB permet de générer des bonnes 
+estimations du potentiel de chaque phrase.
+On présente une procédure de génération de cibles d'entraînement 
+basées sur le potentiel extractif des phrases que l'on compare 
+à l'approche utilisant les cibles binaires habituelles basées sur un oracle \citep{10.5555/3298483.3298681}.
+L'applicabilité de la procédure de génération de cibles proposée 
+est validée empiriquement à partir du jeu de données de développement.
+On présente comment ces cibles peuvent être utilisées pour 
 l'apprentissage de systèmes de génération de résumés en proposant 
 un nouvel algorithme que l'on nomme CombiSum.
-On met CombiSum à l'épreuve sur notre cadre expérimental 
-uniformisé pour juger de son efficacité.
+Enfin, on met CombiSum à l'épreuve sur notre cadre expérimental 
+uniformisé en comparant sa performance à celle obtenue à partir des cibles 
+issues d'un oracle pour juger de son efficacité.
 
-\section{Formulation combinatoire}
+\section{Bandit combinatoire}
 \label{section:formulation_combi}
 
-Le bandit combinatoire est une approche par bandit qui vise à étendre
-la formulation multi-bras à des environnements où plusieurs actions
+Le bandit combinatoire est un problème de bandit qui vise à étendre
+la formulation stochastique à des environnements où plusieurs actions
 $a \in \mathcal{A}$ peuvent être sélectionnées
 en même temps par l'apprenant.
-Nous nous intéressons seulement à la variante dite multitâche \citep{banditalgs}, où
+On s'intéresse seulement à la variante dite multitâche\footnote{On fera 
+un léger abus de langage dans le reste du document, utilisant le terme 
+bandit combinatoire pour définir le bandit combinatoire multitâche.} \citep{banditalgs}, où
 il y a un nombre fixé $m$ d'actions sélectionnées à
-chaque pas de temps $t$, créant une \textit{super-action} $\mathcal{M} = \{a_1, ..., a_m\}$
+chaque pas de temps $t$.
+Les actions sélectionnées créent une \textit{super-action} $\mathcal{M} = \{a_1, ..., a_m\}$
 pour laquelle l'environnement retourne une récompense $X_{\mathcal{M}, t}$.
 L'objectif demeure la minimisation du pseudo-regret cumulatif \eqref{eq:regret_cumulatif}, 
-mais celui-ci est désormais calculé entre
-la \textit{super-action} optimale $\mathcal{M}^*$ et les \textit{super-actions}
-choisies $\mathcal{M}_t$.
+mais celui-ci est désormais calculé entre l'espérance de
+la \textit{super-action} optimale $\mu^* = \mu_{\mathcal{M}^*}$ et celles des \textit{super-actions} 
+$\mathcal{M}_t$ choisies
+
+\begin{equation}
+    R_T = T \mu^* -  \sum_{t=1}^T  \mu_{\mathcal{M}_t}.
+    \label{eq:regret_combi}
+\end{equation}
 
 Tout l'intérêt de cette formulation vient de l'éventuelle relation entre les \textit{super-actions}.
-Bien qu'il serait possible de formuler le bandit multitâche comme un bandit multi-bras où l'ensemble des
+Bien qu'il serait possible de formuler le bandit combinatoire comme un bandit stochastique où l'ensemble des
 actions possibles est l'ensemble des \textit{super-actions} $\mathcal{M}$, cette formulation
 risque d'être très peu efficace.
 En effet, comme les actions $a \in \mathcal{A}$ sont partagées entre les diverses \textit{super-actions},
@@ -66,162 +60,245 @@ Cette information sur les actions $a$ peut alors être utilisée pour guider le 
 prochaines \textit{super-actions} et accélérer l'apprentissage.
 
 \subsection{Application à la génération de résumé}
+\label{subsec:appli_gen_resume_ucb}
 
-La génération du résumé d'un document $d$ peut être vue comme un bandit combinatoire où
-les actions de base sont les phrases $d_i$ et les \textit{super-actions} $\mathcal{M}$
-sont les résumés de 3 phrases possibles.
-En choisissant la \textit{super-action} $\mathcal{M}_{\hat{s}}$ associée au résumé $\hat{s}$,
-l'apprenant reçoit $\text{ROUGE}(\mathcal{M}_{\hat{s}}, s)$ comme récompense et peut mettre à jour ses
-croyances sur les phrases $d_i$ de $\hat{s}$.
-Pour alléger la notation, nous dirons désormais que la \textit{super-action} 
-$\mathcal{M} = \{a_{i_1},a_{i_2},a_{i_3}\}$ est un résumé extractif 
-où l'action $a_i$ correspond à la phrase $d_i$.
+En contraste au bandit contextuel présenté à la section \ref{subsec:context_gen_res},
+la formulation combinatoire est appliquée à la génération du résumé
+extractif d'un seul document.
+Dans notre cadre uniformisé (\ref{section:problematique}), la génération du résumé d'un document $d$ peut être vue comme un bandit combinatoire où
+les actions de base $a \in \mathcal{A}$ sont les phrases $d_i \in d$ 
+et les \textit{super-actions} $\mathcal{M}$ 
+sont les résumés de 3 phrases possibles pour $d$.
+En choisissant la \textit{super-action} $\mathcal{M} = \{a_{i_1},a_{i_2},a_{i_3}\}$ 
+associée au résumé $\hat{s} = \{d_{i_1}, d_{i_2}, d_{i_3}\}$,
+l'apprenant reçoit la récompense $\text{ROUGE}(\mathcal{M}, s)$ et peut mettre à jour ses
+statistiques sur les phrases $d_i$ de $\hat{s}$.
+Pour alléger la notation, on dira désormais que la \textit{super-action} 
+$\mathcal{M} = \{a_{i_1},a_{i_2},a_{i_3}\}$ est un résumé 
+où l'action $a_i$ correspond à la phrase $d_i$ et que l'ensemble 
+des actions possibles est l'ensemble des phrases d'un document, i.e. $\mathcal{A} = d$.
 
-Notons d'abord que, comme on ne tient pas compte de l'ordre dans le cadre 
-expérimental uniformisé décrit à la section \ref{section:problematique},
+Notons aussi que, comme on ne tient pas compte de l'ordre dans le cadre 
+expérimental uniformisé,
 il est naturel de considérer que chaque phrase d'un résumé contribue à part égale
 au score observé.
 Implicitement, cela revient à faire l'hypothèse que la récompense associée à un résumé
 $\mathcal{M}$ est la moyenne de la récompense associable à chaque phrase.
-Or, comme le score ROUGE est basé sur un score F1 sur le résumé complet, cette hypothèse
-n'est pas strictement vraie mais elle est intuitivement valide.
+Or, comme le score ROUGE est basé sur un score F1 sur le résumé $\mathcal{M}$ complet, cette hypothèse
+n'est pas strictement vraie, mais demeure intuitivement valide.
 En effet, les phrases qui résument bien le document généreront des résumés aux scores
 plus élevés et donc leur présence à elle seule doit contribuer à augmenter le score
 associé à un résumé.
 
-Maintenant que l'on a établi le cadre théorique entourant le problème de bandit 
-combinatoire, une question demeure: comment peut-on le résoudre ?
-La prochaine section répond à cette question en démontrant 
-comment l'algorithme UCB peut être légèrement modifié pour 
-être appliqué au bandit combinatoire.
+% Maintenant que l'on a établi le cadre théorique entourant le problème de bandit 
+% combinatoire, une question demeure: comment peut-on le résoudre ?
+% La prochaine section répond à cette question en démontrant 
+% comment l'algorithme UCB peut être légèrement modifié pour 
+% être appliqué au bandit combinatoire.
 
-\subsection{UCB pour bandit combinatoire}
+\subsection{UCB pour bandit combinatoire (CUCB)}
+\label{subsec:ucb_combi}
 
-Tel que décrit à la section \ref{subsec:ucb}, Upper Confidence Bound (UCB) est une approche permettant 
-de minimiser le pseudo-regret cumulatif pour les problèmes de bandit stochastique.
-Pour ce faire, UCB maintient des bornes supérieures UCB$_a(t)$ pour chaque action 
-$a \in \mathcal{A}$ et chaque pas de temps $t$
+Tel que décrit à la section \ref{subsec:ucb}, Upper Confidence Bound (UCB) \citep{ucb} est 
+un algorithme permettant de minimiser le pseudo-regret cumulatif 
+pour les problèmes de bandit stochastique.
+Bien que UCB est conçu pour les problèmes de bandit stochastique, 
+l'approche peut être naturellement étendue aux problèmes de bandit combinatoire
+avec l'algorithme Combinatorial Upper Confidence Bound (CUCB).
+CUCB permet de minimiser le pseudo-regret cumulatif de n'importe quel bandit combinatoire,
+mais on présente ici seulement son application à la formulation multitâche, qui est la 
+formulation présentée à la section \ref{subsec:appli_gen_resume_ucb} pour
+représenter la génération du résumé extractif d'un document.
 
-\begin{equation}
-    \text{UCB}_a(t) = \bar{x}_a(t) + \beta \sqrt{\frac{2\ln t}{n_a(t)}},
-    \label{eq:UCB}
-\end{equation}
-où $\bar{x}_a(t)$ est la moyenne des récompenses reçues jusqu'au temps $t$ par l'action $a$,
-$n_a(t)$ est le nombre de fois que l'action $a$ a été sélectionnée et $\beta$ est un
-hyperparamètre régulant l'exploration.
-Quand une action n'a pas encore été sélectionnée i.e. $n_a(t)=0$, on 
-lui assigne UCB$_a = \infty$, forçant l'apprenant à sélectionner au moins 
-une fois chaque action avant d'exploiter les moyennes $\bar{x}_a(t)$
-dans son choix d'action.
+Pour étendre UCB au bandit multitâche, CUCB modifie d'abord la moyenne 
+empirique $\bar{x}_a(t)$ et le nombre de visites $n_a(t)$ maintenues pour chaque 
+action $a$ après $t$ pas de temps.
+Ces statistiques sont modifiées indiquer maintenant la présence de l'action 
+dans les \textit{super-actions} sélectionnées selon
 
-Bien que UCB est conçu pour les problèmes de bandits stochastiques, 
-l'approche peut être 
-naturellement étendue au problème de bandit combinatoire.
-En effet, il suffit alors de choisir à chaque pas de temps $t$ la \textit{super-action}
-maximisant la borne supérieure définie par UCB sur les actions $a \in \mathcal{A}$.
-Dans notre cas, cela revient à sélectionner la \textit{super-action} composée des trois actions
+\begin{equation*}
+    \bar{x}_a (t) = \frac{1}{n_a (t)} \sum_{\tau = 1}^{t} \mathbb{I}\left[a \in \mathcal{M}_\tau\right] X_{\mathcal{M}_\tau, \tau} \quad \text{et} \quad
+    n_a (t) = \sum_{\tau = 1}^{t} \mathbb{I}\left[a \in \mathcal{M}_\tau\right],
+\end{equation*}
+où $\mathbb{I}$ est la fonction indicatrice retournant 1 quand 
+son prédicat est vrai et 0 sinon.
+
+À chaque pas de temps $t$, CUCB fait appel à un oracle pour sélectionner
+la \textit{super-action} $\mathcal{M}_t$ la plus prometteuse selon
+la borne supérieure UCB \eqref{eq:ucb} de chacune des actions $a \in \mathcal{A}$.
+L'oracle utilisé est requis d'être probablement approximativement 
+correct dans son estimation de la \textit{super-action} optimale.
+Dans le contexte multitâche et selon l'hypothèse faite à la section 
+\ref{subsec:appli_gen_resume_ucb} que chaque phrase 
+d'un résumé contribue de manière égale au score du résumé,
+il est naturel de considérer l'oracle qui sélectionne directement
+la \textit{super-action} contenant les 3 
+actions avec la borne UCB maximale.
+Bien qu'il n'est pas forcément toujours optimal de sélectionner 
+les 3 phrases les plus prometteuses individuellement pour bâtir un 
+résumé, cette approche sera presque optimale la plupart du temps.
+Cela revient à sélectionner au temps $t$ la \textit{super-action} composée des trois actions
 avec la borne supérieure maximale, i.e.
 
 \begin{equation}
-    \mathcal{M}_t = \text{3-}\argmax_{a \in \mathcal{A}} \text{UCB}_a(t),
+    \mathcal{M}_t = \text{3-}\argmax_{a \in \mathcal{A}} \text{UCB}_a(t - 1).
     \label{eq:ucb_combi_rule}
 \end{equation}
 
-où UCB$_a(t)$ est défini selon \eqref{eq:UCB}.
+En sélectionnant les \textit{super-actions} selon \eqref{eq:ucb_combi_rule},
+CUCB accomplit l'objectif de minimisation du pseudo-regret cumulatif \eqref{eq:regret_combi}.
+Une vue d'ensemble de l'application de CUCB au bandit combinatoire 
+représentant la génération du résumé d'un document se trouve 
+à l'algorithme \ref{alg:cible_ucb}.
+Notons que, pour mettre CUCB à l'échelle de chaque document $d$, 
+l'exploration que l'on utilise est plutôt guidée par $\beta' = \frac{\beta}{|d|}$.
 
-La prochaine section décrit le premier volet de notre contribution:
-l'utilisation de UCB pour la génération de cibles extractives 
-d'un document. 
+\begin{algorithm}[!ht]
+    \setstretch{1.3}
+    \begin{algorithmic}[1]
+        \Require $d$ (document), $s$ (résumé cible), $\beta$ (paramètre d'exploration), $T$ (nombre de pas de temps).
+        \State Initialiser $\bar{x}_a =0$ et $n_a = 0$ pour $a \in d$
+        \For{$t=1, ..., T$}
+        \For{$a \in d$}
+        \State UCB$_a = \bar{x}_a + \frac{\beta}{|d|} \sqrt{\frac{2 \ln t}{n_a}}$\Comment{UCB$_a = \infty$ si $n(a) = 0 $}
+        \EndFor
+        \State $\mathcal{M}_t =$ 3-$\argmax$ UCB$_a$\Comment{Selon \eqref{eq:ucb_combi_rule}}
+        \State $X_t = \text{ROUGE}(\mathcal{M}_t, s)$
+        \State Mettre à jour $\bar{x}_a$ et $n_a$ pour {$a \in \mathcal{M}_t$}
+        \EndFor
+    \end{algorithmic}
+    \caption{CUCB pour génération de résumé}
+    \label{alg:cible_ucb}
+\end{algorithm}
 
-\section{Génération de cibles par UCB}
+\section{Génération de cibles}
 \label{sec:cibles_ucb}
 
 Pour entraîner le réseau de neurones décrit à la section
 \ref{subsec:archi}, il est possible d'employer 
 des cibles extractives $y$ associées à chaque document $d$.
-Intuitivement, ces cibles doivent représenter 
+Intuitivement, ces cibles doivent représenter,
 dans quelle mesure chacune des phrases $d_i$
 correspond à une bonne phrase d'un point de vue extractif.
-Naturellement, on prend $y_i \in [0, 1]$\footnote{Ici $y_i$ 
+Naturellement, on prend\footnote{Ici $y_i$ 
 représente la cible associée à la phrase $d_i$. On utilisera aussi parfois $y_a$
-pour représenter la cible associée à la phrase $a$.}, où un score 
+pour représenter la cible associée à la phrase $a$.} $y_i \in [0, 1]$, où un score 
 près de 1 indique que la phrase $d_i$ permet de générer 
 des résumés extractifs de haute qualité.
 
-Sur le jeu de données CNN/DailyMail \citep{hermann2015teaching},
-les cibles habituellement retenues sont produites par 
-l'oracle proposé par \citet{10.5555/3298483.3298681} et décrit 
+\subsection{Utilisation d'un oracle}
+\label{subsec:ucb_oracle}
+
+Sur le jeu de données du CNN/DailyMail \citep{hermann2015teaching},
+les cibles habituellement retenues sont produites par un oracle tel que décrit 
 à la section \ref{sec:extractive}.
-Mentionnons simplement que l'oracle est une heuristique qui 
+Pour un document $d$ et son résumé cible $s$, l'oracle est une heuristique qui 
 génère un résumé extractif $\dot{s}$ de 3 phrases en sélectionnant 
 une à une les phrases d'un document maximisant le score 
-ROUGE.
+ROUGE$(\dot{s}, s)$.
 Comme l'ordre des phrases n'impacte presque pas le score ROUGE (\ref{subsec:eval}),
-le résumé choisi par l'oracle 
-peut être vu comme un résumé de 3 phrases presque optimal
-d'un document.
+la performance du résumé choisi par l'oracle 
+peut être considérée comme très près du véritable résumé 
+extractif optimal $s^*=\argmax_{\hat{s}} \text{ROUGE}(\hat{s}, s)$ d'un document.
 Ainsi, \citet{10.5555/3298483.3298681} proposent d'utiliser 
 les cibles binaires indiquant la présence ou non d'une phrase 
 dans le résumé $\dot{s}$ produit par l'oracle, i.e.
 
 \begin{equation}
-    y_i = \mathbb{I}\big[d_i \in \dot{s}\big],
+    y_a = \mathbb{I}\big[a \in \dot{s}\big], \quad \text{où} \quad \text{ROUGE}(\dot{s}, s) \approx R^*
     \label{eq:cibles_binaires}
 \end{equation}
-pour $\mathbb{I}$ la fonction identité retournant 1 quand 
-son prédicat est vrai et 0 sinon.
+pour $R^*= \text{ROUGE}(s^*, s)$ le score ROUGE du résumé optimal et
+$\mathbb{I}$ la fonction indicatrice.
 
 En raison de leur nature binaire, les cibles obtenues selon \eqref{eq:cibles_binaires}
 peuvent potentiellement être mal spécifiées.
 En effet, si le résumé $\dot{s}$ produit par l'oracle est 
 presque optimal au sens extractif, cela n'empêche pas 
-que d'autres résumés $\dot{s}'$ peuvent obtenir un score ROUGE
+que d'autres résumés $\hat{s}'$ peuvent obtenir un score ROUGE
 très similaire. 
-Or, les phrases de $\dot{s}'$ qui ne font pas partie de $\dot{s}$
-se verront attribuer une cible de 0, alors qu'elles présentent 
-tout de même une excellente \textit{extractivité}.
+Or, les phrases de $\hat{s}'$ qui ne font pas partie de $\dot{s}$
+se verront attribuer une cible de 0, alors qu'elles représentent 
+tout de même des phrases pouvant générer des résumés presque optimaux.
+Ce problème d'identification de phrases alternatives
+presque optimales peut rendre l'entraînement de systèmes 
+de générations de résumés plus difficile.
 
-\subsection{Motivation}
+\subsection{Potentiel extractif d'une phrase}
 
-Nous proposons un nouveau processus de génération de cibles 
-permettant d'alléger ce problème en quantifiant 
+On propose d'adresser directement le problème de l'identification 
+de phrases alternatives en quantifiant 
 directement dans quelle mesure une phrase est susceptible de générer 
-des bons résumés extractifs.
-Pour un document $d$, le processus exécute $T$ pas de temps UCB \eqref{eq:ucb_combi_rule}
-sur le bandit combinatoire représentant la génération du résumé de $d$.
-En minimisant le pseudo-regret, UCB identifie graduellement les 
-bons résumés et, plus particulièrement, maintient une 
-moyenne $\bar{x}_a$ des scores ROUGE reçus en sélectionnant la phrase $a$.
+de bons résumés extractifs.
+Formellement, pour un document $d$ et son résumé cible $s$, 
+on définit le potentiel extractif $v_a$ d'une phrase $a$
+comme
 
-Étant donné un nombre de pas temps $T$ infini, UCB 
-identifierait éventuellement le résumé $\mathcal{M}^*$ optimal.
-À ce moment, les moyennes $\bar{x}_a$ convergeraient éventuellement à $R^*$, 
-le meilleur score de résumé extractif d'un document, pour les phrases $a$ faisant
-partie du résumé optimal.
-Or, tout l'intérêt repose dans les moyennes $\bar{x}_a$ pour les 
-phrases ne faisant pas partie du résumé optimal.
-Comme UCB va progressivement choisir de meilleurs résumés en s'assurant 
-de bien explorer l'espace des résumés possibles, la moyenne $\bar{x}_a$ associée 
-à une phrase $a$ pourra servir d'estimateur de sa qualité extractive.
+\begin{equation}
+    v_a := \frac{1}{|\mathcal{S}_d (a)|}\sum_{\hat{s} \in \mathcal{S}_d(a)} \, \text{ROUGE}(\hat{s}, s),
+    \label{eq:potentiel_extractif}
+\end{equation}
 
-Intuitivement, la structure inhérente de la génération 
+où $\mathcal{S}_d(a)$ est l'ensemble des résumés de 3 phrases de $d$ incluant $a$.
+Ainsi défini, le potentiel extractif $v_a$ d'une phrase représente donc la moyenne 
+des scores générés par les résumés contenant $a$.
+Il est alors naturel d'utiliser des cibles $y$ proportionnelles aux potentiels 
+extractifs des phrases d'un document, i.e. $y_a \propto v_a$,
+pour incorporer de l'information sur la sous-optimalité des phrases.
+
+Une alternative à \eqref{eq:potentiel_extractif} pour définir le potentiel 
+extractif $v_a$ aurait été de plutôt considérer le score maximal d'un résumé 
+contenant $a$.
+Nous avons choisi d'utiliser une moyenne car la moyenne 
+incorpore aussi les mauvais résumés produits par une phrase $a$.
+Prenons le cas de deux phrases $a$ et $a'$ similaires et
+générant toutes deux d'excellents résumés.
+Le score maximal pour chacune des phrases sera très élevé,
+mais le score associé à un résumé contenant à la fois $a$ et $a'$ 
+sera plus faible en raison de la répétition d'information.
+Il n'est donc pas souhaitable d'associer simultanément aux deux phrases 
+un potentiel (une cible) élevé, car cela risquerait seulement 
+d'inciter les résumés contenant $a$ et $a'$.
+En utilisant la moyenne, nos potentiels extractifs $v_a$ contournent 
+le problème en considérant aussi les mauvais résumés contenant $a$,
+comme ceux incluant des phrases répétitives.
+
+\subsection{Utilisation de CUCB}
+
+L'équation \eqref{eq:potentiel_extractif} ne peut toutefois pas être 
+calculée efficacement en pratique, car elle nécessite de 
+tester tous les résumés possibles d'un document.
+Elle n'est pas non plus approximée efficacement par pige 
+aléatoire en raison de la nature de la distribution 
+des scores ROUGE des résumés.
+En effet, la structure inhérente de la génération 
 de résumés extractifs donne lieu à bon nombre de phrases aux 
 potentiels extractifs similaires (quelques mots correspondant au résumé cible) 
-et peu d'excellentes phrases, difficiles à discerner.
-En minimisant le regret, UCB va donc naturellement obtenir plus d'échantillons de résumés contenant 
-les excellentes phrases.
-Or, comme les excellentes phrases sont limitées, il faut échantillonner plus de résumés les contenant
-avant d'obtenir une bonne estimation de leur valeur, contrairement aux phrases insatisfaisantes 
-dont la valeur est rapidement estimée après quelques échantillons.
-Il est donc justifié d'utiliser les quantités mesurées par UCB pour obtenir de l'information 
-sur toutes les phrases d'un document, pas seulement pour trouver le résumé optimal.
+et peu d'excellentes phrases, requérant l'exploration des 
+résumés presque optimaux pour être discernées.
 
-Concrètement, nous proposons d'utiliser les moyennes $\bar{x}_a$ produites 
-par un UCB pour générer les cibles $y_a$ selon le processus suivant.
+Pour approximer les valeurs de $v_a$, il est donc nécessaire 
+d'explorer de bons résumés pour distinguer les phrases 
+au potentiel extractif élevé.
+Nous proposons l'utilisation de CUCB \eqref{eq:ucb_combi_rule} à cet effet. 
+Pour un document $d$, on exécute $T$ pas de temps CUCB 
+sur le bandit combinatoire représentant la génération du résumé de $d$.
+En minimisant le pseudo-regret cumulatif \eqref{eq:regret_combi}, CUCB identifie graduellement les 
+bons résumés et parvient à trouver les phrases 
+au potentiel extractif élevé.
+Parallèlement, CUCB maintient aussi une 
+moyenne empirique $\bar{x}_a(T)$\footnote{Pour alléger la notation,
+on utilisera $\bar{x}_a$ à l'avenir lorsqu'il s'agit clairement 
+des moyennes empiriques après $T$ pas de temps.} des scores ROUGE reçus 
+en sélectionnant la phrase $a$, laquelle peut donc 
+servir d'approximation de $v_a$.
+
+Concrètement, on propose donc d'utiliser les moyennes $\bar{x}_a$ produites 
+par CUCB comme approximations des potentiels extractifs $v_a$ pour générer les cibles $y_a$ selon le processus suivant.
 On commence par appliquer une mise à l'échelle min-max des moyennes $\bar{x}_a$.
 Cette mise à l'échelle produit des moyennes normalisées $\bar{x}_a' \in [0, 1]$
 en conservant proportions originales entre les moyennes.
-Les $\bar{x}_a'$ sont ensuite utilisé pour produire les cibles $y_a$ selon
+Les $\bar{x}_a'$ sont ensuite utilisées pour produire les cibles $y_a$ selon
 
 \begin{equation}
     y_a = 10^{-10(1 - \bar{x}_a')}.
@@ -229,184 +306,124 @@ Les $\bar{x}_a'$ sont ensuite utilisé pour produire les cibles $y_a$ selon
 \end{equation}
 
 L'intuition derrière l'équation \eqref{eq:cibles_ucb} est qu'une phrase 
-avec une moyenne 10 \% inférieure à une autre devrait se voir attribuer une cible 
-10 fois moins élevée. 
+avec un potentiel extractif 10 \% inférieur à celui de la meilleure phrase 
+devrait se voir attribuer une cible 10 fois moins élevée. 
 Cette mise à l'échelle peut sembler drastique mais il faut se souvenir 
 que l'on ne souhaite accorder d'importance qu'aux phrases qui produisent 
 d'excellents résumés.
 Enfin, grâce à la mise à l'échelle min-max préalable, une cible de 1 
-sera toujours associée pour la meilleure phrase selon UCB.
+sera toujours associée pour la phrase au meilleur potentiel 
+extractif selon CUCB.
 
 \subsection{Expériences}
+\label{subsec:exp_cucb}
 
-Si l'intuition de l'utilisation des quantités calculées par UCB comme cibles est naturelle
-pour le cas où le nombre de pas de temps $T$ effectué est immense, il demeure néanmoins important
-de vérifier comment ces cibles sont adéquates sur un nombre de pas de temps plus restreint.
-Mais, comment savoir quand on approche de ce stade d'optimalité et que 
-l'on peut considérer les cibles comme adéquates ?
-Réponse: quand le score du résumé le plus prometteur selon les moyennes $\bar{x}_a$, nommons le $R_t$,
-commence à converger vers le score $R^*$ du résumé extractif optimal.
-En mesurant la sous-optimalité $\Delta_t = R^* - R_t$ des cibles générées
-par UCB, on peut donc savoir à partir de quel moment les cibles seraient satisfaisantes
-pour être utilisées en entraînement.
-
+On souhaite maintenant vérifier dans quelle mesure CUCB est applicable 
+au processus de génération de résumé d'un document et 
+quelle est son efficacité en fonction du nombre de pas de temps $T$ effectués.
+On s'intéresse donc à savoir à quel moment le score du résumé le plus prometteur 
+selon les moyennes $\bar{x}_a(T)$, nommons le $Y_T$,
+se rapproche du score $Y^*$ du résumé extractif optimal.
+En mesurant la sous-optimalité $\Delta_T = Y^* - Y_T$ de CUCB, 
+on peut savoir à partir de quel moment les moyennes empiriques
+obtenues seraient satisfaisantes pour générer des cibles de bonne qualité.
 On reprend donc le jeu de développement présenté à la section \ref{subsec:jeu_donnees} 
-pour mener des expériences sur la rapidité de l'obtention de cibles satisfaisante par UCB.
-Les résultats des figures \ref{fig:bandit_combi_alpha}
-et \ref{fig:bandit_combi_doc_len} sont obtenus en calculant les $\Delta_t$ à partir de
-l'algorithme \ref{alg:cible_ucb}.
-Notons que, pour mettre UCB à l'échelle de chaque document $d$, 
-l'exploration que l'on utilise est plutôt guidée par $\beta' = \frac{\beta}{|d|}$.
-Il est aussi à noter que les différences rapportées entre les différentes 
+pour mener des expériences sur la rapidité de l'identification de 
+résumés presque optimaux par CUCB.
+En fonction des résultats sur la convergence de CUCB, 
+on présente aussi un aperçu des cibles générées par CUCB selon \eqref{eq:cibles_ucb}
+et leur comparaison aux cibles issues de l'oracle \eqref{eq:cibles_binaires}
+sur le jeu d'entraînement du CNN/DailyMail.
+
+\subsection{Résultats}
+\label{subsec:ucb_resultats}
+
+Les figures \ref{fig:bandit_combi_alpha} et \ref{fig:bandit_combi_doc_len}
+présentent respectivement l'impact du paramètre d'exploration $\beta$ et de la taille
+des documents sur l'évolution de la sous-optimalité $\Delta_T$ des meilleurs 
+résumés selon CUCB.
+Il est à noter que les différences rapportées entre les différentes 
 courbes sur les figures ne sont pas statistiquement significatives.
 Pour éviter d'encombrer inutilement les figures, on rapporte alors 
 seulement les moyennes observées.
 Les versions incorporant la déviation standard des différentes courbes 
 se trouvent à l'annexe \ref{chap:variance_graphs}.
 
-\begin{algorithm}
-    \setstretch{1.3}
-    \caption{UCB combinatoire pour génération de résumé}
-    \begin{algorithmic}[1]
-        \Require $d$ (document), $s$ (résumé cible), $\beta$ (paramètre d'exploration), $T$ (nombre de pas de temps).
-        \State Initialiser $\bar{x}_a =0$ et $n_a = 0$ pour $a \in d$
-        \For{$t=1, ..., T$}
-        \For{$a \in d$}
-        \State UCB$_a = \bar{x}_a + \frac{\beta}{|d|} \sqrt{\frac{2 \ln t}{n_a}}$
-        \EndFor
-        \State $\mathcal{M}_t =$ 3-$\argmax$ UCB$_a$
-        \State $r_t = \text{ROUGE}(\mathcal{M}_t, s)$
-        \State Mettre à jour $\bar{x}_a$ et $n_a$ pour {$a \in \mathcal{M}_t$}
-        \EndFor
-    \end{algorithmic}
-    \label{alg:cible_ucb}
-\end{algorithm}
-
-\subsection{Résultats}
-\label{subsec:ucb_resultats}
-
-% La figure \ref{fig:bandit_combi_q_argmax} présente l'importance du critère de sélection
-% utilisé pour trouver le résumé optimal selon UCB au temps $t$.
-% Deux approches sont envisageables: considérer les phrases $i$ où la moyenne des récompenses reçues
-% $\bar{x}_i$ est maximale ou encore celles où le nombre de sélections $n_i$ est maximal.
-% Les résultats rapportés donnent un net avantage aux résumés sélectionnés selon la moyenne des
-% récompenses perçues.
-% C'est normal: les $n_i$ prennent beaucoup plus de temps à distinguer les bonnes phrases
-% car ils sont issus d'une distribution uniforme pour la sélection des $|d|$ premières phrases.
-% Remarquons aussi que les deux approches convergent éventuellement au même résumé optimal,
-% comme c'était à prévoir.
-% Enfin, la conclusion retenue est que les $\bar{x}_i$ forment de meilleurs cibles que les $n_i$.
-% Pour les prochaines figures, les résultats rapportés seront donc seulement ceux obtenus 
-% selon le critère de sélection basés sur $\bar{x}_i$.
-
-% \tikzsetnextfilename{bandit_combi_q_argmax}
-% \begin{figure}[h!]
-%     \begin{center}
-%         \begin{tikzpicture}
-%             \begin{axis}[title={Critère de sélection du résumé retenu}, grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, name=plot0, y tick label style={/pgf/number format/fixed zerofill}, ylabel={$\Delta_t$}, xlabel={$t$}, width=0.95\textwidth, height=0.4\textwidth, smooth, xmin=0, xmax=100, y tick label style={/pgf/number format/fixed}]
-%                 \addplot[green, ylabel near ticks, line width=3pt] table[x=t, y=arg_1e1, col sep=comma]{bandit_combi/bandit_combiExpResults/alpha/all.csv};
-%                 \addplot[blue, ylabel near ticks, line width=3pt] table[x=t, y=q_1e1, col sep=comma]{bandit_combi/bandit_combiExpResults/alpha/all.csv};
-%                 \legend{$n_i$, $\bar{x_i}$}
-%             \end{axis}
-%         \end{tikzpicture}
-%     \end{center}
-%     \caption{Impact du critère de sélection utilisé pour choisir le résumé retenu au temps $t$.}
-%     \label{fig:bandit_combi_q_argmax}
-% \end{figure}
-
 La figure \ref{fig:bandit_combi_alpha} présente comment l'hyperparamètre $\beta$ influence la
-convergence de UCB.
+convergence de CUCB.
 On remarque que $\beta=10$ (courbe verte sur la figure) semble être le bon compromis entre exploration et exploitation,
-réussissant à converger à $\Delta_t \approx 0.05$ après 250 pas de temps de UCB.
+réussissant à converger à $\Delta_T \approx 7$ après 100 pas de temps de CUCB.
 
 \tikzsetnextfilename{bandit_combi_alpha}
-\begin{figure}[h!]
+\begin{figure}[ht!]
     \begin{center}
         \begin{tikzpicture}
-            \begin{axis}[title={Impact de l'exploration sur la progression de la sous-optimalité}, grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, name=plot0, y tick label style={/pgf/number format/fixed zerofill}, ylabel={$\Delta_t$}, xlabel={$t$}, width=0.95\textwidth, height=0.4\textwidth, smooth, xmin=0, xmax=250, y tick label style={/pgf/number format/fixed}]
-                \addplot[red, ylabel near ticks, line width=3pt] table[x=t, y=q_1e0, col sep=comma]{bandit_combi/bandit_combiExpResults/alpha/all.csv};
-                \addplot[green, ylabel near ticks, line width=3pt] table[x=t, y=q_1e1, col sep=comma]{bandit_combi/bandit_combiExpResults/alpha/all.csv};
-                \addplot[blue, ylabel near ticks, line width=3pt] table[x=t, y=q_1e2, col sep=comma]{bandit_combi/bandit_combiExpResults/alpha/all.csv};
+            \begin{axis}[legend cell align={left},  grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, name=plot0, ylabel={$\Delta_T$}, xlabel={$T$}, width=0.95\textwidth, height=0.4\textwidth, smooth, xmin=1, xmax=250, y tick label style={/pgf/number format/fixed}]
+                \addplot[red, ylabel near ticks, line width=1.5pt] table[x expr=\thisrow{t} + 1, y expr=\thisrow{q_1e0} * 100, col sep=comma]{bandit_combi/bandit_combiExpResults/alpha/all.csv};
+                \addplot[green, ylabel near ticks, line width=1.5pt] table[x expr=\thisrow{t} + 1, y expr=\thisrow{q_1e1} * 100, col sep=comma]{bandit_combi/bandit_combiExpResults/alpha/all.csv};
+                \addplot[blue, ylabel near ticks, line width=1.5pt] table[x expr=\thisrow{t} + 1, y expr=\thisrow{q_1e2} * 100, col sep=comma]{bandit_combi/bandit_combiExpResults/alpha/all.csv};
                 \legend{$\beta = 1$, $\beta = 10$, $\beta = 100$}
             \end{axis}
         \end{tikzpicture}
     \end{center}
-    \caption{Impact du paramètre d'exploration $\beta$ utilisé par UCB sur la convergence.
-    $\Delta_t$ représente la différence entre le score ROUGE du meilleur résumé selon UCB et 
-    celui généré par l'oracle.}
+    \caption[Impact du paramètre d'exploration $\beta$ sur la convergence de CUCB]
+    {Impact du paramètre d'exploration $\beta$ utilisé par CUCB sur la convergence.
+    $\Delta_T$ (plus bas est meilleur) représente la différence entre le score ROUGE du meilleur résumé
+    extractif d'un document et celui suggéré CUCB après $T$ pas de temps.}
     \label{fig:bandit_combi_alpha}
 \end{figure}
 
-La figure \ref{fig:bandit_combi_doc_len} évalue dans quelle mesure la taille des documents
-influe sur la sous-optimalité des cibles générées par UCB.
-On remarque d'abord que $\beta=10$ (courbe verte) est la meilleure configuration pour toutes les tailles
-de document.
-Il est donc adéquat de prendre la même valeur de $\beta$ pour tous les documents.
-
-Aussi, on remarque que l'apprentissage converge plus tôt pour les documents qui sont
-plus courts.
-Il serait donc pertinent de faire croître le nombre de pas de temps de UCB en fonction du nombre de
-phrases dans un document.
-À cette fin, on remarque que la performance stagne autour de 100 pas de temps pour les documents 
-courts mais continue à augmenter jusqu'à 250 pas de temps pour les longs documents.
-
-\begin{figure}[h!]
+\begin{figure}[ht!]
     \tikzsetnextfilename{bandit_combi_less20}
     \begin{tikzpicture}[baseline]
-        \begin{axis}[grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\Large}, width=0.35\textwidth,
-                height=0.4\textwidth, name=plot0, y tick label style={/pgf/number format/fixed zerofill}, xmin=0.0, xmax=250.0, ymin=0.01, ymax=0.30, ylabel={$\Delta_t$}, xlabel={$t$}, smooth, title={$|d| \leq 20$}]
-            \addplot[red, ylabel near ticks, line width=3pt] table[x=t, y=less20_1e0, col sep=comma]{bandit_combi/bandit_combiExpResults/doc_len/all.csv};
-            \addplot[green, ylabel near ticks, line width=3pt] table[x=t, y=less20_1e1, col sep=comma]{bandit_combi/bandit_combiExpResults/doc_len/all.csv};
-            \addplot[blue, ylabel near ticks, line width=3pt] table[x=t, y=less20_1e2, col sep=comma]{bandit_combi/bandit_combiExpResults/doc_len/all.csv};
+        \begin{axis}[grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom,legend cell align={left},  every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\Large}, width=0.36\textwidth,
+                height=0.4\textwidth, name=plot0, xmin=1.0, xmax=250.0, ymin=3, ymax=25, ylabel={$\Delta_T$}, xlabel={$T$}, smooth, title={$|d| \leq 20$}, ytick={5, 10, 15, 20, 25}, xtick={50, 100, 150, 200, 250}]
+            \addplot[red, ylabel near ticks, line width=1.5pt] table[x expr=\thisrow{t} + 1, y expr=\thisrow{less20_1e0} * 100, col sep=comma]{bandit_combi/bandit_combiExpResults/doc_len/all.csv};
+            \addplot[green, ylabel near ticks, line width=1.5pt] table[x expr=\thisrow{t} + 1, y expr=\thisrow{less20_1e1} * 100, col sep=comma]{bandit_combi/bandit_combiExpResults/doc_len/all.csv};
+            \addplot[blue, ylabel near ticks, line width=1.5pt] table[x expr=\thisrow{t} + 1, y expr=\thisrow{less20_1e2} * 100, col sep=comma]{bandit_combi/bandit_combiExpResults/doc_len/all.csv};
             \legend{$\beta=1$, $\beta=10$, $\beta=100$}
         \end{axis}
     \end{tikzpicture}
     \tikzsetnextfilename{bandit_combi_20to35}
     \begin{tikzpicture}[baseline]
-        \begin{axis}[grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, width=.35\textwidth,
-                height=0.4\textwidth, name=plot0, xshift=-.1\textwidth, y tick label style={/pgf/number format/fixed zerofill},xmin=0.0, xmax=250.0, ymin=0.01, ymax=0.30, xlabel={$t$}, legend style={at={(0.9,0.1)},anchor=south east}, smooth, title={$20 < |d| < 35$}, ymajorticks=false]
-            \addplot[red, ylabel near ticks, line width=3pt] table[x=t, y=20to35_1e0, col sep=comma]{bandit_combi/bandit_combiExpResults/doc_len/all.csv};
-            \addplot[green, ylabel near ticks, line width=3pt] table[x=t, y=20to35_1e1, col sep=comma]{bandit_combi/bandit_combiExpResults/doc_len/all.csv};
-            \addplot[blue, ylabel near ticks, line width=3pt] table[x=t, y=20to35_1e2, col sep=comma]{bandit_combi/bandit_combiExpResults/doc_len/all.csv};
+        \begin{axis}[grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, width=.36\textwidth,
+                height=0.4\textwidth, name=plot0, xshift=-.1\textwidth, y tick label style={/pgf/number format/fixed zerofill},xmin=1.0, xmax=250.0, ymin=3, ymax=25, xlabel={$T$}, legend style={at={(0.9,0.1)},anchor=south east}, smooth, title={$20 < |d| < 35$}, ymajorticks=false, xtick={50, 100, 150, 200, 250}]
+            \addplot[red, ylabel near ticks, line width=1.5pt] table[x expr=\thisrow{t} + 1, y expr=\thisrow{20to35_1e0} * 100, col sep=comma]{bandit_combi/bandit_combiExpResults/doc_len/all.csv};
+            \addplot[green, ylabel near ticks, line width=1.5pt] table[x expr=\thisrow{t} + 1, y expr=\thisrow{20to35_1e1} * 100, col sep=comma]{bandit_combi/bandit_combiExpResults/doc_len/all.csv};
+            \addplot[blue, ylabel near ticks, line width=1.5pt] table[x expr=\thisrow{t} + 1, y expr=\thisrow{20to35_1e2} * 100, col sep=comma]{bandit_combi/bandit_combiExpResults/doc_len/all.csv};
         \end{axis}
     \end{tikzpicture}
     \tikzsetnextfilename{bandit_combi_more35}
     \begin{tikzpicture}[baseline]
-        \begin{axis}[grid style={dashed,gray!50}, axis y line*=right, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, width=.35\textwidth,
-                height=0.4\textwidth, name=plot0, xshift=-.1\textwidth, y tick label style={/pgf/number format/fixed zerofill}, xmin=0.0, xmax=250.0, ymin=0.01, ymax=0.30, xlabel={$t$}, legend style={at={(1,0.1)},anchor=south east}, smooth, title={$35 \leq |d|$}]
-            \addplot[red, ylabel near ticks, line width=3pt] table[x=t, y=more35_1e0, col sep=comma]{bandit_combi/bandit_combiExpResults/doc_len/all.csv};
-            \addplot[green, ylabel near ticks, line width=3pt] table[x=t, y=more35_1e1, col sep=comma]{bandit_combi/bandit_combiExpResults/doc_len/all.csv};
-            \addplot[blue, ylabel near ticks, line width=3pt] table[x=t, y=more35_1e2, col sep=comma]{bandit_combi/bandit_combiExpResults/doc_len/all.csv};
+        \begin{axis}[grid style={dashed,gray!50}, axis y line*=right, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, width=.36\textwidth,
+                height=0.4\textwidth, name=plot0, xshift=-.1\textwidth, xmin=1.0, xmax=250.0, ymin=3, ymax=25, xlabel={$T$}, legend style={at={(1,0.1)},anchor=south east}, smooth, title={$35 \leq |d|$}, ytick={5, 10, 15, 20, 25}, xtick={50, 100, 150, 200, 250}]
+            \addplot[red, ylabel near ticks, line width=1.5pt] table[x expr=\thisrow{t} + 1, y expr=\thisrow{more35_1e0} * 100, col sep=comma]{bandit_combi/bandit_combiExpResults/doc_len/all.csv};
+            \addplot[green, ylabel near ticks, line width=1.5pt] table[x expr=\thisrow{t} + 1, y expr=\thisrow{more35_1e1} * 100, col sep=comma]{bandit_combi/bandit_combiExpResults/doc_len/all.csv};
+            \addplot[blue, ylabel near ticks, line width=1.5pt] table[x expr=\thisrow{t} + 1, y expr=\thisrow{more35_1e2} * 100, col sep=comma]{bandit_combi/bandit_combiExpResults/doc_len/all.csv};
         \end{axis}
     \end{tikzpicture}
-    \caption{Impact de la taille du document sur la convergence de UCB.
-    $\Delta_t$ représente la différence entre le score ROUGE du meilleur résumé selon UCB et 
-    celui généré par l'oracle.}
+    \caption[Impact de la taille du document sur la convergence de CUCB]
+    {Impact de la taille du document sur la convergence de CUCB.
+    $\Delta_T$ (plus bas est meilleur) représente la différence entre le score ROUGE du meilleur résumé
+    extractif d'un document et celui suggéré CUCB après $T$ pas de temps.}
     \label{fig:bandit_combi_doc_len}
 \end{figure}
 
+La figure \ref{fig:bandit_combi_doc_len} évalue dans quelle mesure la taille des documents
+influe sur la sous-optimalité des cibles générées par CUCB.
+On remarque d'abord que $\beta=10$ (courbe verte) est encore une fois
+la meilleure configuration, peu importe la taille des documents.
+Il est donc adéquat de prendre la même valeur de $\beta$ pour tous les documents.
+Aussi, on remarque que l'apprentissage converge plus tôt pour les documents qui sont
+plus courts.
+Il serait donc pertinent de faire croître le nombre de pas de temps de CUCB en fonction du nombre de
+phrases dans un document.
+À cette fin, on remarque que la performance stagne autour de 100 pas de temps pour les documents 
+courts mais continue à augmenter jusqu'à 250 pas de temps pour les longs documents.
 
-\section{CombiSum}
-\label{sec:combisum}
-
-On propose maintenant un algorithme basé sur les cibles 
-générées par UCB: CombiSum.
-Conformément au cadre expérimental uniformisé présenté à la section 
-\ref{section:problematique},
-CombiSum réutilise exactement la même architecture neuronale que BanditSum.
-Conformément aux méthodes de l'état de l'art sur l'apprentissage 
-de cibles \citep{liu2019text}, la mise à jour des paramètres est faite selon la 
-perte basée sur l'entropie croisée binaire entre une cible $y$
-et un vecteur d'affinités produit $\hat{y} = \pi_\theta(d)$:
-
-\begin{equation}
-    l(\hat{y}, y) = \frac{1}{|y|} \sum_{i=1}^{|y|}\big[y_i \log(\hat{y}_i) + (1 - y_i) \log(1 - \hat{y}_i) \big].
-    \label{eq:bce}
-\end{equation}
-
-En se basant sur les résultats de la section précédente, on explore deux 
-fonctions $T(d)$ déterminant le nombre $T$ de pas de temps utilisés pour 
-générer les cibles UCB pour un document $d$.
+On explore donc deux fonctions $T(d)$ déterminant le 
+nombre $T$ de pas de temps utilisés pour 
+générer les cibles CUCB pour un document $d$.
 Premièrement, on considère une version fixe $T_f(d)=100$, correspondant à une 
 bonne estimation pour toutes les tailles de document.
 On considère aussi une version $T_l(d)=2|d| + 50$ augmentant linéairement selon 
@@ -415,29 +432,86 @@ Comme notre régularisation limite les documents à 50 phrases ou moins,
 $T_l(d)$ varie entre 50 et 150, avec une moyenne (sur les tailles de document) à 
 100.
 Ainsi, $T_f$ et $T_l$ utiliseront le même nombre de pas de temps en moyenne 
-et il sera possible de valider laquelle des deux fonctions permet 
-le meilleur entraînement.
+et leur comparaison est équitable.
 
-\subsection{Expériences}
+\tikzsetnextfilename{distro_targets_cucb}
+\begin{figure}[ht!]
+  \centering
+  \begin{tikzpicture}
+    \begin{axis}[
+      xlabel=Phrase $d_i$,
+      ylabel=$y_i$,
+      xtick=data,
+      axis y line*=left, axis x line*=bottom,
+      ybar,
+      width=0.95\textwidth, 
+      height=0.4\textwidth,
+      xmax=5.5,
+      legend cell align={left},
+      every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}]
+      \addplot[blue!40,fill, draw=blue] table[x=t,y=sit_fix_targets, col sep=comma] {bandit_combi/graham_results/cs_distros.csv};
+      \addplot[green!40,fill,draw=green] table[x=t,y=sit_linear_targets, col sep=comma] {bandit_combi/graham_results/cs_distros.csv};
+      \addplot[red!40,fill, draw=red] table[x=t,y=binary_linear_targets, col sep=comma] {bandit_combi/graham_results/cs_distros.csv};
+      \legend{CUCB ($T_f$), CUCB ($T_l$), Oracle}    
+    \end{axis}
+  \end{tikzpicture}
+  \caption[Distribution moyenne des cibles CUCB sur les phrases d'un document]
+  {Distribution moyenne des cibles $y$ produites par CUCB sur les phrases 
+  d'un document du jeu d'entraînement du jeu de données CNN/DailyMail.}
+  \label{fig:distro_cibles_cucb}
+\end{figure}
+
+Pour mettre à l'échelle les cibles générées par l'oracle 
+et celles générées par CUCB dans la figure \ref{fig:distro_cibles_cucb},
+les cibles CUCB de chaque document sont normalisées pour 
+avoir une somme de 3, comme les cibles binaires.
+Le premier constat est le très faible impact de l'utilisation de $T_f$ 
+ou $T_l$ sur les cibles générées par CUCB.
+Aussi, comme il fallait s'y attendre, les cibles générées par CUCB sont assez différentes 
+de celles générées par l'oracle.
+Notons simplement que la différence entre les cibles peut être attribuée 
+à deux facteurs distincts.
+Premièrement, CUCB ne converge pas, la plupart du temps, au résumé optimal 
+d'un document.
+Ainsi, les phrases auxquelles CUCB attribuera une cible de 1 seront,
+la plupart du temps, différentes de celles déterminées par l'oracle.
+L'autre facteur important de différence entre les cibles est 
+l'incorporation de scores non-nuls pour les phrases sous-optimales par CUCB.
+
+\section{CombiSum}
+\label{sec:combisum}
+
+On propose maintenant un algorithme basé sur les cibles 
+générées par CUCB: CombiSum.
+Conformément au cadre expérimental uniformisé présenté à la section 
+\ref{section:problematique},
+CombiSum réutilise exactement la même architecture neuronale que BanditSum.
+Comme les méthodes de l'état de l'art sur l'apprentissage 
+par cibles \citep{liu2019text}, la mise à jour des paramètres est faite selon la 
+perte basée sur l'entropie croisée binaire entre une cible $y$
+et le vecteur d'affinités produit $\hat{y} = \pi_\theta(d)$:
+
+\begin{equation}
+    l(\hat{y}, y) = \frac{1}{|y|} \sum_{i=1}^{|y|}\big[y_i \ln(\hat{y}_i) + (1 - y_i) \ln(1 - \hat{y}_i) \big].
+    \label{eq:bce}
+\end{equation}
 
 Une description détaillée de CombiSum est fournie à l'algorithme \ref{alg:systeme_ucb}.
-On effectue un entraînement sur le jeu de données CNN/DailyMail en 
-parcourant dans son entièreté le jeu de d'entraînement à 5 reprises
-et en utilisant des \textit{minibatches} de taille $B=64$.
-Notre implémentation est faite selon les détails expérimentaux décrits à la section 
-\ref{subsec:archi}.
+Pour chaque document $d$ d'une \textit{minibatch} d'exemples, CombiSum exécute 
+$T(d)$ pas de temps de CUCB, obtient une cible $y$ selon \eqref{eq:cibles_ucb}
+et met à jour les poids $\theta$ du modèle neuronal selon \eqref{eq:bce}.
 
 \begin{algorithm}
     \setstretch{1.3}
     \caption{CombiSum}
     \begin{algorithmic}[1]
-        \Require  $\mathcal{D}$ (jeu de données), $T$ (fonction pour le nombre de pas de temps), $\alpha$ (taux d'apprentissage), $\beta$ (taux d'exploration UCB), $B$ (taille de minibatch).
-        \While{vrai}
+        \Require  $\mathcal{D}$ (jeu de données), $T$ (fonction pour le nombre de pas de temps), $\alpha$ (taux d'apprentissage), $\beta$ (taux d'exploration CUCB), $B$ (taille de minibatch).
+        \While{critère d'arrêt non atteint}
         \State{batch $\sim \mathcal{D}^B$} \Comment{On pige la minibatch du jeu de données}
         \State $\nabla = \mathbf{0}$
         \ForAll{$(d,s) \in $ batch}
         \State $\hat{y} = \pi_\theta(d)$
-        \State Exécuter $T(d)$ pas de temps de UCB et obtenir $\bar{x}$.
+        \State Exécuter $T(d)$ pas de temps de CUCB et obtenir $\bar{x}$.
         \State Générer les cibles $y$ à partir de $\bar{x}$ \Comment{Selon \eqref{eq:cibles_ucb}}
         \State $\nabla = \nabla + \nabla_\theta l(\hat{y}, y)$ \Comment{Selon \eqref{eq:bce}}
         \EndFor
@@ -447,68 +521,76 @@ Notre implémentation est faite selon les détails expérimentaux décrits à la
     \label{alg:systeme_ucb}
 \end{algorithm}
 
+\subsection{Expériences}
+
+On effectue un entraînement sur le jeu de données du CNN/DailyMail en 
+parcourant dans son entièreté le jeu de d'entraînement à 5 reprises
+et en utilisant des \textit{minibatches} de taille $B=64$.
+Notre implémentation est faite selon les détails expérimentaux décrits à la section 
+\ref{subsec:archi}.
+En se basant sur les résultats empiriques présentés à la section \ref{subsec:ucb_resultats},
+on choisit de fixer $\beta=10$ pour toutes nos expériences.
+
 Pour les expériences, on s'intéresse à
 l'impact de la fonction $T$ utilisée.
 On expérimente donc avec $T = T_f$ et $T=T_l$,
-tel que décrits plus haut.
+tel que décrits à la section \ref{subsec:ucb_resultats}.
 En guise de référence, on entraîne aussi un modèle 
-en utilisant les cibles binaire générées par l'oracle.
-Étant donné le facteur aléatoire présent dans l'entraînement, nous effectuons 
-5 entraînements distincts pour chaque $T$ et présentons la moyenne
+en utilisant les cibles binaires générées par l'oracle selon \eqref{eq:cibles_binaires}.
+Étant donné le facteur aléatoire présent dans l'entraînement, on effectue 
+5 entraînements distincts pour chaque cible utilisée et présentons la moyenne
 des résultats obtenus.
 
 \subsection{Résultats}
 
-Les résultats obtenus sont présentés dans la figure \ref{fig:cs_learning_curve} 
-et le tableau \ref{tab:ROUGE_UCB}.
-Ici, UCB linéaire et fixe font référence respectivement à l'utilisation
-à l'utilisation $T_l$ et $T_f$ pour déterminer le nombre de pas de temps
-effectués par UCB.
+On présente à la figure \ref{fig:cs_learning_curve} l'évolution 
+du score ROUGE moyen obtenu en validation par CombiSum selon les cibles employées. 
+Le tableau \ref{tab:ROUGE_UCB} présente quant à lui une comparaison 
+entre le score ROUGE sur le jeu de test des modèles entraînés 
+par les différentes cibles.
 
-Tout d'abord, la figure \ref{fig:cs_learning_curve} illustre l'évolution 
-de la performance sur le jeu de validation des modèles selon 
-les cibles utilisées.
-On constate d'abord que la performance en validation avec les cibles 
-UCB atteint rapidement un plateau à partir duquel elle 
+On constate à la figure \ref{fig:cs_learning_curve} que la performance en validation avec les cibles 
+CUCB atteint rapidement un plateau à partir duquel elle 
 ne varie plus.
 Ce plateau n'affecte toutefois pas l'entraînement avec les cibles binaires,
 avec lesquelles l'apprentissage continue de varier jusqu'à
-éventuellement dépasser légèrement la performance des cibles UCB.
+éventuellement dépasser légèrement la performance des cibles CUCB.
 
 \tikzsetnextfilename{combisum_learning_curve}
-\begin{figure}[h!]
+\begin{figure}[ht!]
     \begin{center}
         \begin{tikzpicture}
-            \begin{axis}[title={Performance sur le jeu de validation selon la cible utilisée}, grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, name=plot0, y tick label style={/pgf/number format/fixed zerofill}, ylabel={ROUGE}, xlabel={Nombre de mises à jour (en milliers)}, width=0.95\textwidth, height=0.4\textwidth, smooth, xmin=0.5, legend style={at={(0.9,0.1)},anchor=south east}, legend cell align={left}, xmax=22.5, y tick label style={/pgf/number format/fixed}]
-                \addplot[blue, ylabel near ticks, line width=2pt] table[x=t, y=sit_fix, col sep=comma]{bandit_combi/graham_results/cs_learning_curve.csv};
-                \addplot[forget plot, name path=upperblue, draw=none] table[x=t, y=sit_fix_+, col sep=comma]{bandit_combi/graham_results/cs_learning_curve.csv};
-                \addplot[forget plot, name path=lowerblue, draw=none] table[x=t, y=sit_fix_-, col sep=comma]{bandit_combi/graham_results/cs_learning_curve.csv};
-                \addplot[red, ylabel near ticks, line width=2pt] table[x=t, y=sit_linear, col sep=comma]{bandit_combi/graham_results/cs_learning_curve.csv};
-                \addplot[forget plot, name path=upperred, draw=none] table[x=t, y=sit_linear_+, col sep=comma]{bandit_combi/graham_results/cs_learning_curve.csv};
-                \addplot[forget plot, name path=lowerred, draw=none] table[x=t, y=sit_linear_-, col sep=comma]{bandit_combi/graham_results/cs_learning_curve.csv};
-                \addplot[green, ylabel near ticks, line width=2pt] table[x=t, y=binary_linear, col sep=comma]{bandit_combi/graham_results/cs_learning_curve.csv};
-                \addplot[forget plot, name path=uppergreen, draw=none] table[x=t, y=binary_linear_+, col sep=comma]{bandit_combi/graham_results/cs_learning_curve.csv};
-                \addplot[forget plot, name path=lowergreen, draw=none] table[x=t, y=binary_linear_-, col sep=comma]{bandit_combi/graham_results/cs_learning_curve.csv};
+            \begin{axis}[grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, name=plot0, ylabel={ROUGE}, xlabel={Nombre de mises à jour (en milliers)}, width=0.95\textwidth, height=0.4\textwidth, smooth, xmin=0.5, legend style={at={(0.9,0.1)},anchor=south east}, legend cell align={left}, xmax=22.5, y tick label style={/pgf/number format/fixed}]
+                \addplot[blue, ylabel near ticks, line width=1.5pt] table[x=t, y expr=\thisrow{sit_fix} * 100, col sep=comma]{bandit_combi/graham_results/cs_learning_curve.csv};
+                \addplot[forget plot, name path=upperblue, draw=none] table[x=t, y expr=\thisrow{sit_fix_+} * 100, col sep=comma]{bandit_combi/graham_results/cs_learning_curve.csv};
+                \addplot[forget plot, name path=lowerblue, draw=none] table[x=t, y expr=\thisrow{sit_fix_-} * 100, col sep=comma]{bandit_combi/graham_results/cs_learning_curve.csv};
+                \addplot[green, ylabel near ticks, line width=1.5pt] table[x=t, y expr=\thisrow{sit_linear} * 100, col sep=comma]{bandit_combi/graham_results/cs_learning_curve.csv};
+                \addplot[forget plot, name path=uppergreen, draw=none] table[x=t, y expr=\thisrow{sit_linear_+} * 100, col sep=comma]{bandit_combi/graham_results/cs_learning_curve.csv};
+                \addplot[forget plot, name path=lowergreen, draw=none] table[x=t, y expr=\thisrow{sit_linear_-} * 100, col sep=comma]{bandit_combi/graham_results/cs_learning_curve.csv};
+                \addplot[red, ylabel near ticks, line width=1.5pt] table[x=t, y expr=\thisrow{binary_linear} * 100, col sep=comma]{bandit_combi/graham_results/cs_learning_curve.csv};
+                \addplot[forget plot, name path=upperred, draw=none] table[x=t, y expr=\thisrow{binary_linear_+} * 100, col sep=comma]{bandit_combi/graham_results/cs_learning_curve.csv};
+                \addplot[forget plot, name path=lowerred, draw=none] table[x=t, y expr=\thisrow{binary_linear_-} * 100, col sep=comma]{bandit_combi/graham_results/cs_learning_curve.csv};
                 \addplot[fill=blue!20, fill opacity=0.5] fill between[of=upperblue and lowerblue];
                 \addplot[fill=red!20, fill opacity=0.5] fill between[of=upperred and lowerred];
                 \addplot[fill=green!20, fill opacity=0.5] fill between[of=uppergreen and lowergreen];
-                \legend{UCB fixe, UCB linéaire, Oracle}
+                \legend{CUCB ($T_f$), CUCB ($T_l$), Oracle}
             \end{axis}
         \end{tikzpicture}
     \end{center}
-    \caption{Courbe d'apprentissage de CombiSum selon la cible UCB utilisée.
-             Un intervalle de confiance à 95 \% calculé à partir de 5 entraînements distincts
-             est rapporté pour chaque cible.}
+    \caption[Performance de CombiSum sur le jeu de validation selon la cible utilisée]
+    {Score ROUGE (plus élevé est meilleur) moyen de CombiSum en validation selon la cible utilisée.
+    Un intervalle de confiance à 95 \% calculé à partir de 5 entraînements distincts
+    est rapporté pour chaque cible.}
     \label{fig:cs_learning_curve}
 \end{figure}
 
 Le tableau \ref{tab:ROUGE_UCB} présente la performance 
-obtenue par nos modèles et par la référence Lead-3 sur le jeu de test.
+obtenue par CombiSum avec les différentes cibles et par la référence Lead-3 sur le jeu de test.
 Pour chaque entraînement effectué, la performance en test 
 rapportée est celle obtenue avec les paramètres $\theta$
 permettant d'obtenir la meilleure performance en validation.
 
-\begin{table}[!h]
+\begin{table}[!ht]
     \centering
     \def\arraystretch{1.8}
     \resizebox{0.8\textwidth}{!}{%
@@ -516,12 +598,14 @@ permettant d'obtenir la meilleure performance en validation.
     \specialrule{.2em}{.1em}{.1em}
     \multicolumn{1}{c}{\textbf{Cible utilisée}} & \multicolumn{1}{c}{\textbf{ROUGE-1}} & \multicolumn{1}{c}{\textbf{ROUGE-2}} & \multicolumn{1}{c}{\textbf{ROUGE-L}} & \multicolumn{1}{c}{\textbf{ROUGE}} \\ \specialrule{.2em}{.1em}{.1em}
     Lead-3 & 39.59  & 17.68 & 36.21 & 31.16\\ \specialrule{.1em}{.05em}{.05em}
-    UCB fixe & $40.04 \pm 0.11$  & $\mathbf{18.18 \pm 0.14}$  & $36.46 \pm 0.15$ & $\mathbf{31.56 \pm 0.13}$\\
-    UCB linéaire & $40.07 \pm 0.09$  & $\mathbf{18.21 \pm 0.10}$ & $36.49 \pm 0.10$ & $\mathbf{31.59 \pm 0.10}$ \\ 
+    CUCB ($T_f$) & $40.04 \pm 0.11$  & $\mathbf{18.18 \pm 0.14}$  & $36.46 \pm 0.15$ & $\mathbf{31.56 \pm 0.13}$\\
+    CUCB ($T_l$) & $40.07 \pm 0.09$  & $\mathbf{18.21 \pm 0.10}$ & $36.49 \pm 0.10$ & $\mathbf{31.59 \pm 0.10}$ \\ 
     Oracle & $\mathbf{40.47 \pm 0.27}$ & $\mathbf{18.21 \pm 0.15}$ & $\mathbf{36.93 \pm 0.24}$ & $\mathbf{31.87 \pm 0.22}$ \\\specialrule{.2em}{.1em}{.1em}
     \end{tabular}
     }
-    \caption{Performance sur le jeu de test.}
+    \caption[Score ROUGE de CombiSum sur le jeu de test
+    selon la cible utilisée]{Score ROUGE (plus élevé est meilleur) de CombiSum sur le jeu de test
+    selon la cible utilisée}
     \label{tab:ROUGE_UCB}
 \end{table}
 
@@ -530,29 +614,67 @@ utilisée, les modèles produits se comportent de manière
 extrêmement similaire sur le jeu de test.
 Aussi, la performance obtenue n'est que 
 très légèrement supérieure à Lead-3.
-
 En somme, les résultats obtenus par CombiSum sont décevants,
 ne se distinguant que très légèrement de la référence Lead-3.
-Nous élaborons davantage sur les potentielles 
-justifications de cette performance et discutons 
-d'une piste de solution envisageable au chapitre \ref{chap:analyse_convergemce}.
+On élabore davantage sur les potentielles 
+justifications de cette performance et on discute
+d'une piste de solution envisageable à la section \ref{sec:analyse_convergence}.
 
 \section{Conclusion}
 
-Dans ce chapitre, nous avons proposé de nouvelles cibles plus riches
-pour l'entraînement d'un modèle de génération de résumés.
-Nos nouvelles cibles sont basées sur une version 
-de UCB adaptée au bandit combinatoire, dont nous avons validé 
-l'applicabilité sur notre jeu de développement.
-Enfin, nous avons présenté comment les cibles 
-peuvent être utilisées dans un algorithme 
-que nous avons nommé CombiSum.
+% Dans ce chapitre, on présente comment la génération du résumé d'un document
+% peut être interprétée un problème de bandit combinatoire \citep{pmlr-v28-chen13a}.
+% On montre ensuite comment l'algorithme Combinatorial Upper Confidence Bound (CUCB) 
+% \citep{pmlr-v28-chen13a} peut être utilisé pour résoudre ce type de problème.
+% On s'intéresse alors à savoir comment la formulation combinatoire et sa résolution 
+% par CUCB peuvent être employés pour générer des cibles d'entraînement 
+% pour les phrases d'un document.
+% À cette fin, on introduit le concept de potentiel extractif d'une phrase
+% et on montre comment CUCB permet de générer des bonnes 
+% estimations du potentiel de chaque phrase.
+% On présente une procédure de génération de cibles d'entraînement 
+% basées sur le potentiel extractif des phrases que l'on compare 
+% à l'approche actuelle des cibles binaires basées sur un oracle \citep{10.5555/3298483.3298681}.
+% L'applicabilité des cibles proposées est validée empiriquement 
+% à partir du jeu de données de développement.
+% On présente comment ces cibles peuvent être utilisées pour 
+% l'apprentissage de systèmes de génération de résumés en proposant 
+% un nouvel algorithme que l'on nomme CombiSum.
+% Enfin, on met CombiSum à l'épreuve sur notre cadre expérimental 
+% uniformisé en comparant sa performance à celle obtenue à partir des cibles 
+% issues d'un oracle pour juger de son efficacité.
 
-Le prochain chapitre présente une autre 
-formulation bandit pouvant être utilisée pour 
-générer des cibles riches: le bandit combinatoire 
-linéaire.
-En mode linéaire, le bandit combinatoire peut être résolu 
-encore plus rapidement et le prochain chapitre 
-représente donc une version potentiellement plus 
-efficace des cibles présentées dans ce chapitre.
+On a débuté ce chapitre en présentant le bandit combinatoire et son application 
+au problème de la génération du résumé d'un document.
+On a ensuite introduit CUCB, un algorithme permettant de résoudre le 
+bandit combinatoire proposé.
+On a introduit la notion de potentiel extractif d'une phrase,
+présentée comme le score moyen des résumés extractifs incluant 
+la phrase.
+On a proposé l'utilisation de CUCB pour estimer de manière 
+efficace le potentiel extractif d'une phrase et 
+générer des cibles d'entraînement.
+L'applicabilité de CUCB à l'estimation du potentiel extractif d'une 
+phrase a été validée empiriquement sur le jeu de développement,
+où on a démontré que CUCB identifie, en moyenne, un résumé 
+inférieur d'environ 7 points ROUGE au résumé optimal après avoir 
+observé les scores associés à 100 résumés.
+Les cibles proposées sont intuitivement plus riches que les cibles 
+binaires habituelles générées par un oracle, car elles permettent 
+d'incorporer de l'information sur les phrases qui ne font pas partie 
+du résumé optimal d'un document. 
+Enfin, on a présenté CombiSum, un algorithme d'entraînement de modèles 
+de génération de résumés qui incorpore les cibles générées par CUCB.
+CombiSum a été mis à l'essai sur le jeu de données du CNN/DailyMail,
+où on a comparé sa performance à celle obtenue en utilisant les cibles 
+binaires issues d'un oracle.
+Que l'on utilise les cibles issues de CUCB ou celles de l'oracle,
+les modèles produits obtiennent tous une performance similaire et 
+seulement légèrement supérieure à l'heuristique de référence Lead-3.
+
+En somme, l'application de la formulation en bandit combinatoire au problème 
+de la génération du résumé d'un document permet de générer des cibles 
+incorporant la notion de potentiel extractif propre à chaque phrase.
+Il n'est toutefois pas encore clair que ces cibles soient meilleures 
+que les cibles binaires habituelles basées sur un oracle du point de vue 
+de la performance des modèles produits.

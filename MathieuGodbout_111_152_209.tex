@@ -44,20 +44,22 @@
 
   %% Style de la bibliographie.  
 
-  \titre{Approches de bandits pour la\\ génération automatique de résumés de textes}
+  \titre{Approches par bandit pour la\\ génération automatique de résumés de textes}
   \auteur{Mathieu Godbout}
   \programme{Maîtrise en informatique}
-  \codirection{Luc Lamontagne, codirecteur de recherche \\
+  \codirection{Luc Lamontagne, directeur de recherche \\
               Audrey Durand, codirectrice de recherche}
 
 
 \usepackage{tikz}
-\usepackage{ctable}
+% \usepackage{ctable}
+\usepackage{icomma}
 \usepackage{graphicx}
 \usetikzlibrary{intersections}
 \usetikzlibrary{external}
 \usetikzlibrary{shapes.misc, positioning, fit, arrows.meta, arrows, shapes, backgrounds, calc}
 \tikzexternalize[prefix=figures/]
+\tikzset{external/export=false}
 
 \usepackage{pgfplots}
 \usepackage{pgfplotstable}
@@ -89,6 +91,7 @@
 \addto\captionsfrench{\def\tablename{Tableau}}
 
   % French version of algorithmic
+
   \usepackage[noend]{algpseudocode}
   \usepackage{algorithm}
   \algnewcommand\AND{\textbf{et} }
@@ -109,6 +112,39 @@
 	\newcommand{\algorithmicelsif}{\algorithmicelse\ \algorithmicif}
 	\newcommand{\algorithmicendif}{\algorithmicend\ \algorithmicif}
 	\newcommand{\algorithmicendfor}{\algorithmicend\ \algorithmicfor}
+
+  \makeatletter
+% start with some helper code
+% This is the vertical rule that is inserted
+\newcommand*{\algrule}[1][\algorithmicindent]{%
+  \makebox[#1][l]{%
+    \hspace*{.2em}% <------------- This is where the rule starts from
+    \vrule height .4\baselineskip depth .2\baselineskip
+  }
+}
+
+\newcount\ALG@printindent@tempcnta
+\def\ALG@printindent{%
+    \ifnum \theALG@nested>0% is there anything to print
+    \ifx\ALG@text\ALG@x@notext% is this an end group without any text?
+    % do nothing
+    \else
+    \unskip
+    % draw a rule for each indent level
+    \ALG@printindent@tempcnta=1
+    \loop
+    \algrule[\csname ALG@ind@\the\ALG@printindent@tempcnta\endcsname]%
+    \advance \ALG@printindent@tempcnta 1
+    \ifnum \ALG@printindent@tempcnta<\numexpr\theALG@nested+1\relax
+    \repeat
+    \fi
+    \fi
+}
+% the following line injects our new indent handling code in place of the default spacing
+\patchcmd{\ALG@doentity}{\noindent\hskip\ALG@tlm}{\ALG@printindent}{}{\errmessage{failed to patch}}
+\patchcmd{\ALG@doentity}{\item[]\nointerlineskip}{}{}{} % no spurious vertical space
+% end vertical rule patch for algorithmicx
+\makeatother
 
 \begin{document}
 
@@ -136,7 +172,8 @@
 \dedicace{À Samantha.}
 \cleardoublepage
 
-\epigraphe{"<Texte de l'épigraphe>"}{<Source ou auteur>}
+% \epigraphe{"Éviter les situations dans lesquelles on peut faire des erreurs est peut-être la pire des erreurs."}{Peter McWilliams}
+\epigraphe{To avoid situations in which you might make mistakes may be the biggest mistake of all.}{Peter McWilliams}
 \cleardoublepage
 
 \include{remerciements/remerciements}         % remerciements
@@ -148,7 +185,6 @@
 \include{bandit_contextuel/chap}
 \include{bandit_combi/chap}
 \include{bandit_combi_lin/chap}
-\include{analyse_convergence/chap}
 \include{conclusion/chap}
 
 \appendix                       % annexes le cas échéant

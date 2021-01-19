@@ -10,23 +10,22 @@ Les modèles extractifs, qui bâtissent des résumés en sélectionnant des phra
 document original, sont difficiles à entraîner car le résumé cible 
 correspondant à un document n'est habituellement pas constitué de 
 manière extractive.
-C'est à cet effet que nous proposons de voir la production d'un résumé
-extractif comme différents problèmes de bandit, lesquels sont 
-accompagnées d'algorithmes pouvant être utilisés pour l'entraînement.
+C'est à cet effet que l'on propose de voir la production de résumés
+extractifs comme différents problèmes de bandit, lesquels sont 
+accompagnés d'algorithmes pouvant être utilisés pour l'entraînement.
 
-Dans ce document, nous voyons d'abord comment la génération du résumé 
-de n'importe quel document peut être formulée comme un problème de bandit 
-contextuel pour atteindre une excellente efficacité computationnelle.
-Ensuite, nous proposons de voir la génération du résumé 
-d'un seul document comme un bandit combinatoire.
-Nous présentons une méthode permettant d'obtenir des cibles 
-pour l'entraînement d'un modèle à partir de la résolution 
-du bandit combinatoire.
-On présente deux algorithmes, UCB et LinUCB, qui peuvent 
-être utilisés à cet effet.
-UCB, le premier algorithme présenté, se caractérise par 
-son universalité alors que LinUCB se veut computationnellement
-plus efficace, au prix ajouté d'une hypothèse de l'existence 
-d'une relation linéaire entre phrase et la qualité des résumés 
-qu'elle produit. 
+On commence ce document en présentant BanditSum, une approche tirée 
+de la litérature et qui voit la génération des résumés 
+d'un ensemble de documents comme un problème de bandit 
+contextuel.
+Ensuite, on introduit CombiSum, un nouvel algorithme 
+qui formule la génération du résumé d'un 
+seul document comme un bandit combinatoire.
+En exploitant la formule combinatoire,
+CombiSum réussit à incorporer la notion du potentiel 
+extractif de chaque phrase à son entraînement.
+Enfin, on propose LinCombiSum, la variante linéaire de CombiSum 
+qui exploite les similarités entre les phrases d'un document 
+et emploie plutôt la formulation en bandit linéaire combinatoire.
+
 \end{otherlanguage*}

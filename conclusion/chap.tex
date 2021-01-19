@@ -2,76 +2,152 @@
 \label{chap:conclusion}         % étiquette pour renvois
 \phantomsection\addcontentsline{toc}{chapter}{\nameref{chap:conclusion}} % inclure dans TdM
 
-Dans ce mémoire, nous avons abordé la problématique de 
+Dans ce mémoire, on a abordé la problématique de 
 l'entraînement de modèles de génération de résumés de documents.
-Nous avons considéré les résumés dits extractifs, qui sont bâtis 
+On a considéré les résumés dits extractifs, qui sont bâtis 
 en sélectionnant des phrases du document initial.
-Pour mener nos expérimentations, nous nous sommes intéressés 
+Pour mener nos expérimentations, on s'est intéressés 
 au jeu de données du CNN/DailyMail \citep{hermann2015teaching}, 
 regroupant plus de 300 000 articles de journaux et leurs résumés.
-
-Notre intérêt était de démontrer comment les approches par bandit \citep{Robbins:1952}
-peuvent être mises à profit dans des algorithmes d'entraînement 
+Notre intérêt était de démontrer comment les approches par bandit 
+\citep{Robbins:1952} peuvent être mises à profit dans des algorithmes d'entraînement 
 pour la génération de résumés.
-Nous avons commencé par présenter BanditSum \citep{dong2018banditsum}, qui voit la génération 
-du résumé de n'importe quel document comme un bandit contextuel.
-BanditSum représente l'état de l'art en termes 
-d'efficacité computationnelle, atteignant une performance inférieure de seulement 
-2 points ROUGE à l'état de l'art tout en ayant un entraînement plusieurs ordres 
-de magnitude moins coûteux computationnellement.
 
-Nous avons ensuite présenté comment la génération du résumé d'un document peut être vue 
-comme un bandit combinatoire \citep{CESABIANCHI20121404}.
-En modifiant légèrement l'algorithme UCB \citep{ucb}, nous avons démontré 
-qu'il est possible d'apprendre de manière efficace à résoudre le problème 
-de la génération de résumé d'un document.
-Nous avons alors introduit le premier volet de notre contribution 
-en proposant des cibles d'entraînement basées sur l'exécution de UCB.
-Les cibles proposées sont utilisées par un nouvel algorithme d'entraînement 
-nommé CombiSum.
+Au chapitre \ref{chap:bandit_contextuel}, on a d'abord détaillé 
+la problématique à l'étude ainsi que le cadre uniformisé 
+utilisé tout au long du document pour comparer la performance
+des algorithmes considérés.
+Le cadre uniformisé retenu est de considérer seulement les résumés extractifs de 
+3 phrases et d'utiliser le même réseau de neurones que BanditSum \citep{dong2018banditsum}.
+On a aussi mis sur pied un jeu de développement constitué de 25 000 
+documents sur le jeu de données du CNN/DailyMail qui est utilisé pour 
+déterminer l'applicabilité des formulations bandits considérées.
+Ensuite, on a présenté BanditSum en détails, qui voit la génération 
+des résumés sur un jeu de données en entier comme un bandit contextuel.
+BanditSum exploite la formulation contextuelle en utilisant l'algorithme REINFORCE \citep{williams1992simple} 
+pour entraîner un système de génération de résumés optimisant la qualité des résumés 
+générés en espérance.
+À partir du jeu de développement, on a établi de manière rigoureuse 
+que le nombre d'échantillons $N=20$ utilisé par BanditSum pour REINFORCE 
+est approprié.
+Enfin, on a présenté qu'avec un modèle contenant 25 fois de paramètres 
+et avec un entraînement sur 10 fois moins de documents, BanditSum 
+obtient une performance seulement légèrement inférieure aux meilleurs 
+algorithmes de l'état de l'art, établissant sa supériorité 
+en matière de temps de calcul.
 
-Pour poursuivre, on a démontré que l'on pouvait encore accélérer 
-la convergence sur le problème de bandit combinatoire en utilisant 
-les relations linéaires entre les phrases.
-À cet effet, on fait appel à une version modifiée de l'algorithm LinUCB 
-\citep{Li_2010} pour résoudre le nouveau problème.
-Nous avons montré comment des cibles d'entraînement peuvent aussi être 
-extraites de l'éxécution de LinUCB, ce qui représente le second volet de 
-notre contribution.
-Les cibles proposées sont utilisées par un nouvel algorithme d'entraînement 
-nommé LinCombiSum.
+Au chapitre \ref{chap:bandit_combi}, on s'est intéressé
+à un second niveau d'application pour le problème de bandit: 
+l'application à la génération du résumé 
+d'un seul document.
+On a présenté comment la génération du résumé d'un document 
+peut être vue comme un problème de bandit combinatoire \citep{pmlr-v28-chen13a}.
+On a ensuite introduit la notion de potentiel extractif d'une phrase,
+utilisable comme cible quantifiable pour l'affinité d'un système de génération 
+de résumés à inclure une phrase dans le résumé d'un document.
+On a détaillé l'algorithme CUCB \citep{pmlr-v28-chen13a}
+permettant de résoudre le bandit combinatoire proposé et pouvant 
+être utilisé pour estimer le potentiel extractif de chaque phrase 
+d'un document.
+Les cibles basées sur le potentiel extractif des phrases 
+sont utilisées par un nouvel algorithme, nommé CombiSum, 
+que l'on a mis à l'essai sur le jeu de données CNN/DailyMail.
+Nos résultats ont montré que les cibles proposées ne permettent 
+pas un meilleur entraînement que les cibles basées sur un oracle 
+\citep{10.5555/3298483.3298681}, car les modèles produits 
+convergent tous vers une performance très similaire à l'heuristique 
+de référence Lead-3 \citep{10.5555/3298483.3298681}.
 
-Pour finir, on a évalué en détails comment les 
-cibles obtenues avec UCB et LinUCB influent sur la convergence 
-des procédures d'entraînement de génération de résumés.
-Pour ce faire, on les a comparées avec les cibles d'entraînement 
-binaires issues d'un oracle, représentant les cibles 
-utilisées par les modèles de l'état de l'art.
-Notre analyse a permis d'identifier que les mauvaises performances 
-obtenus avec les cibles que nous proposons sont probablement explicables 
-par la faible expressivité de l'architecture neuronale retenue.
+Au chapitre \ref{chap:bandit_combi_lin}, on a montré comment 
+il est possible d'incorporer les similarités entre les phrases 
+d'un document pour voir la génération du résumé d'un document 
+comme un bandit linéaire combinatoire \citep{NEURIPS2018_207f8801}.
+On a présenté l'algorithme LinCUCB, une variante de CUCB 
+qui permet d'exploiter l'hypothèse linéaire pour résoudre 
+le bandit linéaire combinatoire à un coût de calcul amoindri.
+On a utilisé LinCUCB pour générer des cibles basées sur le potentiel 
+extractif des phrases d'un document dans un processus plus efficace 
+en termes de coût de calcul que celui basé sur CUCB.
+L'algorithme LinCombiSum, utilisant les cibles obtenues à partir de LinCUCB,
+a été présenté et mis à l'épreuve sur le jeu de données du CNN/DailyMail.
+Les modèles produits par LinCombiSum obtiennent encore une fois une performance 
+très similaire à l'heuristique Lead-3.
+On a analysé plus en détails la convergence de CombiSum, LinCombiSum et un
+modèle entraîné selon les cibles issues d'un oracle et prouvé que 
+les modèles produits à partir de toutes les cibles génèrent 
+leurs résumés d'une manière très similaire à l'heuristique Lead-3.
+On a émis l'hypothèse que cette convergence est dûe à la nature 
+de la distribution de l'information contenue dans les articles de journaux ainsi 
+qu'à l'expressivité limitée du modèle neuronal employé.
 
-\section*{Travaux futurs}
+En somme, les travaux présentés ont permis d'établir comment les formulations en bandit 
+contextuel, combinatoire et linéaire combinatoire peuvent être utilisées 
+pour donner naissance à des approches par bandit pour l'entraînement 
+de modèle de génération résumés.
+L'utilisation des bandits aura permis aux algorithmes abordés une efficacité accrue,
+mais surtout une façon directe d'incorporer la différence de qualité entre 
+deux résumés dans la procédure d'entraînement.
+
+\section*{Contributions}
+
+Les contributions principales des travaux présentés sont les suivantes :
+
+\begin{itemize}
+    \item \textbf{Algorithme d'entraînement CombiSum.}
+    En décrivant le problème de la génération du résumé extractif d'un 
+    document comme un bandit combinatoire, CombiSum permet un changement de perspective
+    important sur la production de cibles d'entraînement pour un document.
+    En effet, la formulation combinatoire alloue l'incorporation d'information 
+    relative aux résumés non-optimaux d'un document dans la génération de cibles,
+    en contraste avec les cibles binaires actuelles basées sur le meilleur résumé selon un oracle.
+    \item \textbf{Algorithme d'entraînement LinCombiSum.}
+    LinCombiSum exploite la notion de similarité entre les phrases pour visualiser 
+    le problème de la génération du résumé extractif d'un document comme un bandit 
+    linéaire combinatoire.
+    D'une manière similaire à ce qui est fait par CombiSum, LinCombiSum utilise 
+    la formulation en bandit linéaire combinatoire pour générer des cibles d'entraînement
+    plus riches pour chaque document.
+    La génération des cibles est toutefois obtenue à un coût de calcul moins 
+    élevé grâce à l'incorporation de similarités entre les phrases d'un même 
+    document pour faciliter la résolution du problème de bandit.
+\end{itemize}
+
+\section*{Défis et perspectives}
 
 Plusieurs modifications pourraient être apportées à nos travaux afin 
 de les améliorer.
 
-Premièrement, les approches abordées considèrent toujours 
-que les résumés extractifs d'un document contiennent un nombre 
-fixe de phrases.
+Un premier angle à partir duquel il serait possible d'améliorer nos travaux
+est celui de la relaxation des contraintes sur les résumés extractifs considérés.
+Notre étude s'arrête au cas où l'on génère un résumé à partir 
+d'un groupe non-ordonné de 3 phrases.
 Il serait intéressant d'incorporer des formulations plus souples 
-comme \citet{luo-etal-2019-reading} qui permettent de sélectionner 
-un nombre variable de phrases d'un document.
+qui permettent de sélectionner un nombre variable de phrases d'un document.
+Une première piste en ce sens serait de considérer une critère d'arrêt 
+flexible dans le processus de génération de résumés à partir d'affinités,
+comme le font \citet{luo-etal-2019-reading}. 
+On pourrait aussi considérer le cas où les phrases sont sélectionnées 
+les unes après les autres, permettant notamment au modèle d'apprendre 
+directement à éviter la répétition.
+Cette dernière approche, s'apparentant à l'apprentissage par renforcement \citep{Sutton1998},
+est d'ailleurs déjà explorée en partie par \citet{zhong-etal-2020-extractive}. 
 
-Deuxièmement, on n'a utilisé aucun algorithme de bandit combinatoire dédié,
-on s'est plutôt contenté d'utiliser des modifications aux algorithmes 
-UCB et LinUCB.
-Il serait intéressant de voir la différence de performance quand on utilise les algorithmes
-dédiés spécifiquement à cette tâche comme \citet{10.5555/2969442.2969476} par exemple.
+Une seconde région où il serait possible de faire progresser notre réflexion est 
+celle des algorithmes utilisés pour la génération de cibles.
+En effet, les algorithmes CUCB et LinCUCB employés sont 
+conçus pour le bandit combinatoire général et n'exploitent donc pas 
+directement la variante multitâche à laquelle on s'intéresse.
+Des algorithmes comme KMTL-UCB \citep{deshmukh2017multi} et MT-LinUCB \citep{soare2014multi},
+conçus spécialement pour le bandit multitâche, pourraient notamment être envisagés
+pour la génération de cibles d'entraînement.
 
-Troisièmement, il serait intéressant de voir comment les approches 
+Une troisième façon de bonifier nos travaux serait de voir comment les approches 
 par bandit présentées performent pour l'entraînement de modèles 
 bien plus imposants, comme celui utilisé par \citet{liu2019text}.
-En effet, peut-être qu'avec un modèle plus expressif, les cibles 
-proposées pourraient être apprises plus efficacement et mener à des 
-modèles rivalisant avec l'état de l'art.
+En effet, l'architecture de réseau de neurones utilisée par BanditSum 
+et reprise dans nos travaux est très peu expressive en comparaison avec les modèles
+de l'état de l'art.
+Bien que cela permette d'établir l'efficacité computationnelle 
+de BanditSum, on croit aussi qu'il peut s'agir de la raison 
+pour laquelle la performance avec nos nouvelles cibles a
+obtenu des résultats aussi peu convaincants.

@@ -1,8 +1,6 @@
 \chapter{Gains computationnels LinUCB}     % numérotée
 \label{chap:lincub_gains}                   % étiquette pour renvois (à compléter!)
 
-\todo{Uniformisation notation vecteurs d'action}
-
 Cet annexe vise à décrire comment il est possible d'alléger le coût computationnel
 lié à LinUCB en exploitant la nature de la matrice $\mathbf{V}_t$ construite
 selon \eqref{eq:linucb_iteratif}.
@@ -13,33 +11,33 @@ Soit $\mathbf{M} \in \mathbb{R}^{n \times n}$ une matrice carrée inversible et 
 deux vecteurs.
 Dans ce cas, $\mathbf{M} + uv^\top$ est inversible si et seulement si $1 + v^\top \mathbf{M}u \neq 0$.
 On a alors
-\begin{equation}
+\begin{equation*}
     \left(\mathbf{M} + uv^\top \right)^{-1} = \mathbf{M}^{-1} - \frac{\mathbf{M}^{-1}uv^\top\mathbf{M}^{-1}}{1 + v^\top \mathbf{M}u}.
     \label{eq:sherman_morrison}
-\end{equation}
+\end{equation*}
 
 Pour le calcul de $\mathbf{V}_t$ dans LinUCB, la formule s'applique directement et
 donne 
-\begin{equation}
+\begin{equation*}
 \mathbf{V}_t^{-1} =
-\left(\mathbf{V}_{t-1} + \tilde{a}_{i_t}^\top \tilde{a}_{i_t} \right)^{-1} =
-\mathbf{V}_{t-1}^{-1} - \frac{\mathbf{V}_{t-1}^{-1}\tilde{a}_{i_t}\tilde{a}_{i_t}^\top\mathbf{V}_{t-1}^{-1}}{1 + \tilde{a}_{i_t}^\top \mathbf{V}_{t-1}\tilde{a}_{i_t}},
-\end{equation}
+\left(\mathbf{V}_{t-1} + \tilde{a}_{t}^\top \tilde{a}_{t} \right)^{-1} =
+\mathbf{V}_{t-1}^{-1} - \frac{\mathbf{V}_{t-1}^{-1}\tilde{a}_{t}\tilde{a}_{t}^\top\mathbf{V}_{t-1}^{-1}}{1 + \tilde{a}_{t}^\top \mathbf{V}_{t-1}\tilde{a}_{t}},
+\end{equation*}
 un calcul bien plus efficace que d'inverser la matrice $\mathbf{V}_t$ car il ne requiert 
 que des produits matriciels et vectoriels.
 
 On note aussi qu'une légère optimisation peut aussi être faite en constatant que 
-le produit $\mathbf{V}^{-1}_{t-1}\tilde{a}_{i_t}$ est utilisé à plusieurs reprises.
+le produit $\mathbf{V}^{-1}_{t-1}\tilde{a}_{t}$ est utilisé à plusieurs reprises.
 On peut donc entreposer le produit en posant 
 \begin{equation*}
-W = \mathbf{V}^{-1}_{t-1}\tilde{a}_{i_t}.
+W = \mathbf{V}^{-1}_{t-1}\tilde{a}_{t}.
 \end{equation*}
 
 Enfin, comme la matrice $\mathbf{V}$ sera toujours symétrique car elle est la 
 somme de matrices symétriques, on aura aussi $\mathbf{V}^{-1}$ symétrique.
 Cette symétrie peut aussi être exploitée pour donner 
-\begin{equation}
+\begin{equation*}
     \mathbf{V}_t^{-1} =
-    \mathbf{V}_{t-1}^{-1} - \frac{WW^\top}{1 + \tilde{a}_{i_t}^\top W},
-\end{equation}
+    \mathbf{V}_{t-1}^{-1} - \frac{WW^\top}{1 + \tilde{a}_{t}^\top W},
+\end{equation*}
 qui est la version utilisée dans notre implémentation de LinUCB.

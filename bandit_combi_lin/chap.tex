@@ -1,172 +1,199 @@
-\chapter{Bandit combinatoire linéaire}
+\chapter{Bandit linéaire combinatoire}
 \label{chap:bandit_combi_lin}                   % étiquette pour renvois (à compléter!)
 
-L'approche combinatoire pure présentée au chapitre précédent présente un inconvénient
-notoire: elle n'utilise pas de relation de similarité entre les phrases pour propager
-de l'information entre deux phrases similaires.
-Il est possible de faire cela sous la formulation du bandit combinatoire linéaire,
-où on possède des représentations vectorielles de chacune des actions et on
-fait l'hypothèse qu'il existe un vecteur propre au problème qui relie
-les représentations de phrases à leur récompense espérée.
-
-Ce chapitre suit une structure très similaire au chapitre précédent.
-D'abord, on présente comment la génération du résumé d'un document
-peut être interprétée un problème de bandit combinatoire \citep{CESABIANCHI20121404}
-linéaire.
-On montre ensuite comment l'algorithme Linear Upper Confidence Bound (LinUCB) 
-\citep{chu2011contextual} peut être utilisé 
-pour résoudre ce type de problème et comment il peut être employé pour 
-générer des cibles pour un système de génération de résumés.
-L'applicabilité des cibles proposées est par la suite validée empiriquement 
-à l'aide d'un jeu de données de développement.
-Enfin, on présente comment ces cibles peuvent être utilisées pour 
-l'apprentissage de systèmes de génération de résumés en proposant 
-un nouvel algorithme que l'on nomme LinCombiSum.
+L'approche combinatoire pure présentée au chapitre \ref{chap:bandit_combi} comporte 
+une amélioration notoire et facilement accessible: l'utilisation des relations de 
+similarité entre les phrases d'un même document.
+Dans ce chapitre, on présente comment la formulation en bandit linéaire 
+combinatoire \citep{NEURIPS2018_207f8801} peut être appliquée à la génération du résumé d'un document 
+et permettre d'exploiter ces similarités entre les phrases.
+Pour ce faire, on propose une procédure permettant d'obtenir 
+des représentations vectorielles de chaque phrase et résumé.
+On introduit ensuite LinCUCB, la version linéaire de Combinatorial Upper Confidence Bound (CUCB) 
+\citep{pmlr-v28-chen13a}, qui permet de résoudre le bandit linéaire combinatoire 
+de manière plus efficace grâce aux représentations vectorielles.
+On utilise le jeu de développement pour prouver l'applicabilité
+et l'efficacité computationnelle de LinCUCB.
+Similairement à ce qui a été fait avec CUCB, on montre comment LinCUCB 
+peut être utilisé pour produire des cibles d'entraînement pour un document 
+basées sur le potentiel extractif de chacune de ses phrases.
+On présente enfin LinCombiSum, un algorithme basé sur les cibles 
+produites à partir de LinCUCB pour l'entraînement de modèles de génération de résumés.
 On met LinCombiSum à l'épreuve sur notre cadre expérimental 
-uniformisé pour juger de son efficacité.
+uniformisé en comparant sa performance à celle obtenue avec les cibles binaires
+issues d'un oracle pour juger de la qualité des cibles proposées.
+On termine en analysant de manière approfondie l'impact des cibles 
+utilisées sur la rapidité de convergence et la nature des modèles 
+produits par CombiSum (chapitre \ref{chap:bandit_combi}) et LinCombiSum.
 
-\section{Formulation combinatoire linéaire}
+\section{Bandit linéaire combinatoire}
 
-La formulation combinatoire linéaire n'est rien de plus que 
-l'application du principe combinatoire (\ref{section:formulation_combi})
+Le bandit linéaire combinatoire n'est rien de plus que 
+l'application du principe combinatoire
 au bandit stochastique linéaire (\ref{subsec:bandit_lineaire}).
-Pour garder la présentation digeste,
-nous nous contentons de rapporter les différences clés 
+Comme on a déjà présenté l'application du principe combinatoire 
+au problème de bandit stochastique à la section \ref{section:formulation_combi},
+on se contente ici de rapporter les différences clés 
 introduites par la formulation linéaire et les modifications
 aux équations pertinentes.
 
 Pour un problème de bandit linéaire, on dit que l'on dispose 
 de représentations vectorielles $\tilde{a} \in \tilde{\mathcal{A}} \subseteq \mathbb{R}^n$
 des actions qui peuvent être sélectionnées par l'apprenant.
-Il est supposé qu'il existe un vecteur de récompense $\omega_*$
-reliant un action $\tilde{a}$ à son espérance de récompense $\mu_a$, i.e.
+L'hypothèse linéaire est faite: on suppose qu'il existe un vecteur de récompense $\omega_*$
+reliant une action $\tilde{a}$ à son espérance de récompense $\mu_a$, i.e.
 $\langle \omega_*, \tilde{a}\rangle \approx \mu_a$ pour tout $a$.
 
-Cette formulation se généralise similairement à la 
-variante multitâche du bandit combinatoire, où l'agent 
-sélectionne $m$ actions à chaque pas de temps $t$.
-Les vecteurs d'actions $\tilde{a}$ sélectionnés sont
-additionnés pour former une \textit{super-action} $\tilde{\mathcal{M}} = \sum_{i=1}^m \tilde{a}_i$
-pour laquelle l'environnement retourne une récompense $X_{\tilde{\mathcal{M}}, t}$.
-L'objectif demeure la minimisation du pseudo-regret cumulatif \eqref{eq:regret_cumulatif_lineaire}, 
+Cette formulation se généralise à la 
+variante multitâche \citep{banditalgs} du bandit combinatoire, où l'apprenant 
+sélectionne plutôt des \textit{super-actions} $\mathcal{M}=\{a_{i_1}, ..., a_{i_m}\}$
+de $m$ actions.
+À chaque pas de temps $t$, l'environnement produit une récompense $X_{\tilde{\mathcal{M}}, t}$ 
+pour toutes les \textit{super-actions} $\mathcal{M}$.
+Dans ce contexte, l'hypothèse linéaire revient maintenant 
+à supposer que l'on dispose de représentations vectorielles 
+$\tilde{\mathcal{M}} \in \mathbb{R}^n$ pour lesquelles il existe un 
+vecteur de récompense $\omega_*$ reliant chaque \textit{super-action}
+à sa récompense espérée $\mu_{\mathcal{M}}$, i.e. 
+$\langle \omega_*, \tilde{\mathcal{M}} \rangle \approx \mu_{\mathcal{M}}$.
+
+L'objectif demeure la minimisation du pseudo-regret cumulatif
+\eqref{eq:regret_cumulatif_lineaire}, 
 mais celui-ci est désormais calculé entre
 la \textit{super-action} optimale $\tilde{\mathcal{M}}^*$ et les \textit{super-actions}
-choisies $\tilde{\mathcal{M}}_t$.
+$\tilde{\mathcal{M}}_t$ choisies
 
-\subsection{Représentations vectorielles de phrases}
+\begin{equation}
+    R_T = \sum_{t=1}^T \langle \omega_*, \tilde{\mathcal{M}}^* -\tilde{\mathcal{M}}_t \rangle.
+    \label{eq:regret_combi_lineair}
+\end{equation}
 
-Les représentations vectorielles utilisées pour les phrases sont basées sur l'observation
-que les calculs de ROUGE sont essentiellement basés sur les comptes de \ngrams.
-On choisit donc de générer, pour chaque phrase $d_i$ d'un document $d$, un vecteur parcimonieux
-représentant le nombre de fois qu'un $n$-gramme donné y est présent.
+Tout l'intérêt de la formulation linéaire combinatoire vient de 
+l'exploitation des représentations vectorielles $\tilde{\mathcal{M}}$.
+Si l'hypothèse linéaire est respectée, les similarités 
+entre les \textit{super-actions} peuvent être exploitées 
+pour extraire de l'information sur toutes les \textit{super-actions}
+$\mathcal{M}$ à partir de la \textit{super-action} $\mathcal{M}_t$
+sélectionnée au temps $t$.
+Par exemple, pour deux \textit{super-actions} dotées de représentations 
+vectorielles $\tilde{\mathcal{M}}$ et $\tilde{\mathcal{M}}'$ 
+similaires, l'hypothèse linéaire indique que les deux \textit{super-actions} devraient 
+avoir une espérance de récompense similaire.
+On peut donc considérer qu'une récompense reçue en sélectionnant 
+$\mathcal{M}$ permet de donner un bon aperçu de ce que la \textit{super-action} 
+$\mathcal{M}'$ semblable aurait pu recevoir et exploiter 
+toutes les similarités entre les \textit{super-actions} pour accélérer
+la résolution du problème.
+Intuitivement, cela revient à dire qu'il devrait être possible 
+de résoudre la version linéaire 
+du bandit combinatoire en un nombre de pas de temps moins importants
+grâce à l'exploitation de l'hypothèse linéaire.
+
+\subsection{Application à la génération de résumé}
+\label{subsec:representations_phrases}
+
+Comme présenté précédemment à la section \ref{subsec:appli_gen_resume_ucb}, 
+la génération du résumé d'un document $d$ peut être vue comme un bandit combinatoire 
+où les actions $a \in \mathcal{A}$ sont les phrases $d_i \in d$ du document
+et les \textit{super-actions} $\mathcal{M}=\{a_{i_1},...,a_{i_3}\}$ sont 
+les résumés non-ordonnés de 3 phrases possibles.
+Dans le contexte linéaire considéré dans ce chapitre, on cherche aussi 
+à obtenir des représentation vectorielles $\tilde{a}$ des phrases 
+et $\tilde{\mathcal{M}}$ des résumés.
+
+
+\subsubsection*{Représentations vectorielles des phrases}
+
+On prend appui sur la nature du score ROUGE (section \ref{subsec:eval}) 
+utilisé comme récompense pour bâtir les représentations vectorielles des phrases.
+Comme les calculs de ROUGE sont basés sur les comptes 
+de \ngrams entre les phrases d'un résumé produit et d'un résumé
+cible, il est naturel de baser la construction du vecteur 
+d'une phrase sur les \ngrams qui la composent.
+Concrètement, on choisit de générer, pour chaque phrase $a$ d'un document $d$,
+sa représentation en sac de mots. 
+Le sac de mots d'une phrase est un vecteur parcimonieux représentant 
+le nombre de fois qu'un $n$-gramme donné y est présent.
 Pour que les relations entre les phrases soient incorporées dans ces vecteurs,
 on associe à chaque $n$-gramme du document un index unique.
-On obtient donc, pour chaque phrase, un vecteur parcimonieux $\tilde{d}_i$ de taille $N$,
-pour le nombre $N$ de \ngrams dans le document, représentant le 
-nombre d'occurrences de chaque $n$-gramme dans la phrase.
+On obtient donc, pour chaque phrase $a$, un vecteur parcimonieux $\tilde{a}$
+de taille $N$ représentant le 
+nombre d'occurrences de chaque $n$-gramme dans la phrase, pour $N$  le nombre de \ngrams 
+différents dans le document.
 Dans nos expériences, on limite l'exploration des \ngrams aux unigrammes,
 afin de garder une taille raisonnable pour les vecteurs parcimonieux générés.
 
-On bâtit ensuite une matrice parcimonieuse $P$ dont les rangées sont les vecteurs parcimonieux 
+On bâtit ensuite une matrice parcimonieuse dont les rangées sont les vecteurs parcimonieux 
 de chaque phrase du document.
-La dimension de la matrice $P$ est ensuite réduite via une analyse sémantique latente \citep{10.1145/291128.291131}, 
+La dimension de la matrice est ensuite réduite via une analyse sémantique latente (LSA) \citep{10.1145/291128.291131}, 
 applicable naturellement dans notre cas de matrice parcimonieuse de grande taille.
 Le processus retourne un vecteur de taille $|d|$ pour chaque phrase, que l'on normalise pour avoir 
 une norme unitaire et qu'on utilise pour les 
 représentations vectorielles $\tilde{a}$.
 On note ici que, si aucun $n$-gramme n'était partagé entre les phrases,
 leurs représentations vectorielles $\tilde{a}$ seraient
-les vecteurs unitaires orthogonaux $e_i$ et, 
-comme mentionné à la section \ref{subsec:pr_linucb}, LinUCB serait équivalent à UCB.
-Comme pour les scores ROUGE, les vecteurs $\tilde{a}$ associés à un document peuvent 
-être pré-calculés pour ne pas avoir à les recalculer inutilement à chaque fois 
-que l'on traite un document.
+les vecteurs unitaires orthogonaux $e_a$ et, 
+comme mentionné à la section \ref{subsec:pr_linucb}, les vecteurs
+ne permettraient pas d'accélérer l'apprentissage.
 
-Maintenant que l'on a bien défini le problème de bandit combinatoire linéaire,
-regardons comment LinUCB peut être utilisé pour le résoudre à la prochaine section.
+\subsubsection*{Représentations vectorielles de résumés}
 
-\subsection{LinUCB pour bandit combinatoire linéaire}
+Maintenant que l'on dispose de représentations $\tilde{a}$ pour chaque phrase 
+$a$, on s'intéresse à la manière de les regrouper pour obtenir une 
+représentation $\tilde{\mathcal{M}}$ d'un résumé $\mathcal{M}$.
+On reprend ici l'hypothèse présentée à la section \ref{subsec:appli_gen_resume_ucb}
+selon laquelle chaque phrase d'un résumé contribue à part égale au 
+score du résumé complet.
+Cela revient à dire que le score associé à un résumé n'est que la moyenne 
+des scores associables à chacune des phrases qu'il contient.
+Dans le contexte de représentations vectorielles, on pose 
+alors naturellement la représentation d'un résumé 
+comme la moyenne de la représentation de ses phrases 
 
-Tel que décrit à la section \ref{subsec:pr_linucb}, 
-Linear Upper Confidence Bound (LinUCB) est une approche permettant 
-de minimiser le pseudo-regret cumulatif pour les problèmes de bandit stochastique linéaire.
-Pour ce faire, LinUCB maintient des bornes supérieures UCB$_a(t)$ pour chaque action 
-$\tilde{a} \in \tilde{\mathcal{A}}$ et chaque pas de temps $t$
-
-\begin{equation}
-    \text{UCB}_a(t) = \langle \omega_t^\top, \tilde{a} \rangle +  \beta\sqrt{\tilde{a}^\top \mathbf{V_t}^{-1} \tilde{a}},
-    \label{eq:linUCB}
-\end{equation}
-pour
 \begin{equation*}
-    \hat{\omega}_t = \mathbf{V_t}^{-1}\mathbf{b_t}, \quad \text{pour} \quad \mathbf{V_t} = \mathbf{I} + \displaystyle \sum_{\tau=1}^t \tilde{a}_{\tau} \tilde{a}_{\tau}^\top, \quad \mathbf{b_t} = \displaystyle \sum_{\tau=1}^t \tilde{a}_{\tau} X_\tau.
+\tilde{\mathcal{M}} = \frac{1}{3}\sum_{i=1}^3 \tilde{a}_i.
 \end{equation*}
 
-Ici, $\tilde{a}_\tau$ et $X_\tau$ représentent respectivement l'action prise et 
-sa récompense associée perçue au pas de temps numéro $\tau$ alors que $\hat{\omega}_t$
-représente la meilleure estimation de $\omega_*$ après $t$ pas de temps.
+Pour un document $d$ et son résumé cible $s$, l'hypothèse linéaire 
+devient alors l'existence d'un vecteur $\omega_*$ reliant chaque résumé $\mathcal{M}$
+à son score ROUGE$(\mathcal{M}, s)$ correspondant, i.e. 
+$\langle \omega_*, \tilde{\mathcal{M}} \rangle \approx \text{ROUGE}(\mathcal{M}, s)$.
 
-LinUCB peut encore une fois être étendu au problème de bandit combinatoire.
-En effet, il suffit de choisir à chaque pas de temps $t$ la \textit{super-action}
-maximisant la borne supérieure définie par UCB sur les actions $\tilde{a} \in \tilde{\mathcal{A}}$.
-Dans notre cas, cela revient à sélectionner la \textit{super-action} qui additionne les trois actions
-avec la borne supérieure maximale, i.e.
+\subsection{LinUCB pour bandit linéaire combinatoire (LinCUCB)}
 
+Selon le même argument qu'à la section \ref{subsec:ucb_combi} où on appliquait UCB
+au problème combinatoire pour trouver l'algorithme CUCB, 
+LinUCB peut être adapté au problème multitâche linéaire en 
+sélectionnant 
 \begin{equation}
-    \tilde{\mathcal{M}}_t = \sum_{\tilde{a} \in \mathcal{M}_t} \tilde{a}, \quad\text{pour } \quad \mathcal{M}_t = \text{3-}\argmax_{\tilde{a} \in \tilde{\mathcal{A}}} \text{UCB}_a(t),
+    \mathcal{M}_t = \text{3-}\argmax_{\tilde{a} \in \tilde{\mathcal{A}}} \text{UCB}_a(t-1),
     \label{eq:linucb_combi_rule}
 \end{equation}
 
-où UCB$_a(t)$ est défini selon \eqref{eq:linUCB}.
+où UCB$_a(t-1)$ représente la borne supérieure associée à l'action $a$ par LinUCB selon 
+\eqref{eq:linucb}.
 
-La prochaine section décrit le second volet de notre contribution:
-l'utilisation de LinUCB pour la génération de cibles extractives 
-d'un document. 
-
-\section{Génération de cibles par LinUCB}
-\label{sec:cibles_linucb}
-
-La génération de cibles avec LinUCB est presque identique
-à celle avec UCB présentée à la section \ref{sec:cibles_ucb}.
-Dans notre cas, comme LinUCB ne garantit plus l'exploration de chacune des 
-actions, on utilise alors les approximations fournies par $\langle \omega_t, \tilde{a} \rangle$
-au lieu des moyennes empiriques $\hat{x}_a$ pour générer les cibles.
-Une mise à l'échelle min-max est encore une fois utilisée pour
-normaliser les valeurs estimées $\langle \omega_t, \tilde{a} \rangle$.
-Cette mise à l'échelle produit des estimés normalisés $x_{\tilde{a}} \in [0, 1]$
-en conservant proportions originales entre les moyennes.
-Les $x_{\tilde{a}}$ sont ensuite utilisés pour produire les cibles $y_a$ selon
-
-\begin{equation}
-    y_a = 10^{-10(1 - x_{\tilde{a}})}.
-    \label{eq:cibles_linucb}
-\end{equation}
-
-\subsection{Expériences}
-
-Similairement au chapitre sur la formulation combinatoire,
-on mesure la sous-optimalité $\Delta_t = R^* - R_t$ des cibles générées
-par LinUCB.
-On reprend donc notre jeu de développement pour mener des expériences 
-sur la qualité des cibles générées par LinUCB.
-Le pseudocode utilisé pour les expériences se trouve à l'algorithme 
+De manière analogue, on dira que l'apprenant sélectionnant les \textit{super-actions}
+d'un bandit linéaire combinatoire selon \eqref{eq:linucb_combi_rule} correspond 
+à un algorithme que l'on choisit de nommer LinCUCB.
+Le pseudocode de LinCUCB se trouve à l'algorithme 
 \ref{alg:cible_linucb}.
-Notons que, pour mettre LinUCB à l'échelle de chaque document $d$, 
+Notons que, pour mettre LinCUCB à l'échelle de chaque document $d$, 
 l'exploration que l'on utilise est plutôt guidée par $\beta' = \frac{\beta}{|d|}$.
 
 \begin{algorithm}
     \setstretch{1.3}
-    \caption{LinUCB combinatoire pour génération de résumé}
+    \caption{LinCUCB pour génération de résumé}
     \begin{algorithmic}[1]
-        \Require $d$ (document), $s$ (résumé cible), $\beta$ (paramètre d'exploration), $T$ (nombre de pas de temps de LinUCB), $\tilde{\mathcal{A}}$ (représentations des phrases).
+        \Require $d$ (document), $s$ (résumé cible), $\beta$ (paramètre d'exploration), $T$ (nombre de pas de temps), $\tilde{\mathcal{A}}$ (représentations des phrases).
         \State {$\mathbf{V} = \mathbf{I}$}
         \State {$\mathbf{b} = \mathbf{0}$}
         \For{$t=1, ..., T$}
-        \State $\omega_t = \mathbf{V}^{-1}\mathbf{b}$
+        \State $\hat{\omega}_t = \mathbf{V}^{-1}\mathbf{b}$
         \For{$\tilde{a} \in \tilde{\mathcal{A}}$}
-        \State UCB$_a = \langle \omega_t^\top, \tilde{a} \rangle + \frac{\beta}{|d|}\sqrt{\tilde{a}^\top \mathbf{V}^{-1} \tilde{a}}$
+        \State UCB$_a = \langle \hat{\omega}_t^\top, \tilde{a} \rangle + \frac{\beta}{|d|}\sqrt{\tilde{a}^\top \mathbf{V}^{-1} \tilde{a}}$
         \EndFor
-        \State $\mathcal{M}_t =$ 3-$\argmax$ UCB$_a$
+        \State $\mathcal{M}_t =$ 3-$\argmax$ UCB$_a$\Comment{Selon \eqref{eq:linucb_combi_rule}}
         \State $X_t = \text{ROUGE}(\mathcal{M}_t, s)$
         \ForAll{$a \in \mathcal{M}_t$}
         \State {$\mathbf{V} = \mathbf{V} + \tilde{a} \tilde{a}^\top$}
@@ -177,17 +204,64 @@ l'exploration que l'on utilise est plutôt guidée par $\beta' = \frac{\beta}{|d
     \label{alg:cible_linucb}
 \end{algorithm}
 
-
-Notre implémentation actuelle diffère légèrement du pseudocode présenté 
+Notre implémentation de LinCUCB diffère légèrement du pseudocode présenté 
 en utilisant la nature de la matrice $\mathbf{V}$ pour éviter d'avoir 
-à calculer son inverse à chaque ronde et être computationnellement plus efficace.
+à calculer son inverse à chaque pas de temps et être computationnellement plus efficace.
 Les détails techniques de cette manipulation sont disponibles dans l'annexe 
 \ref{chap:lincub_gains} pour le lecteur intéressé.
 
-\subsection{Résultats}
+\section{Génération de cibles par LinCUCB}
+\label{sec:cibles_linucb}
 
-Les résultats obtenus sont présentés dans les figures 
-\ref{fig:bandit_combi_lin_alpha} et \ref{fig:bandit_combi_lin_doc_len}.
+La génération de cibles avec LinCUCB est presque identique
+à celle avec CUCB présentée à la section \ref{sec:cibles_ucb}.
+Dans notre cas, comme LinCUCB ne garantit plus l'exploration de chacune des 
+actions, on utilise alors les approximations fournies par $\langle \omega_T, \tilde{a} \rangle$
+au lieu des moyennes empiriques $\bar{x}_a(T)$ comme estimations du potentiel 
+extractif de chaque phrase.
+Une mise à l'échelle min-max est encore une fois utilisée pour
+normaliser les valeurs estimées $\langle \omega_T, \tilde{a} \rangle$.
+Cette mise à l'échelle produit des estimés normalisés $x_{\tilde{a}} \in [0, 1]$
+conservant les proportions originales entre les moyennes.
+Les $x_{\tilde{a}}$ sont ensuite utilisés pour produire les cibles $y_a$ selon
+
+\begin{equation}
+    y_a = 10^{-10(1 - x_{\tilde{a}})},
+    \label{eq:cibles_linucb}
+\end{equation}
+
+où l'intuition est encore qu'une phrase 
+avec un potentiel extractif 10 \% inférieur à celui de la meilleure phrase 
+devrait se voir attribuer une cible 10 fois moins élevée. 
+Enfin, grâce à la mise à l'échelle min-max préalable, une cible de 1 
+sera toujours associée pour la phrase au meilleur potentiel 
+extractif selon LinCUCB.
+
+\subsection{Expériences}
+
+Similairement à ce qui a été fait à la section \ref{subsec:exp_cucb},
+on désire valider l'applicabilité de LinCUCB à la formulation linéaire 
+combinatoire présentée à partir des documents du jeu de développement.
+On définit $Y_T$ comme le score du résumé le plus prometteur selon 
+LinCUCB et $Y^*$ le score du résumé extractif optimal d'un document. 
+On mesure l'évolution de la sous-optimalité $\Delta_T = Y^* - Y_T$ des meilleurs 
+résumés selon LinCUCB pour établir la rapidité de la convergence.
+Comme l'intérêt est d'établir la plus grande efficacité de LinCUCB 
+en nombre de pas de temps $T$ requis pour la convergence, on 
+compare la performance de LinCUCB à celle de CUCB, qui n'utilise
+aucune représentation vectorielle.
+En fonction des résultats sur la convergence de LinCUCB, 
+on présente aussi un aperçu des cibles générées par LinCUCB selon \eqref{eq:cibles_linucb}
+et leur comparaison aux cibles issues de l'oracle \eqref{eq:cibles_binaires}
+sur le jeu d'entraînement du CNN/DailyMail.
+
+\subsection{Résultats}
+\label{subsec:results_clinucb}
+
+Les figures \ref{fig:bandit_combi_lin_alpha} et \ref{fig:bandit_combi_lin_doc_len}
+présentent respectivement l'impact du paramètre d'exploration $\beta$ et de 
+la taille des documents sur l'évolution de la sous-optimalité $\Delta_T$ des meilleurs résumés 
+selon LinCUCB.
 Il est à noter que les différences rapportées entre les différentes 
 courbes sur les figures ne sont pas statistiquement significatives.
 Pour éviter d'encombrer inutilement les figures, on rapporte alors 
@@ -196,94 +270,80 @@ Les versions incorporant la déviation standard des différentes courbes
 se trouvent à l'annexe \ref{chap:variance_graphs}.
 
 La figure \ref{fig:bandit_combi_lin_alpha} présente comment l'hyperparamètre $\beta$ influence la
-convergence de LinUCB.
-On remarque d'abord que, comme il fallait s'y attendre, LinUCB converge
-nettement plus rapidement à des cibles de bonne qualité que UCB.
-En effet, l'erreur $\Delta_t$ de près 0.05 observée avec UCB après 250 pas de temps est plutôt 
-observable après 50 pas de temps de LinUCB.
-On remarque aussi que $\beta=10^8$ (courbe bleue sur la figure) semble être un bon choix,
-réussissant à converger légèrement plus rapidement que $\beta=10^7$.
+convergence de LinCUCB.
+On remarque d'abord que, comme il fallait s'y attendre, LinCUCB converge
+nettement plus rapidement que CUCB.
+En effet, alors que CUCB atteint une sous-optimalité $\Delta_T \approx 7$ après 100 
+pas de temps, LinCUCB obtient atteint $\Delta_T \approx 5$ apres seulement 50 
+pas de temps.
+On remarque aussi que $\beta=10^8$ (courbe bleue sur la figure) semble être un bon choix
+pour l'exploration, réussissant à converger légèrement plus rapidement que $\beta=10^7$.
 
 \tikzsetnextfilename{bandit_combi_lin_alpha}
-\begin{figure}[h!]
+\begin{figure}[ht!]
     \begin{center}
         \begin{tikzpicture}
-            \begin{axis}[title={Impact de l'exploration sur la progression de la sous-optimalité}, grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, name=plot0, y tick label style={/pgf/number format/fixed zerofill}, ylabel={$\Delta_t$}, xlabel={$t$}, width=0.95\textwidth, height=0.4\textwidth, smooth, xmin=0, xmax=100, y tick label style={/pgf/number format/fixed}, ytick={0.00, 0.05, 0.10, 0.15, 0.20, 0.25}]
-                \addplot[red, ylabel near ticks, line width=3pt] table[x=t, y=1000000_, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/alpha/all.csv};
-                \addplot[green, ylabel near ticks, line width=3pt] table[x=t, y=10000000.0_, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/alpha/all.csv};
-                \addplot[blue, ylabel near ticks, line width=3pt] table[x=t, y=100000000.0_, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/alpha/all.csv};
-                \addplot[black, ylabel near ticks, line width=3pt] table[x=t, y=q_1e1, col sep=comma]{bandit_combi/bandit_combiExpResults/alpha/all.csv};
-                \legend{$\beta=10^6$, $\beta = 10^7$, $\beta = 10^8$, UCB}
+            \begin{axis}[grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, name=plot0, ylabel={$\Delta_T$}, xlabel={$T$}, width=0.95\textwidth, height=0.4\textwidth, smooth, xmin=1, xmax=99, y tick label style={/pgf/number format/fixed}, ytick={0, 5, 10, 15, 20, 25}]
+                \addplot[red, ylabel near ticks, line width=1.5pt] table[x expr=\thisrow{t} + 1, y expr=\thisrow{1000000_}  * 100, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/alpha/all.csv};
+                \addplot[green, ylabel near ticks, line width=1.5pt] table[x expr=\thisrow{t} + 1, y expr=\thisrow{10000000.0_} * 100, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/alpha/all.csv};
+                \addplot[blue, ylabel near ticks, line width=1.5pt] table[x expr=\thisrow{t} + 1, y expr=\thisrow{100000000.0_} * 100, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/alpha/all.csv};
+                \addplot[black, dashed, ylabel near ticks, line width=1.5pt] table[x expr=\thisrow{t} + 1, y expr=\thisrow{q_1e1} * 100, col sep=comma]{bandit_combi/bandit_combiExpResults/alpha/all.csv};
+                \legend{$\beta=10^6$, $\beta = 10^7$, $\beta = 10^8$, CUCB}
             \end{axis}
         \end{tikzpicture}
     \end{center}
-    \caption{Impact du paramètre d'exploration $\beta$ utilisé par LinUCB sur la convergence.
-    $\Delta_t$ représente la différence entre le score ROUGE du meilleur résumé selon LinUCB et 
-    celui généré par l'oracle.}
+    \caption[Impact du paramètre d'exploration $\beta$ sur la convergence de LinCUCB]
+    {Impact du paramètre d'exploration $\beta$ utilisé par LinCUCB sur la convergence.
+    $\Delta_T$ (plus bas est meilleur) représente la différence entre le score ROUGE du meilleur résumé
+    extractif d'un document et celui suggéré CUCB après $T$ pas de temps.}
     \label{fig:bandit_combi_lin_alpha}
 \end{figure}
 
-La figure \ref{fig:bandit_combi_lin_doc_len} évalue dans quelle mesure la taille des documents
-influe sur la sous-optimalité des cibles générées par UCB.
-La valeur $\beta=10^8$ (courbe bleue) semble encore une fois optimale et ce, pour toutes les tailles 
+À la figure \ref{fig:bandit_combi_doc_len}, on constate que la valeur $\beta=10^8$ 
+(courbe bleue) semble encore une fois optimale et ce, pour toutes les tailles 
 de document.
-Similairement à ce qui avait été observé pour les cibles générées par UCB, il semble que de 
-rouler LinUCB avec plus de pas de temps est bénéfique pour les documents plus longs.
+Similairement à ce qui avait été observé pour CUCB, il semble que
+l'exécution de LinUCB avec plus de pas de temps est bénéfique pour les documents plus longs.
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
     \tikzsetnextfilename{bandit_combi_lin_less20}
     \begin{tikzpicture}[baseline]
-        \begin{axis}[grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\Large}, width=0.34\textwidth,
-                height=0.4\textwidth, name=plot0, y tick label style={/pgf/number format/fixed zerofill}, xmin=0.0, xmax=100.0, ymin=0.01, ymax=0.30, ylabel={$\Delta_t$}, xlabel={$t$}, smooth, title={$|d| \leq 20$}]
-            \addplot[red, ylabel near ticks, line width=3pt] table[x=t, y=less20_1000000_, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/doc_len/all.csv};
-            \addplot[green, ylabel near ticks, line width=3pt] table[x=t, y=less20_10000000.0_, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/doc_len/all.csv};
-            \addplot[blue, ylabel near ticks, line width=3pt] table[x=t, y=less20_100000000.0_, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/doc_len/all.csv};
+        \begin{axis}[grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\Large}, width=0.36\textwidth,
+                height=0.4\textwidth, name=plot0, xmin=1.0, xmax=100.0, ymin=1, ymax=25, ylabel={$\Delta_T$}, xlabel={$T$}, smooth, title={$|d| \leq 20$}, xtick={0, 20, 40, 60, 80}, ytick={5, 10, 15, 20, 25}]
+            \addplot[red, ylabel near ticks, line width=1.5pt] table[x expr=\thisrow{t} + 1, y expr=\thisrow{less20_1000000_} * 100, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/doc_len/all.csv};
+            \addplot[green, ylabel near ticks, line width=1.5pt] table[x expr=\thisrow{t} + 1, y expr=\thisrow{less20_10000000.0_} * 100, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/doc_len/all.csv};
+            \addplot[blue, ylabel near ticks, line width=1.5pt] table[x expr=\thisrow{t} + 1, y expr=\thisrow{less20_100000000.0_} * 100, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/doc_len/all.csv};
             \legend{$\beta=10^6$, $\beta = 10^7$, $\beta = 10^8$}
         \end{axis}
     \end{tikzpicture}
     \tikzsetnextfilename{bandit_combi_lin_20to35}
     \begin{tikzpicture}[baseline]
-        \begin{axis}[grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, width=.34\textwidth,
-                height=0.4\textwidth, name=plot0, xshift=-.1\textwidth, y tick label style={/pgf/number format/fixed zerofill},xmin=0.0, xmax=100.0, ymin=0.01, ymax=0.30, xlabel={$t$}, legend style={at={(0.9,0.1)},anchor=south east}, smooth, title={$20 < |d| < 35$}, ymajorticks=false]
-            \addplot[red, ylabel near ticks, line width=3pt] table[x=t, y=20to35_1000000_, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/doc_len/all.csv};
-            \addplot[green, ylabel near ticks, line width=3pt] table[x=t, y=20to35_10000000.0_, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/doc_len/all.csv};
-            \addplot[blue, ylabel near ticks, line width=3pt] table[x=t, y=20to35_100000000.0_, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/doc_len/all.csv};
+        \begin{axis}[grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, width=.36\textwidth,
+                height=0.4\textwidth, name=plot0, xshift=-.1\textwidth, xmin=1, xmax=100.0, ymin=1, ymax=25, xlabel={$T$}, legend style={at={(0.9,0.1)},anchor=south east}, smooth, title={$20 < |d| < 35$}, ymajorticks=false, xtick={0, 20, 40, 60, 80}]
+            \addplot[red, ylabel near ticks, line width=1.5pt] table[x expr=\thisrow{t} + 1, y expr=\thisrow{20to35_1000000_} * 100, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/doc_len/all.csv};
+            \addplot[green, ylabel near ticks, line width=1.5pt] table[x expr=\thisrow{t} + 1, y expr=\thisrow{20to35_10000000.0_} * 100, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/doc_len/all.csv};
+            \addplot[blue, ylabel near ticks, line width=1.5pt] table[x expr=\thisrow{t} + 1, y expr=\thisrow{20to35_100000000.0_} * 100, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/doc_len/all.csv};
         \end{axis}
     \end{tikzpicture}
     \tikzsetnextfilename{bandit_combi_lin_more35}
     \begin{tikzpicture}[baseline]
-        \begin{axis}[grid style={dashed,gray!50}, axis y line*=right, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, width=.34\textwidth,
-                height=0.4\textwidth, name=plot0, xshift=-.1\textwidth, y tick label style={/pgf/number format/fixed zerofill}, xmin=0.0, xmax=100.0, ymin=0.01, ymax=0.30, xlabel={$t$}, legend style={at={(1,0.1)},anchor=south east}, smooth, title={$35 \leq |d|$}]
-            \addplot[red, ylabel near ticks, line width=3pt] table[x=t, y=more35_1000000_, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/doc_len/all.csv};
-            \addplot[green, ylabel near ticks, line width=3pt] table[x=t, y=more35_10000000.0_, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/doc_len/all.csv};
-            \addplot[blue, ylabel near ticks, line width=3pt] table[x=t, y=more35_100000000.0_, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/doc_len/all.csv};
+        \begin{axis}[grid style={dashed,gray!50}, axis y line*=right, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, width=.36\textwidth,
+                height=0.4\textwidth, name=plot0, xshift=-.1\textwidth, xmin=1.0, xmax=100.0, ymin=1, ymax=25, xlabel={$T$}, legend style={at={(1,0.1)},anchor=south east}, smooth, title={$35 \leq |d|$}, xtick={0, 20, 40, 60, 80}, ytick={5, 10, 15, 20, 25}]
+            \addplot[red, ylabel near ticks, line width=1.5pt] table[x expr=\thisrow{t} + 1, y expr=\thisrow{more35_1000000_} * 100, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/doc_len/all.csv};
+            \addplot[green, ylabel near ticks, line width=1.5pt] table[x expr=\thisrow{t} + 1, y expr=\thisrow{more35_10000000.0_} * 100, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/doc_len/all.csv};
+            \addplot[blue, ylabel near ticks, line width=1.5pt] table[x expr=\thisrow{t} + 1, y expr=\thisrow{more35_100000000.0_} * 100, col sep=comma]{bandit_combi_lin/bandit_combi_linExpResults/doc_len/all.csv};
         \end{axis}
     \end{tikzpicture}
-    \caption{Impact de la taille du document sur la convergence de LinUCB.
-    $\Delta_t$ représente la différence entre le score ROUGE du meilleur résumé selon UCB et 
-    celui généré par l'oracle.}
+    \caption[Impact de la taille du document sur la convergence de LinCUCB]
+    {Impact de la taille du document sur la convergence de LinCUCB.
+    $\Delta_T$ (plus bas est meilleur) représente la différence entre le score ROUGE du meilleur résumé
+    extractif d'un document et celui suggéré CUCB après $T$ pas de temps.}
     \label{fig:bandit_combi_lin_doc_len}
 \end{figure}
 
-\section{LinCombiSum}
-\label{section:lincombisum}
-
-On propose maintenant un système de génération de résumés complet nommé LinCombiSum,
-qui se veut identique à CombiSum (\ref{sec:combisum}) mais qui utilise LinUCB
-au lieu de UCB pour générer ses cibles selon l'équation \ref{eq:cibles_linucb}.
-Conformément aux méthodes de l'état de l'art sur l'apprentissage 
-de cibles \citep{liu2019text}, la mise à jour des paramètres est faite selon la 
-perte basée sur l'entropie croisée binaire entre une cible $y$
-et un vecteur d'affinités produit $\hat{y} = \pi_\theta(d)$:
-
-\begin{equation}
-    l(\hat{y}, y) = \frac{1}{|y|} \sum_{i=1}^{|y|}\big[y_i \log(\hat{y}_i) + (1 - y_i) \log(1 - \hat{y}_i) \big].
-    \label{eq:bce_linucb}
-\end{equation}
-
-En se basant sur les résultats de la section précédente, on explore deux 
+En se basant sur ces résultats, on explore deux 
 fonctions $T(d)$ déterminant le nombre $T$ de pas de temps utilisés pour 
-générer les cibles UCB pour un document $d$.
+générer les cibles LinCUCB pour un document $d$.
 Premièrement, on considère une version fixe $T_f(d)=50$, correspondant à une 
 bonne estimation pour toutes les tailles de document.
 On considère aussi une version $T_l(d)=|d| + 25$ augmentant linéairement selon 
@@ -295,28 +355,86 @@ Ainsi, $T_f$ et $T_l$ utiliseront le même nombre de pas de temps en moyenne
 et il sera possible de valider laquelle des deux fonctions permet 
 le meilleur entraînement.
 
-\subsection{Expériences}
+\tikzsetnextfilename{distro_cibles_clinucb}
+\begin{figure}[ht!]
+  \centering
+  \begin{tikzpicture}
+    \begin{axis}[
+      xlabel=Phrase $i$,
+      ylabel=$y_i$,
+      xtick=data,
+      axis y line*=left, axis x line*=bottom,
+      ybar,
+      width=0.95\textwidth, 
+      height=0.4\textwidth,
+      xmax=5.5,
+      legend cell align={left},
+      legend style={at={(0.78,.9)},anchor=north west},
+      every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}]
+      \addplot[blue!40,fill, draw=blue] table[x=t,y=linsit_fix_targets, col sep=comma] {bandit_combi/graham_results/cs_distros.csv};
+      \addplot[green!40,fill,draw=green] table[x=t,y=linsit_linear_targets, col sep=comma] {bandit_combi/graham_results/cs_distros.csv};
+      \addplot[red!40,fill, draw=red] table[x=t,y=binary_linear_targets, col sep=comma] {bandit_combi/graham_results/cs_distros.csv};
+      \legend{LinCUCB $(T_f)$, LinUCB $(T_l)$, Oracle}    
+    \end{axis}
+  \end{tikzpicture}
+  \caption[Distribution moyenne des cibles LinCUCB sur les phrases d'un document]
+  {Distribution moyenne des cibles $y$ produites par LinCUCB sur les phrases 
+  d'un document du jeu d'entraînement du jeu de données CNN/DailyMail.}
+  \label{fig:distro_cibles_clinucb}
+\end{figure}
+
+Pour mettre à l'échelle les cibles générées par l'oracle 
+et celles générées par LinCUCB dans la figure \ref{fig:distro_cibles_clinucb},
+les cibles LinCUCB de chaque document sont normalisées pour 
+avoir une somme de 3, comme les cibles binaires.
+Le premier constat est le faible impact de l'utilisation de $T_f$ 
+ou $T_l$ sur les cibles générées par LinCUCB.
+On note toutefois que l'impact est plus élevé que pour les cibles 
+générées pas CUCB affichées à la figure \ref{fig:distro_cibles_cucb}.
+
+En contraste à ce qui avait été observé pour les cibles CUCB,
+les cibles LinCUCB sont très près de celles générées par l'oracle,
+la seule différence notoire étant dans la distribution de la 4ème 
+phrase.
+En vue de la convergence rapide de LinCUCB, on fait l'hypothèse 
+que LinCUCB parvient à identifier plus souvent 
+le résumé généré par l'oracle et que les variations sont 
+principalement dûes à la nature plus riche des cibles proposées.
+
+\section{LinCombiSum}
+\label{section:lincombisum}
+
+On propose maintenant un système de génération de résumés complet nommé LinCombiSum,
+qui se veut identique à CombiSum (\ref{sec:combisum}) mais qui utilise LinCUCB
+au lieu de CUCB pour générer ses cibles selon l'équation \ref{eq:cibles_linucb}.
+Conformément aux méthodes de l'état de l'art sur l'apprentissage 
+de cibles \citep{liu2019text}, la mise à jour des paramètres est faite selon la 
+perte basée sur l'entropie croisée binaire entre une cible $y$
+et un vecteur d'affinités produit $\hat{y} = \pi_\theta(d)$:
+
+\begin{equation}
+    l(\hat{y}, y) = \frac{1}{|y|} \sum_{i=1}^{|y|}\big[y_i \ln(\hat{y}_i) + (1 - y_i) \ln(1 - \hat{y}_i) \big].
+    \label{eq:bce_linucb}
+\end{equation}
 
 Une description détaillée de LinCombiSum est fournie à l'algorithme \ref{alg:systeme_linucb}.
-On effectue un entraînement sur le jeu de données CNN/DailyMail en 
-parcourant dans son entièreté le jeu de d'entraînement à 5 reprises
-et en utilisant des \textit{minibatches} de taille $B=64$.
-Notre implémentation est faite selon les détails expérimentaux décrits à la section 
-\ref{subsec:archi}.
+Pour chaque document $d$ d'une \textit{minibatch} d'exemples, LinCombiSum exécute 
+$T(d)$ pas de temps de LinCUCB, obtient une cible $y$ selon \eqref{eq:cibles_linucb}
+et met à jour les poids $\theta$ du modèle neuronal selon \eqref{eq:bce_linucb}.
 
 \begin{algorithm}
     \setstretch{1.3}
     \caption{LinCombiSum}
     \begin{algorithmic}[1]
-        \Require  $\mathcal{D}$ (jeu de données), $T$ (fonction pour le nombre de pas de temps), $\alpha$ (taux d'apprentissage), $\beta$ (taux d'exploration UCB), $B$ (taille de minibatch).
-        \While{vrai}
+        \Require  $\mathcal{D}$ (jeu de données), $T$ (fonction pour le nombre de pas de temps), $\alpha$ (taux d'apprentissage), $\beta$ (taux d'exploration LinCUCB), $B$ (taille de minibatch).
+        \While{critère d'arrêt non atteint}
         \State{batch $\sim \mathcal{D}^B$} \Comment{On pige la minibatch du jeu de données}
         \State $\nabla = \mathbf{0}$
         \ForAll{$(d,s) \in $ batch}
         \State $\hat{y} = \pi_\theta(d)$
-        \State Obtenir les représentations $\tilde{a}$ des phrases de $d$
-        \State Exécuter $T(d)$ pas de temps de UCB et obtenir $\langle \hat{\omega}_T, \tilde{a}_i \rangle$
-        \State Générer les cibles $y$ à partir de $\langle \hat{\omega}_T, \tilde{a}_i \rangle$ \Comment{Selon \eqref{eq:cibles_linucb}}
+        \State Obtenir les représentations $\tilde{a}$ des phrases de $d$ \Comment{Section (\ref{subsec:representations_phrases})}
+        \State Exécuter $T(d)$ pas de temps de LinCUCB et obtenir $\langle \hat{\omega}_T, \tilde{a} \rangle$
+        \State Générer les cibles $y$ à partir de $\langle \hat{\omega}_T, \tilde{a} \rangle$ \Comment{Selon \eqref{eq:cibles_linucb}}
         \State $\nabla = \nabla + \nabla_\theta l(\hat{y}, y)$\Comment{Selon \eqref{eq:bce_linucb}}
         \EndFor
         \State $\theta = \theta - \alpha \nabla$
@@ -325,57 +443,65 @@ Notre implémentation est faite selon les détails expérimentaux décrits à la
     \label{alg:systeme_linucb}
 \end{algorithm}
 
+\subsection{Expériences}
+
+On effectue un entraînement sur le jeu de données CNN/DailyMail en 
+parcourant dans son entièreté le jeu d'entraînement à 5 reprises
+et en utilisant des \textit{minibatches} de taille $B=64$.
+Notre implémentation est faite selon les détails expérimentaux décrits à la section 
+\ref{subsec:archi}.
+En se basant sur les résultats empiriques présentés à la section \ref{subsec:results_clinucb},
+on choisit de fixer $\beta=10^8$ pour toutes nos expériences.
+
 Pour les expériences, on s'intéresse à
 l'impact de la fonction $T$ utilisée.
 On expérimente donc avec $T = T_f$ et $T=T_l$,
 tel que décrits plus haut.
 En guise de référence, on entraîne aussi un modèle 
-en utilisant les cibles binaire générées par l'oracle telles que décrites
-à la section \ref{sec:cibles_ucb}.
-Étant donné le facteur aléatoire présent dans l'entraînement, nous effectuons 
+en utilisant les cibles binaires générées par l'oracle telles que décrites
+à la section \ref{subsec:ucb_oracle}.
+Étant donné le facteur aléatoire présent dans l'entraînement, on effectue 
 5 entraînements distincts pour chaque $T$ et présentons la moyenne
 des résultats obtenus.
 
 \subsection{Résultats}
 
-Les résultats obtenus sont présentés dans la figure \ref{fig:lcs_learning_curve} 
-et le tableau \ref{tab:ROUGE_LINUCB}.
-Ici, UCB linéaire et fixe font référence respectivement à l'utilisation
-à l'utilisation $T_l$ et $T_f$ pour déterminer le nombre de pas de temps
-effectués par UCB.
+On présente à la figure \ref{fig:lcs_learning_curve} l'évolution 
+du score ROUGE moyen obtenu en validation par LinCombiSum en fonction de la méthode
+de génération des cibles employée. 
+Une comparaison entre le score ROUGE sur le jeu de test des modèles entraînés 
+par les différentes cibles se trouve au tableau \ref{tab:ROUGE_LINUCB}.
 
 Tout d'abord, la figure \ref{fig:lcs_learning_curve} illustre l'évolution 
 de la performance sur le jeu de validation des modèles selon 
 les cibles utilisées.
-On constate d'abord que la performance en validation avec les cibles 
-UCB atteint rapidement un plateau à partir duquel elle 
-ne varie plus.
-Ce plateau n'affecte toutefois pas l'entraînement avec les cibles binaires,
-avec lesquelles l'apprentissage continue de varier jusqu'à
-éventuellement dépasser légèrement la performance des cibles LinUCB.
+Les constats sont les mêmes que pour les cibles CUCB: la performance 
+stagne rapidement pour les cibles LinCUCB et est éventuellement 
+dépassée par celle obtenue avec les cibles issues de l'oracle.
 
 \tikzsetnextfilename{lincombisum_learning_curve}
-\begin{figure}[h!]
+\begin{figure}[ht!]
     \begin{center}
         \begin{tikzpicture}
-            \begin{axis}[title={Performance sur le jeu de validation selon la cible utilisée}, grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, name=plot0, y tick label style={/pgf/number format/fixed zerofill}, ylabel={ROUGE}, xlabel={Nombre de mises à jour (en milliers)}, width=0.95\textwidth, height=0.4\textwidth, smooth, xmin=0.5, legend style={at={(0.9,0.1)},anchor=south east}, legend cell align={left}, xmax=22.5, y tick label style={/pgf/number format/fixed}]
-                \addplot[blue, ylabel near ticks, line width=2pt] table[x=t, y=linsit_fix, col sep=comma]{bandit_combi/graham_results/cs_learning_curve.csv};
-                \addplot[forget plot, name path=upperblue, draw=none] table[x=t, y=linsit_fix_+, col sep=comma]{bandit_combi/graham_results/cs_learning_curve.csv};
-                \addplot[forget plot, name path=lowerblue, draw=none] table[x=t, y=linsit_fix_-, col sep=comma]{bandit_combi/graham_results/cs_learning_curve.csv};
-                \addplot[red, ylabel near ticks, line width=2pt] table[x=t, y=linsit_linear, col sep=comma]{bandit_combi/graham_results/cs_learning_curve.csv};
-                \addplot[forget plot, name path=upperred, draw=none] table[x=t, y=linsit_linear_+, col sep=comma]{bandit_combi/graham_results/cs_learning_curve.csv};
-                \addplot[forget plot, name path=lowerred, draw=none] table[x=t, y=linsit_linear_-, col sep=comma]{bandit_combi/graham_results/cs_learning_curve.csv};
-                \addplot[green, ylabel near ticks, line width=2pt] table[x=t, y=binary_linear, col sep=comma]{bandit_combi/graham_results/cs_learning_curve.csv};
-                \addplot[forget plot, name path=uppergreen, draw=none] table[x=t, y=binary_linear_+, col sep=comma]{bandit_combi/graham_results/cs_learning_curve.csv};
-                \addplot[forget plot, name path=lowergreen, draw=none] table[x=t, y=binary_linear_-, col sep=comma]{bandit_combi/graham_results/cs_learning_curve.csv};
+            \begin{axis}[ grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, name=plot0, ylabel={ROUGE}, xlabel={Nombre de mises à jour (en milliers)}, width=0.95\textwidth, height=0.4\textwidth, smooth, xmin=0.5, legend style={at={(0.9,0.1)},anchor=south east}, legend cell align={left}, xmax=22.5, y tick label style={/pgf/number format/fixed}]
+                \addplot[blue, ylabel near ticks, line width=1.5pt] table[x=t, y expr=\thisrow{linsit_fix} * 100, col sep=comma]{bandit_combi/graham_results/cs_learning_curve.csv};
+                \addplot[forget plot, name path=upperblue, draw=none] table[x=t, y expr=\thisrow{linsit_fix_+} * 100, col sep=comma]{bandit_combi/graham_results/cs_learning_curve.csv};
+                \addplot[forget plot, name path=lowerblue, draw=none] table[x=t, y expr=\thisrow{linsit_fix_-} * 100, col sep=comma]{bandit_combi/graham_results/cs_learning_curve.csv};
+                \addplot[green, ylabel near ticks, line width=1.5pt] table[x=t, y expr=\thisrow{linsit_linear} * 100, col sep=comma]{bandit_combi/graham_results/cs_learning_curve.csv};
+                \addplot[forget plot, name path=uppergreen, draw=none] table[x=t, y expr=\thisrow{linsit_linear_+} * 100, col sep=comma]{bandit_combi/graham_results/cs_learning_curve.csv};
+                \addplot[forget plot, name path=lowergreen, draw=none] table[x=t, y expr=\thisrow{linsit_linear_-} * 100, col sep=comma]{bandit_combi/graham_results/cs_learning_curve.csv};
+                \addplot[red, ylabel near ticks, line width=1.5pt] table[x=t, y expr=\thisrow{binary_linear} * 100, col sep=comma]{bandit_combi/graham_results/cs_learning_curve.csv};
+                \addplot[forget plot, name path=upperred, draw=none] table[x=t, y expr=\thisrow{binary_linear_+} * 100, col sep=comma]{bandit_combi/graham_results/cs_learning_curve.csv};
+                \addplot[forget plot, name path=lowerred, draw=none] table[x=t, y expr=\thisrow{binary_linear_-} * 100, col sep=comma]{bandit_combi/graham_results/cs_learning_curve.csv};
                 \addplot[fill=blue!20, fill opacity=0.5] fill between[of=upperblue and lowerblue];
                 \addplot[fill=red!20, fill opacity=0.5] fill between[of=upperred and lowerred];
                 \addplot[fill=green!20, fill opacity=0.5] fill between[of=uppergreen and lowergreen];
-                \legend{LinUCB fixe, LinUCB linéaire, Oracle}
+                \legend{LinCUCB ($T_f$), LinCUCB ($T_l$), Oracle}
             \end{axis}
         \end{tikzpicture}
     \end{center}
-    \caption{Courbe d'apprentissage de LinCombiSum selon la cible utilisée.
+    \caption[Performance de LinCombiSum sur le jeu de validation selon la cible utilisée]
+    {Score ROUGE (plus élevé est meilleur) moyen de LinCombiSum en validation selon la cible utilisée.
              Un intervalle de confiance à 95 \% calculé à partir de 5 entraînements distincts
              est rapporté pour chaque cible.}
     \label{fig:lcs_learning_curve}
@@ -395,39 +521,168 @@ permettant d'obtenir la meilleure performance en validation.
     \specialrule{.2em}{.1em}{.1em}
     \multicolumn{1}{c}{\textbf{Cible utilisée}} & \multicolumn{1}{c}{\textbf{ROUGE-1}} & \multicolumn{1}{c}{\textbf{ROUGE-2}} & \multicolumn{1}{c}{\textbf{ROUGE-L}} & \multicolumn{1}{c}{\textbf{ROUGE}} \\ \specialrule{.2em}{.1em}{.1em}
     Lead-3 & 39.59  & 17.68 & 36.21 & 31.16\\ \specialrule{.1em}{.05em}{.05em}
-    LinUCB fixe & $39.91 \pm 0.04$  & $\mathbf{18.11 \pm 0.05}$  & $36.33 \pm 0.06$ & $31.45 \pm 0.05$\\
-    LinUCB linéaire & $39.84 \pm 0.06$  & $\mathbf{18.03 \pm 0.04}$ & $36.25 \pm 0.06$ & $31.37 \pm 0.06$ \\ 
+    LinCUCB ($T_f$) & $39.91 \pm 0.04$  & $\mathbf{18.11 \pm 0.05}$  & $36.33 \pm 0.06$ & $31.45 \pm 0.05$\\
+    LinCUCB ($T_l$) & $39.84 \pm 0.06$  & $\mathbf{18.03 \pm 0.04}$ & $36.25 \pm 0.06$ & $31.37 \pm 0.06$ \\ 
     Oracle & $\mathbf{40.47 \pm 0.27}$ & $\mathbf{18.21 \pm 0.15}$ & $\mathbf{36.93 \pm 0.24}$ & $\mathbf{31.87 \pm 0.22}$ \\\specialrule{.2em}{.1em}{.1em}
     \end{tabular}
     }
-    \caption{Performance sur le jeu de test.}
+    \caption[Score ROUGE de LinCombiSum sur le jeu de test selon la cible utilisée]
+    {Score ROUGE (plus élevé est meilleur) de LinCombiSum sur le jeu de test selon la cible utilisée}
     \label{tab:ROUGE_LINUCB}
 \end{table}
 
 Un premier constat qui se pose est que, peu importe la cible 
-utilisée, les modèles produits se comportent de manière 
+utilisée, les modèles générés par LinCombiSum se comportent de manière 
 extrêmement similaire sur le jeu de test.
 Aussi, la performance obtenue n'est que 
 très légèrement supérieure à Lead-3.
-
 En somme, les résultats obtenus par LinCombiSum sont décevants,
 ne se distinguant que très légèrement de la référence Lead-3.
-Nous élaborons davantage sur les potentielles 
+On élabore davantage sur les potentielles 
 justifications de cette performance et discutons 
-d'une piste de solution envisageable au chapitre \ref{chap:analyse_convergemce}.
+d'une piste de solution envisageable à la prochaine section.
+
+\section{Impact des cibles sur la convergence}
+\label{sec:analyse_convergence}
+
+Les nouvelles cibles riches basées sur CUCB et LinCUCB
+n'ont pas permis d'obtenir des résultats dépassant 
+la référence représentée par les cibles binaires d'un oracle.
+En effet, peu importe les cibles utilisées, les modèles entraînés
+semblaient toujours converger à des modèles dont les prédictions 
+étaient extrêmement près de celles l'heuristique Lead-3 (voir tableaux \ref{tab:ROUGE_UCB} et \ref{tab:ROUGE_LINUCB}).
+On analyse de manière plus approfondie le comportement de 
+nos algorithmes CombiSum et LinCombiSum dans cette section afin 
+de tenter de comprendre à quoi ces résultats décevants peuvent être 
+attribuables.
+Comme aucune différence statistiquement significative n'avait été observée
+entre les versions linéaire et fixe des cibles proposées, on limite 
+notre analyse au comportement de la version linéaire de nos cibles.
+
+La figure \ref{fig:loss_curve} montre d'abord l'évolution de la perte 
+empirique \eqref{eq:perte_stochastique} à l'entraînement selon la cible utilisée.
+On voit que les modèles entraînés convergent tous très rapidement 
+à une perte empirique stable, qui est maintenue sur l'ensemble de 
+la procédure d'entraînement.
+Cela témoigne de l'incapacité du modèle neuronal à apprendre 
+autant les cibles issues de l'oracle que celles basées sur CUCB et LinCUCB.
+
+\tikzsetnextfilename{loss_curve}
+\begin{figure}[ht!]
+    \begin{center}
+        \begin{tikzpicture}
+            \begin{axis}[grid style={dashed,gray!50}, axis y line*=left, axis x line*=bottom, every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}, name=plot0, y tick label style={/pgf/number format/fixed zerofill}, ylabel={$\bar{\mathcal{L}}(\theta)$}, xlabel={Nombre de mises à jour (en milliers)}, width=0.95\textwidth, height=0.4\textwidth, smooth, xmin=0.5, legend cell align={left}, xmax=22.5, y tick label style={/pgf/number format/fixed}, ymax=0.5]
+                \addplot[blue, ylabel near ticks, line width=2pt] table[x=t, y=sit_linear, col sep=comma]{bandit_combi/graham_results/cs_loss_curve.csv};
+                \addplot[forget plot, name path=upperblue, draw=none] table[x=t, y=sit_linear_+, col sep=comma]{bandit_combi/graham_results/cs_loss_curve.csv};
+                \addplot[forget plot, name path=lowerblue, draw=none] table[x=t, y=sit_linear_-, col sep=comma]{bandit_combi/graham_results/cs_loss_curve.csv};
+                \addplot[green, ylabel near ticks, line width=2pt] table[x=t, y=linsit_linear, col sep=comma]{bandit_combi/graham_results/cs_loss_curve.csv};
+                \addplot[forget plot, name path=uppergreen, draw=none] table[x=t, y=linsit_linear_+, col sep=comma]{bandit_combi/graham_results/cs_loss_curve.csv};
+                \addplot[forget plot, name path=lowergreen, draw=none] table[x=t, y=linsit_linear_-, col sep=comma]{bandit_combi/graham_results/cs_loss_curve.csv};
+                \addplot[red, ylabel near ticks, line width=2pt] table[x=t, y=binary_linear, col sep=comma]{bandit_combi/graham_results/cs_loss_curve.csv};
+                \addplot[forget plot, name path=upperred, draw=none] table[x=t, y=binary_linear_+, col sep=comma]{bandit_combi/graham_results/cs_loss_curve.csv};
+                \addplot[forget plot, name path=lowerred, draw=none] table[x=t, y=binary_linear_-, col sep=comma]{bandit_combi/graham_results/cs_loss_curve.csv};
+                \addplot[fill=blue!20, fill opacity=0.5] fill between[of=upperblue and lowerblue];
+                \addplot[fill=red!20, fill opacity=0.5] fill between[of=upperred and lowerred];
+                \addplot[fill=green!20, fill opacity=0.5] fill between[of=uppergreen and lowergreen];
+                \legend{CUCB ($T_l$), LinCUCB ($T_l$), Oracle}
+            \end{axis}
+        \end{tikzpicture}
+    \end{center}
+    \caption[Évolution de la perte empirique selon la cible utilisée]
+    {Courbe d'évolution de la perte empirique selon la cible utilisée.
+             Un intervalle de confiance à 95 \% calculé à partir de 5 entraînements distincts
+             est rapporté pour chaque cible.}
+    \label{fig:loss_curve}
+\end{figure}
+
+
+La figure \ref{fig:distro_predict} présente le pourcentage d'inclusion 
+des phrases sur le jeu de test en fonction des cibles utilisées à l'entraînement.
+On y voit que la ressemblance de la performance 
+à celle l'heuristique Lead-3 n'est pas le fruit du hasard: peu importe la
+cible, les modèles entraînés sélectionnent dans une
+très grande proportion les premières phrases d'un document. 
+
+\tikzsetnextfilename{distro_predicts}
+\begin{figure}[ht!]
+    \centering
+    \begin{tikzpicture}
+    \begin{axis}[
+        xlabel=Phrase $i$,
+        ylabel=Inclusion,
+        xtick=data,
+        axis y line*=left, axis x line*=bottom,
+        ybar,
+        width=0.95\textwidth, 
+        height=0.4\textwidth,
+        xmax=5.5,
+        legend cell align={left},
+        every axis plot/.append style={line width=1.5pt, mark size=0pt, font=\huge}]
+        \addplot[blue!40,fill, draw=blue] table[x=t,y=sit_linear_predicts, col sep=comma] {bandit_combi/graham_results/cs_distros.csv};
+        \addplot[green!40,fill,draw=green] table[x=t,y=linsit_linear_predicts, col sep=comma] {bandit_combi/graham_results/cs_distros.csv};
+        \addplot[red!40,fill, draw=red] table[x=t,y=binary_linear_predicts, col sep=comma] {bandit_combi/graham_results/cs_distros.csv};
+      \legend{CUCB ($T_l$), LinCUCB ($T_l$), Oracle}    
+    \end{axis}
+  \end{tikzpicture}
+  \caption[Distribution de l'inclusion des phrases dans les résumés selon la cible utilisée]
+  {Distribution moyenne des phrases retenues
+  sur le jeu de test du jeu de données de CNN/DailyMail.}
+  \label{fig:distro_predict}
+\end{figure}
+
+On fait l'hypothèse qu'une cause plausible de ce comportement est l'attractivité 
+du minimum local qui consiste à prédire les phrases seulement en fonction 
+de leur index.
+Comme les résumés d'articles de journaux suivent une structure en pyramide
+inverse où l'information pertinente
+contenue dans une phrase diminue alors que sa position dans le document 
+augmente, le modèle utilisant toujours les premières phrases d'un 
+document pour générer son résumé sera toujours bon
+sur ce type de document \citep{kryscinski-etal-2019-neural}.
+
+
+Or, les modèles que l'on entraîne avec les cibles binaires de l'oracle souffrent aussi
+(dans une moindre mesure) de ce problème.
+Cela fait contraste avec la performance rapportée par BertSumExt \citep{liu2019text}
+qui représente l'état de l'art extractif et qui utilise exactement la même procédure 
+d'entraînement.
+La seule différence entre nos expériences et BertSumExt est dans le modèle neuronal:
+on utilise un modèle léger basé sur deux LSTMs \citep{10.1162/neco.1997.9.8.1735} 
+alors qu'ils utilisent un modèle BERT \citep{devlin-etal-2019-bert}, 
+un ordre de magnitude plus gros.
+Cela suggère que les mauvaises performances obtenues 
+avec nos cibles sont dues à un manque d'expressivité du réseau de neurones utilisé.
+Ainsi, en utilisant les cibles basées sur CUCB et LinCUCB avec le modèle utilisé par BertSumExt, 
+il n'y a pas de raison évidente pour que la performance ne soit pas au minimum similaire.
 
 \section{Conclusion}
 
-Dans ce chapitre, nous avons proposé de nouvelles cibles plus riches
-pour l'entraînement d'un modèle de génération de résumés.
-Nos nouvelles cibles sont basées sur une version 
-de LinUCB adaptée au bandit combinatoire, dont nous avons validé 
-l'applicabilité sur notre jeu de développement.
-Enfin, nous avons présenté comment les cibles 
-peuvent être utilisées dans un algorithme 
-que nous avons nommé CombiSum.
+On a commencé ce chapitre par la présentation du bandit linéaire combinatoire,
+une formulation permettant d'exploiter la similarité entre les phrases 
+dans le problème de la génération du résumé d'un document.
+On a proposé des représentations vectorielles de phrases 
+et des résumés fondées sur les \ngrams et utilisables dans la formulation linéaire.
+On a présenté LinCUCB, un algorithme qui résout le bandit linéaire combinatoire
+proposé et validé qu'il permet d'identifier des résumés de qualité comparable 
+à CUCB en deux fois moins de pas de temps sur le jeu de développement.
+On a ensuite utilisé LinCUCB pour générer des cibles d'entraînement basées 
+sur le potentiel extractif des phrases, que l'on a incorporées
+à un nouvel algorithme intitulé LinCombiSum.
+L'application au cadre expérimental uniforme a permis d'établir que,
+similairement à CombiSum et les cibles binaires générées par un oracle,
+LinCombiSum produit des modèles dont la performance est seulement marginalement 
+plus élevée que celle de l'heuristique Lead-3.
+On a investigué davantage la convergence avec CombiSum, LinCombiSum et
+les cibles générées par un oracle pour établir que la piètre performance 
+est probablement attribuable à la nature de la distribution 
+de l'information dans les documents considérés et un manque d'expressivité
+dans le modèle neuronal employé.
 
-Dans le prochain chapitre, on compare 
-de manière exhaustive les cibles 
-générées par UCB et LinUCB ainsi que les modèles 
-qu'elles génèrent.
+En somme, ce chapitre a établi comment la génération du résumé 
+d'un document peut être vue comme un bandit linéaire combinatoire, 
+permettant d'utiliser les similarités entre les phrases d'un document pour
+accélérer la résolution du problème.
+Les cibles issues de la résolution du bandit linéaire combinatoire par LinCUCB 
+n'ont toutefois pas permis d'atteindre des performances convaincantes sur le 
+jeu de données du CNN/DailyMail, mais il semble que l'utilisation d'un modèle neuronal 
+plus expressif devrait permettre d'exploiter la richesse des cibles proposées.

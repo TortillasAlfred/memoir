@@ -1,430 +1,312 @@
-@article{2020t5,
-  author  = {Colin Raffel and Noam Shazeer and Adam Roberts and Katherine Lee and Sharan Narang and Michael Matena and Yanqi Zhou and Wei Li and Peter J. Liu},
-  title   = {Exploring the Limits of Transfer Learning with a Unified Text-to-Text Transformer},
-  journal = {Journal of Machine Learning Research},
-  year    = {2020},
-  volume  = {21},
-  number  = {140},
-  url     = {http://jmlr.org/papers/v21/20-074.html}
+@misc{2020t5,
+      title={Exploring the Limits of Transfer Learning with a Unified Text-to-Text Transformer}, 
+      author={Colin Raffel and Noam Shazeer and Adam Roberts and Katherine Lee and Sharan Narang and Michael Matena and Yanqi Zhou and Wei Li and Peter J. Liu},
+      year={2020},
+      eprint={1910.10683},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG}
 }
 
 @inproceedings{unilm,
-  title     = {Unified Language Model Pre-training for Natural Language Understanding and Generation},
-  author    = {Dong, Li and Yang, Nan and Wang, Wenhui and Wei, Furu and Liu, Xiaodong and Wang, Yu and Gao, Jianfeng and Zhou, Ming and Hon, Hsiao-Wuen},
-  year      = {2019},
-  booktitle = {33rd Conference on Neural Information Processing Systems (NeurIPS 2019)}
+ author = {Dong, Li and Yang, Nan and Wang, Wenhui and Wei, Furu and Liu, Xiaodong and Wang, Yu and Gao, Jianfeng and Zhou, Ming and Hon, Hsiao-Wuen},
+ booktitle = {Advances in Neural Information Processing Systems},
+ editor = {H. Wallach and H. Larochelle and A. Beygelzimer and F. d\textquotesingle Alch\'{e}-Buc and E. Fox and R. Garnett},
+ pages = {13063--13075},
+ publisher = {Curran Associates, Inc.},
+ title = {Unified Language Model Pre-training for Natural Language Understanding and Generation},
+ url = {https://proceedings.neurips.cc/paper/2019/file/c20bb2d9a50d5ac1f713f8b34d9aac5a-Paper.pdf},
+ volume = {32},
+ year = {2019}
 }
 
-@InProceedings{zhang2019pegasus, 
-title = {{PEGASUS}: Pre-training with Extracted Gap-sentences for Abstractive Summarization}, 
-author = {Zhang, Jingqing and Zhao, Yao and Saleh, Mohammad and Liu, Peter}, 
-booktitle = {Proceedings of the 37th International Conference on Machine Learning}, 
-year = {2020}, 
-editor = {Hal Daumé III and Aarti Singh}, 
-volume = {119}, 
-series = {Proceedings of Machine Learning Research}, 
-address = {Virtual}, 
-month = {13--18 Jul}, 
-publisher = {PMLR}, 
-pdf = {http://proceedings.mlr.press/v119/zhang20ae/zhang20ae.pdf}, 
-url = {http://proceedings.mlr.press/v119/zhang20ae.html}
-} 
+
+@inproceedings{zhang2019pegasus,
+  title={Pegasus: Pre-training with extracted gap-sentences for abstractive summarization},
+  author={Zhang, Jingqing and Zhao, Yao and Saleh, Mohammad and Liu, Peter},
+  booktitle={International Conference on Machine Learning},
+  pages={11328--11339},
+  year={2020},
+  organization={PMLR}
+}
 
 @inproceedings{dong2018banditsum,
-  title     = {BanditSum: Extractive Summarization as a Contextual Bandit},
-  author    = {Dong, Yue and Shen, Yikang and Crawford, Eric and van Hoof, Herke and Cheung, Jackie Chi Kit},
-  booktitle = {Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing},
-  year      = {2018}
+    title = "{B}andit{S}um: Extractive Summarization as a Contextual Bandit",
+    author = "Dong, Yue  and
+      Shen, Yikang  and
+      Crawford, Eric  and
+      van Hoof, Herke  and
+      Cheung, Jackie Chi Kit",
+    booktitle = "Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing",
+    month = oct # "-" # nov,
+    year = "2018",
+    address = "Brussels, Belgium",
+    publisher = "Association for Computational Linguistics",
+    url = "https://www.aclweb.org/anthology/D18-1409",
+    doi = "10.18653/v1/D18-1409",
+    pages = "3739--3748",
+    abstract = "In this work, we propose a novel method for training neural networks to perform single-document extractive summarization without heuristically-generated extractive labels. We call our approach BanditSum as it treats extractive summarization as a contextual bandit (CB) problem, where the model receives a document to summarize (the context), and chooses a sequence of sentences to include in the summary (the action). A policy gradient reinforcement learning algorithm is used to train the model to select sequences of sentences that maximize ROUGE score. We perform a series of experiments demonstrating that BanditSum is able to achieve ROUGE scores that are better than or comparable to the state-of-the-art for extractive summarization, and converges using significantly fewer update steps than competing approaches. In addition, we show empirically that BanditSum performs significantly better than competing approaches when good summary sentences appear late in the source document.",
 }
 
 @inproceedings{luo-etal-2019-reading,
-  title     = {Reading Like {HER}: Human Reading Inspired Extractive Summarization},
-  author    = {Luo, Ling  and
+    title = "Reading Like {HER}: Human Reading Inspired Extractive Summarization",
+    author = "Luo, Ling  and
       Ao, Xiang  and
       Song, Yan  and
       Pan, Feiyang  and
       Yang, Min  and
-      He, Qing},
-  booktitle = {Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP)},
-  month     = nov,
-  year      = {2019},
-  address   = {Hong Kong, China},
-  publisher = {Association for Computational Linguistics},
-  url       = {https://www.aclweb.org/anthology/D19-1300},
-  doi       = {10.18653/v1/D19-1300},
-  abstract  = {In this work, we re-examine the problem of extractive text summarization for long documents. We observe that the process of extracting summarization of human can be divided into two stages: 1) a rough reading stage to look for sketched information, and 2) a subsequent careful reading stage to select key sentences to form the summary. By simulating such a two-stage process, we propose a novel approach for extractive summarization. We formulate the problem as a contextual-bandit problem and solve it with policy gradient. We adopt a convolutional neural network to encode gist of paragraphs for rough reading, and a decision making policy with an adapted termination mechanism for careful reading. Experiments on the CNN and DailyMail datasets show that our proposed method can provide high-quality summaries with varied length, and significantly outperform the state-of-the-art extractive methods in terms of ROUGE metrics.}
+      He, Qing",
+    booktitle = "Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP)",
+    month = nov,
+    year = "2019",
+    address = "Hong Kong, China",
+    publisher = "Association for Computational Linguistics",
+    url = "https://www.aclweb.org/anthology/D19-1300",
+    doi = "10.18653/v1/D19-1300",
+    pages = "3033--3043",
+    abstract = "In this work, we re-examine the problem of extractive text summarization for long documents. We observe that the process of extracting summarization of human can be divided into two stages: 1) a rough reading stage to look for sketched information, and 2) a subsequent careful reading stage to select key sentences to form the summary. By simulating such a two-stage process, we propose a novel approach for extractive summarization. We formulate the problem as a contextual-bandit problem and solve it with policy gradient. We adopt a convolutional neural network to encode gist of paragraphs for rough reading, and a decision making policy with an adapted termination mechanism for careful reading. Experiments on the CNN and DailyMail datasets show that our proposed method can provide high-quality summaries with varied length, and significantly outperform the state-of-the-art extractive methods in terms of ROUGE metrics.",
 }
 
 @inproceedings{zhong-etal-2020-extractive,
-  title     = {Extractive Summarization as Text Matching},
-  author    = {Zhong, Ming  and
+    title = "Extractive Summarization as Text Matching",
+    author = "Zhong, Ming  and
       Liu, Pengfei  and
       Chen, Yiran  and
       Wang, Danqing  and
       Qiu, Xipeng  and
-      Huang, Xuanjing},
-  booktitle = {Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics},
-  month     = jul,
-  year      = {2020},
-  address   = {Online},
-  publisher = {Association for Computational Linguistics},
-  url       = {https://www.aclweb.org/anthology/2020.acl-main.552},
-  doi       = {10.18653/v1/2020.acl-main.552},
-  abstract  = {This paper creates a paradigm shift with regard to the way we build neural extractive summarization systems. Instead of following the commonly used framework of extracting sentences individually and modeling the relationship between sentences, we formulate the extractive summarization task as a semantic text matching problem, in which a source document and candidate summaries will be (extracted from the original text) matched in a semantic space. Notably, this paradigm shift to semantic matching framework is well-grounded in our comprehensive analysis of the inherent gap between sentence-level and summary-level extractors based on the property of the dataset. Besides, even instantiating the framework with a simple form of a matching model, we have driven the state-of-the-art extractive result on CNN/DailyMail to a new level (44.41 in ROUGE-1). Experiments on the other five datasets also show the effectiveness of the matching framework. We believe the power of this matching-based summarization framework has not been fully exploited. To encourage more instantiations in the future, we have released our codes, processed dataset, as well as generated summaries in \url{https://github.com/maszhongming/MatchSum}.}
+      Huang, Xuanjing",
+    booktitle = "Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics",
+    month = jul,
+    year = "2020",
+    address = "Online",
+    publisher = "Association for Computational Linguistics",
+    url = "https://www.aclweb.org/anthology/2020.acl-main.552",
+    doi = "10.18653/v1/2020.acl-main.552",
+    pages = "6197--6208",
+    abstract = "This paper creates a paradigm shift with regard to the way we build neural extractive summarization systems. Instead of following the commonly used framework of extracting sentences individually and modeling the relationship between sentences, we formulate the extractive summarization task as a semantic text matching problem, in which a source document and candidate summaries will be (extracted from the original text) matched in a semantic space. Notably, this paradigm shift to semantic matching framework is well-grounded in our comprehensive analysis of the inherent gap between sentence-level and summary-level extractors based on the property of the dataset. Besides, even instantiating the framework with a simple form of a matching model, we have driven the state-of-the-art extractive result on CNN/DailyMail to a new level (44.41 in ROUGE-1). Experiments on the other five datasets also show the effectiveness of the matching framework. We believe the power of this matching-based summarization framework has not been fully exploited. To encourage more instantiations in the future, we have released our codes, processed dataset, as well as generated summaries in \url{https://github.com/maszhongming/MatchSum}.",
 }
 
 @inproceedings{lin-2004-rouge,
-  title     = {{ROUGE}: A Package for Automatic Evaluation of Summaries},
-  author    = {Lin, Chin-Yew},
-  booktitle = {Text Summarization Branches Out},
-  month     = jul,
-  year      = {2004},
-  address   = {Barcelona, Spain},
-  publisher = {Association for Computational Linguistics},
-  url       = {https://www.aclweb.org/anthology/W04-1013},
+    title = "{ROUGE}: A Package for Automatic Evaluation of Summaries",
+    author = "Lin, Chin-Yew",
+    booktitle = "Text Summarization Branches Out",
+    month = jul,
+    year = "2004",
+    address = "Barcelona, Spain",
+    publisher = "Association for Computational Linguistics",
+    url = "https://www.aclweb.org/anthology/W04-1013",
+    pages = "74--81",
 }
 
-@article{DBLP:journals/corr/SeeLM17,
-  author        = {Abigail See and
-               Peter J. Liu and
-               Christopher D. Manning},
-  title         = {Get To The Point: Summarization with Pointer-Generator Networks},
-  journal       = {CoRR},
-  volume        = {abs/1704.04368},
-  year          = {2017},
-  url           = {http://arxiv.org/abs/1704.04368},
-  archiveprefix = {arXiv},
-  eprint        = {1704.04368},
-  timestamp     = {Mon, 13 Aug 2018 16:46:08 +0200},
-  biburl        = {https://dblp.org/rec/bib/journals/corr/SeeLM17},
-  bibsource     = {dblp computer science bibliography, https://dblp.org}
+@inproceedings{DBLP:journals/corr/SeeLM17,
+    title = "Get To The Point: Summarization with Pointer-Generator Networks",
+    author = "See, Abigail  and
+      Liu, Peter J.  and
+      Manning, Christopher D.",
+    booktitle = "Proceedings of the 55th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)",
+    month = jul,
+    year = "2017",
+    address = "Vancouver, Canada",
+    publisher = "Association for Computational Linguistics",
+    url = "https://www.aclweb.org/anthology/P17-1099",
+    doi = "10.18653/v1/P17-1099",
+    pages = "1073--1083",
+    abstract = "Neural sequence-to-sequence models have provided a viable new approach for abstractive text summarization (meaning they are not restricted to simply selecting and rearranging passages from the original text). However, these models have two shortcomings: they are liable to reproduce factual details inaccurately, and they tend to repeat themselves. In this work we propose a novel architecture that augments the standard sequence-to-sequence attentional model in two orthogonal ways. First, we use a hybrid pointer-generator network that can copy words from the source text via pointing, which aids accurate reproduction of information, while retaining the ability to produce novel words through the generator. Second, we use coverage to keep track of what has been summarized, which discourages repetition. We apply our model to the CNN / Daily Mail summarization task, outperforming the current abstractive state-of-the-art by at least 2 ROUGE points.",
 }
 
 @inproceedings{10.5555/3020488.3020497,
-  author    = {Coquelin, Pierre-Arnaud and Munos, R\'{e}mi},
-  title     = {Bandit Algorithms for Tree Search},
-  year      = {2007},
-  isbn      = {0974903930},
-  publisher = {AUAI Press},
-  address   = {Arlington, Virginia, USA},
-  abstract  = {Bandit based methods for tree search have recently gained popularity when applied to huge trees, e.g. in the game of go [6]. Their efficient exploration of the tree enables to return rapidly a good value, and improve precision if more time is provided. The UCT algorithm [8], a tree search method based on Upper Confidence Bounds (UCB) [2], is believed to adapt locally to the effective smoothness of the tree. However, we show that UCT is "over-optimistic" in some sense, leading to a worst-case regret that may be very poor. We propose alternative bandit algorithms for tree search. First, a modification of UCT using a confidence sequence that scales exponentially in the horizon depth is analyzed. We then consider Flat-UCB performed on the leaves and provide a finite regret bound with high probability. Then, we introduce and analyze a Bandit Algorithm for Smooth Trees (BAST) which takes into account actual smoothness of the rewards for performing efficient "cuts" of sub-optimal branches with high confidence. Finally, we present an incremental tree expansion which applies when the full tree is too big (possibly infinite) to be entirely represented and show that with high probability, only the optimal branches are indefinitely developed. We illustrate these methods on a global optimization problem of a continuous function, given noisy values.},
-  booktitle = {Proceedings of the Twenty-Third Conference on Uncertainty in Artificial Intelligence},
-  location  = {Vancouver, BC, Canada},
-  series    = {UAI'07}
+author = {Coquelin, Pierre-Arnaud and Munos, R\'{e}mi},
+title = {Bandit Algorithms for Tree Search},
+year = {2007},
+isbn = {0974903930},
+publisher = {AUAI Press},
+address = {Arlington, Virginia, USA},
+abstract = {Bandit based methods for tree search have recently gained popularity when applied to huge trees, e.g. in the game of go [6]. Their efficient exploration of the tree enables to return rapidly a good value, and improve precision if more time is provided. The UCT algorithm [8], a tree search method based on Upper Confidence Bounds (UCB) [2], is believed to adapt locally to the effective smoothness of the tree. However, we show that UCT is "over-optimistic" in some sense, leading to a worst-case regret that may be very poor. We propose alternative bandit algorithms for tree search. First, a modification of UCT using a confidence sequence that scales exponentially in the horizon depth is analyzed. We then consider Flat-UCB performed on the leaves and provide a finite regret bound with high probability. Then, we introduce and analyze a Bandit Algorithm for Smooth Trees (BAST) which takes into account actual smoothness of the rewards for performing efficient "cuts" of sub-optimal branches with high confidence. Finally, we present an incremental tree expansion which applies when the full tree is too big (possibly infinite) to be entirely represented and show that with high probability, only the optimal branches are indefinitely developed. We illustrate these methods on a global optimization problem of a continuous function, given noisy values.},
+booktitle = {Proceedings of the Twenty-Third Conference on Uncertainty in Artificial Intelligence},
+pages = {67–74},
+numpages = {8},
+location = {Vancouver, BC, Canada},
+series = {UAI'07}
 }
 
 @inproceedings{7860440,
-  author    = {Y. {Mandai} and T. {Kaneko}},
-  booktitle = {2016 IEEE Conference on Computational Intelligence and Games (CIG)},
-  title     = {Improved LinUCT and its evaluation on incremental random-feature tree},
-  year      = {2016},
-  volume    = {},
-  number    = {},
-  doi       = {10.1109/CIG.2016.7860440}
+  title={Improved LinUCT and its evaluation on incremental random-feature tree},
+  author={Mandai, Yusaku and Kaneko, Tomoyuki},
+  booktitle={2016 IEEE Conference on Computational Intelligence and Games (CIG)},
+  pages={1--8},
+  year={2016},
+  organization={IEEE}
 }
 
-@article{doi:10.1080/00029890.1969.12000364,
-  author    = {J. F. Ramaley},
-  title     = {Buffon's Noodle Problem},
-  journal   = {The American Mathematical Monthly},
-  volume    = {76},
-  number    = {8},
-  year      = {1969},
-  publisher = {Taylor & Francis},
-  doi       = {10.1080/00029890.1969.12000364},
-  url       = { 
-        https://doi.org/10.1080/00029890.1969.12000364
-    
-},
-  eprint    = { 
-        https://doi.org/10.1080/00029890.1969.12000364
-    
-}
-}
-
-@inproceedings{NIPS2013_9aa42b31,
-  author    = {Mikolov, Tomas and Sutskever, Ilya and Chen, Kai and Corrado, Greg S and Dean, Jeff},
-  booktitle = {Advances in Neural Information Processing Systems},
-  editor    = {C. J. C. Burges and L. Bottou and M. Welling and Z. Ghahramani and K. Q. Weinberger},
-  publisher = {Curran Associates, Inc.},
-  title     = {Distributed Representations of Words and Phrases and their Compositionality},
-  url       = {https://proceedings.neurips.cc/paper/2013/file/9aa42b31882ec039965f3c4923ce901b-Paper.pdf},
-  volume    = {26},
-  year      = {2013}
+@article{NIPS2013_9aa42b31,
+  title={Distributed representations of words and phrases and their compositionality},
+  author={Mikolov, Tomas and Sutskever, Ilya and Chen, Kai and Corrado, Greg S and Dean, Jeff},
+  journal={Advances in neural information processing systems},
+  volume={26},
+  pages={3111--3119},
+  year={2013}
 }
 
 @inproceedings{10.5555/3298483.3298681,
-  author    = {Nallapati, Ramesh and Zhai, Feifei and Zhou, Bowen},
-  title     = {SummaRuNNer: A Recurrent Neural Network Based Sequence Model for Extractive Summarization of Documents},
-  year      = {2017},
-  publisher = {AAAI Press},
-  abstract  = {We present SummaRuNNer, a Recurrent Neural Network (RNN) based sequence model for extractive summarization of documents and show that it achieves performance better than or comparable to state-of-the-art. Our model has the additional advantage of being very interpretable, since it allows visualization of its predictions broken up by abstract features such as information content, salience and novelty. Another novel contribution of our work is abstractive training of our extractive model that can train on human generated reference summaries alone, eliminating the need for sentence-level extractive labels.},
-  booktitle = {Proceedings of the Thirty-First AAAI Conference on Artificial Intelligence},
-  location  = {San Francisco, California, USA},
-  series    = {AAAI'17}
+  title={Summarunner: A recurrent neural network based sequence model for extractive summarization of documents},
+  author={Nallapati, Ramesh and Zhai, Feifei and Zhou, Bowen},
+  booktitle={Proceedings of the AAAI conference on artificial intelligence},
+  volume={31},
+  year={2017}
 }
 
 @inproceedings{pennington2014glove,
-  added-at  = {2016-02-18T12:02:38.000+0100},
-  author    = {Pennington, Jeffrey and Socher, Richard and Manning, Christopher D},
-  biburl    = {https://www.bibsonomy.org/bibtex/2a6e77a38c13e374ab250e13ae22993ec/thoni},
-  booktitle = {EMNLP},
-  interhash = {29813227df1eea94efa14c7df2b5553a},
-  intrahash = {a6e77a38c13e374ab250e13ae22993ec},
-  keywords  = {deeplearning deepwiki glove semantic},
-  timestamp = {2016-09-06T08:23:07.000+0200},
-  title     = {Glove: Global Vectors for Word Representation.},
-  volume    = 14,
-  year      = 2014
+  title={Glove: Global vectors for word representation},
+  author={Pennington, Jeffrey and Socher, Richard and Manning, Christopher D},
+  booktitle={Proceedings of the 2014 conference on empirical methods in natural language processing (EMNLP)},
+  pages={1532--1543},
+  year={2014}
 }
 
 @article{DBLP:journals/corr/PaulusXS17,
-  author        = {Romain Paulus and
-               Caiming Xiong and
-               Richard Socher},
-  title         = {A Deep Reinforced Model for Abstractive Summarization},
-  journal       = {CoRR},
-  volume        = {abs/1705.04304},
-  year          = {2017},
-  url           = {http://arxiv.org/abs/1705.04304},
-  archiveprefix = {arXiv},
-  eprint        = {1705.04304},
-  timestamp     = {Mon, 13 Aug 2018 16:48:58 +0200},
-  biburl        = {https://dblp.org/rec/journals/corr/PaulusXS17.bib},
-  bibsource     = {dblp computer science bibliography, https://dblp.org}
+  title={A deep reinforced model for abstractive summarization},
+  author={Paulus, Romain and Xiong, Caiming and Socher, Richard},
+  journal={arXiv preprint arXiv:1705.04304},
+  year={2017}
 }
 
+
 @article{kuleshov2014algorithms,
-author = {Kuleshov, Volodymyr and Precup, Doina},
-year = {2014},
-month = {02},
-title = {Algorithms for multi-armed bandit problems},
-volume = {1},
-journal = {Journal of Machine Learning Research}
+  title={Algorithms for multi-armed bandit problems},
+  author={Kuleshov, Volodymyr and Precup, Doina},
+  journal={arXiv preprint arXiv:1402.6028},
+  year={2014}
 }
 
 @inproceedings{10.5555/2832249.2832384,
-  author    = {Shen, Weiwei and Wang, Jun and Jiang, Yu-Gang and Zha, Hongyuan},
-  title     = {Portfolio Choices with Orthogonal Bandit Learning},
-  year      = {2015},
-  isbn      = {9781577357384},
-  publisher = {AAAI Press},
-  abstract  = {The investigation and development of new methods from diverse perspectives to shed light on portfolio choice problems has never stagnated in financial research. Recently, multi-armed bandits have drawn intensive attention in various machine learning applications in online settings. The tradeoff between exploration and exploitation to maximize rewards in bandit algorithms naturally establishes a connection to portfolio choice problems. In this paper, we present a bandit algorithm for conducting online portfolio choices by effectually exploiting correlations among multiple arms. Through constructing orthogonal portfolios from multiple assets and integrating with the upper confidence bound bandit framework, we derive the optimal portfolio strategy that represents the combination of passive and active investments according to a risk-adjusted reward function. Compared with oft-quoted trading strategies in finance and machine learning fields across representative real-world market datasets, the proposed algorithm demonstrates superiority in both risk-adjusted return and cumulative wealth.},
-  booktitle = {Proceedings of the 24th International Conference on Artificial Intelligence},
-  location  = {Buenos Aires, Argentina},
-  series    = {IJCAI'15}
+  title={Portfolio choices with orthogonal bandit learning},
+  author={Shen, Weiwei and Wang, Jun and Jiang, Yu-Gang and Zha, Hongyuan},
+  booktitle={Twenty-fourth international joint conference on artificial intelligence},
+  year={2015}
 }
 
-@misc{xu2015empirical,
-  abstract             = {{In this paper we investigate the performance of different types of rectified
-activation functions in convolutional neural network: standard rectified linear
-unit (ReLU), leaky rectified linear unit (Leaky ReLU), parametric rectified
-linear unit (PReLU) and a new randomized leaky rectified linear units (RReLU).
-We evaluate these activation function on standard image classification task.
-Our experiments suggest that incorporating a non-zero slope for negative part
-in rectified activation units could consistently improve the results. Thus our
-findings are negative on the common belief that sparsity is the key of good
-performance in ReLU. Moreover, on small scale dataset, using deterministic
-negative slope or learning it are both prone to overfitting. They are not as
-effective as using their randomized counterpart. By using RReLU, we achieved
-75.68\% accuracy on CIFAR-100 test set without multiple test or ensemble.}},
-  added-at             = {2017-07-19T15:29:59.000+0200},
-  archiveprefix        = {arXiv},
-  author               = {Xu, Bing and Wang, Naiyan and Chen, Tianqi and Li, Mu},
-  biburl               = {https://www.bibsonomy.org/bibtex/2d15ce97ffbd56f6b67a3b3e9808d409f/andreashdez},
-  citeulike-article-id = {13901176},
-  citeulike-linkout-0  = {http://arxiv.org/abs/1505.00853},
-  citeulike-linkout-1  = {http://arxiv.org/pdf/1505.00853},
-  day                  = 27,
-  eprint               = {1505.00853},
-  interhash            = {cd7f58f055c63e11c1555abb1e72b978},
-  intrahash            = {d15ce97ffbd56f6b67a3b3e9808d409f},
-  keywords             = {imported},
-  month                = nov,
-  posted-at            = {2016-04-29 20:51:58},
-  priority             = {0},
-  timestamp            = {2017-07-19T15:31:02.000+0200},
-  title                = {{Empirical Evaluation of Rectified Activations in Convolutional Network}},
-  url                  = {http://arxiv.org/abs/1505.00853},
-  year                 = 2015
+@article{xu2015empirical,
+  title={Empirical evaluation of rectified activations in convolutional network},
+  author={Xu, Bing and Wang, Naiyan and Chen, Tianqi and Li, Mu},
+  journal={arXiv preprint arXiv:1505.00853},
+  year={2015}
 }
 
-
-
-
-@article{iet:/content/conferences/10.1049/cp_19991218,
-  author      = {F.A. Gers},
-  affiliation = {IDSIA, Lugano},
-  author      = {J. Schmidhuber},
-  affiliation = {IDSIA, Lugano},
-  author      = {F. Cummins},
-  affiliation = {IDSIA, Lugano},
-  keywords    = {learning;long short-term memory;recurrent neural networks;adaptive forget gate;resource allocation;},
-  language    = {English},
-  abstract    = {Long short-term memory (LSTM) can solve many tasks not solvable by previous learning algorithms for recurrent neural networks (RNNs). We identify a weakness of LSTM networks processing continual input streams without explicitly marked sequence ends. Without resets, the internal state values may grow indefinitely and eventually cause the network to break down. Our remedy is an adaptive “forget gate” that enables an LSTM cell to learn to reset itself at appropriate times, thus releasing internal resources. We review an illustrative benchmark problem on which standard LSTM outperforms other RNN algorithms. All algorithms (including LSTM) fail to solve a continual version of that problem. LSTM with forget gates, however, easily solves it in an elegant way.},
-  title       = {Learning to forget: continual prediction with LSTM},
-  journal     = {IET Conference Proceedings},
-  year        = {1999},
-  month       = {January},
-  publisher   = {Institution of Engineering and Technology},
-  url         = {https://digital-library.theiet.org/content/conferences/10.1049/cp_19991218}
+@article{10.1162/neco.1997.9.8.1735,
+  title={Long short-term memory},
+  author={Hochreiter, Sepp and Schmidhuber, J{\"u}rgen},
+  journal={Neural computation},
+  volume={9},
+  number={8},
+  pages={1735--1780},
+  year={1997},
+  publisher={MIT Press}
 }
 
 @article{williams1992simple,
-  title     = {Simple statistical gradient-following algorithms for connectionist reinforcement learning},
-  author    = {Williams, Ronald J},
-  journal   = {Machine learning},
-  volume    = {8},
-  number    = {3-4},
-  year      = {1992},
-  publisher = {Springer}
+  title={Simple statistical gradient-following algorithms for connectionist reinforcement learning},
+  author={Williams, Ronald J},
+  journal={Machine learning},
+  volume={8},
+  number={3-4},
+  pages={229--256},
+  year={1992},
+  publisher={Springer}
 }
 
-@article{sutton1999policy,
-  title   = {Policy gradient methods for reinforcement learning with function approximation},
-  author  = {Sutton, Richard S and McAllester, David and Singh, Satinder and Mansour, Yishay},
-  journal = {Advances in neural information processing systems},
-  volume  = {12},
-  year    = {1999}
+@inproceedings{sutton1999policy,
+  title={Policy gradient methods for reinforcement learning with function approximation},
+  author={Sutton, Richard S and McAllester, David A and Singh, Satinder P and Mansour, Yishay},
+  booktitle={Advances in neural information processing systems},
+  pages={1057--1063},
+  year={2000}
 }
-
 
 @inproceedings{peyrard-2019-studying,
-  title     = {Studying Summarization Evaluation Metrics in the Appropriate Scoring Range},
-  author    = {Peyrard, Maxime},
-  booktitle = {Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics},
-  month     = jul,
-  year      = {2019},
-  address   = {Florence, Italy},
-  publisher = {Association for Computational Linguistics},
-  url       = {},
-  doi       = {10.18653/v1/P19-1502},
-  abstract  = {In summarization, automatic evaluation metrics are usually compared based on their ability to correlate with human judgments. Unfortunately, the few existing human judgment datasets have been created as by-products of the manual evaluations performed during the DUC/TAC shared tasks. However, modern systems are typically better than the best systems submitted at the time of these shared tasks. We show that, surprisingly, evaluation metrics which behave similarly on these datasets (average-scoring range) strongly disagree in the higher-scoring range in which current systems now operate. It is problematic because metrics disagree yet we can{'}t decide which one to trust. This is a call for collecting human judgments for high-scoring summaries as this would resolve the debate over which metrics to trust. This would also be greatly beneficial to further improve summarization systems and metrics alike.}
+  title={Studying summarization evaluation metrics in the appropriate scoring range},
+  author={Peyrard, Maxime},
+  booktitle={Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics},
+  pages={5093--5100},
+  year={2019}
 }
 
-@inproceedings{ng-abrecht-2015-better,
-  title     = {Better Summarization Evaluation with Word Embeddings for {ROUGE}},
-  author    = {Ng, Jun-Ping  and
-      Abrecht, Viktoria},
-  booktitle = {Proceedings of the 2015 Conference on Empirical Methods in Natural Language Processing},
-  month     = sep,
-  year      = {2015},
-  address   = {Lisbon, Portugal},
-  publisher = {Association for Computational Linguistics},
-  url       = {https://www.aclweb.org/anthology/D15-1222},
-  doi       = {10.18653/v1/D15-1222},
-  }
-
-@article{61115,
-  author  = {J. {Lin}},
-  journal = {IEEE Transactions on Information Theory},
-  title   = {Divergence measures based on the Shannon entropy},
-  year    = {1991},
-  volume  = {37},
-  number  = {1},
-  doi     = {10.1109/18.61115}
+@article{ng-abrecht-2015-better,
+  title={Better summarization evaluation with word embeddings for rouge},
+  author={Ng, Jun-Ping and Abrecht, Viktoria},
+  journal={arXiv preprint arXiv:1508.06034},
+  year={2015}
 }
 
 @inproceedings{peyrard-etal-2017-learning,
-  title     = {Learning to Score System Summaries for Better Content Selection Evaluation.},
-  author    = {Peyrard, Maxime  and
-      Botschen, Teresa  and
-      Gurevych, Iryna},
-  booktitle = {Proceedings of the Workshop on New Frontiers in Summarization},
-  month     = sep,
-  year      = {2017},
-  address   = {Copenhagen, Denmark},
-  publisher = {Association for Computational Linguistics},
-  url       = {https://www.aclweb.org/anthology/W17-4510},
-  doi       = {10.18653/v1/W17-4510},
-  abstract  = {The evaluation of summaries is a challenging but crucial task of the summarization field. In this work, we propose to learn an automatic scoring metric based on the human judgements available as part of classical summarization datasets like TAC-2008 and TAC-2009. Any existing automatic scoring metrics can be included as features, the model learns the combination exhibiting the best correlation with human judgments. The reliability of the new metric is tested in a further manual evaluation where we ask humans to evaluate summaries covering the whole scoring spectrum of the metric. We release the trained metric as an open-source tool.}
+  title={Learning to Score System Summaries for Better Content Selection Evaluation.},
+  author={Peyrard, Maxime and Botschen, Teresa and Gurevych, Iryna},
+  booktitle={Proceedings of the Workshop on New Frontiers in Summarization},
+  pages={74--84},
+  year={2017}
 }
 
 @article{ucb,
-  title     = {Finite-time analysis of the multiarmed bandit problem},
-  author    = {Auer, Peter and Cesa-Bianchi, Nicolo and Fischer, Paul},
-  journal   = {Machine learning},
-  volume    = {47},
-  number    = {2-3},
-  year      = {2002},
-  publisher = {Springer}
+  title={Finite-time analysis of the multiarmed bandit problem},
+  author={Auer, Peter and Cesa-Bianchi, Nicolo and Fischer, Paul},
+  journal={Machine learning},
+  volume={47},
+  number={2-3},
+  pages={235--256},
+  year={2002},
+  publisher={Springer}
 }
+
 
 
 @inproceedings{chu2011contextual,
-  title     = {Contextual bandits with linear payoff functions},
-  author    = {Chu, Wei and Li, Lihong and Reyzin, Lev and Schapire, Robert},
-  booktitle = {Proceedings of the Fourteenth International Conference on Artificial Intelligence and Statistics},
-  year      = {2011}
+  title={Contextual bandits with linear payoff functions},
+  author={Chu, Wei and Li, Lihong and Reyzin, Lev and Schapire, Robert},
+  booktitle={Proceedings of the Fourteenth International Conference on Artificial Intelligence and Statistics},
+  pages={208--214},
+  year={2011}
 }
-
 
 @inproceedings{tikhonov1963solution,
-  title        = {On the solution of ill-posed problems and the method of regularization},
-  author       = {Tikhonov, Andrei Nikolaevich},
-  booktitle    = {Doklady Akademii Nauk},
-  volume       = {151},
-  number       = {3},
-  year         = {1963},
-  organization = {Russian Academy of Sciences}
+  title={On the solution of ill-posed problems and the method of regularization},
+  author={Tikhonov, Andrei Nikolaevich},
+  booktitle={Doklady Akademii Nauk},
+  volume={151},
+  pages={501--504},
+  year={1963},
+  organization={Russian Academy of Sciences}
 }
+
 
 @book{banditalgs,
-  place     = {Cambridge},
-  title     = {Bandit Algorithms},
-  doi       = {10.1017/9781108571401},
-  publisher = {Cambridge University Press},
-  author    = {Lattimore, Tor and Szepesvári, Csaba},
-  year      = {2020}
+  title={Bandit algorithms},
+  author={Lattimore, Tor and Szepesv{\'a}ri, Csaba},
+  year={2020},
+  publisher={Cambridge University Press}
 }
 
-@article{Li_2010,
-  title     = {A contextual-bandit approach to personalized news article recommendation},
-  isbn      = {9781605587998},
-  url       = {http://dx.doi.org/10.1145/1772690.1772758},
-  doi       = {10.1145/1772690.1772758},
-  journal   = {Proceedings of the 19th international conference on World wide web - WWW  ’10},
-  publisher = {ACM Press},
-  author    = {Li, Lihong and Chu, Wei and Langford, John and Schapire, Robert E.},
-  year      = {2010}
+@inproceedings{Li_2010,
+  title={A contextual-bandit approach to personalized news article recommendation},
+  author={Li, Lihong and Chu, Wei and Langford, John and Schapire, Robert E},
+  booktitle={Proceedings of the 19th international conference on World wide web},
+  pages={661--670},
+  year={2010}
 }
 
-@misc{kingma2014method,
-  added-at = {2020-01-17T03:14:27.000+0100},
-  author = {Kingma, Diederik P. and Ba, Jimmy},
-  biburl = {https://www.bibsonomy.org/bibtex/2d53bcfff0fe1a1d3a4a171352ee6e92c/simon_diener},
-  description = {An upgrade over the standard stochastic gradient descend as it is able to apply changes to the learning rate by itself to be able to escape local maxima etc. This methods was used for the dynamic explainable recommender framework by Chen et al.},
-  interhash = {57d2ac873f398f21bb94790081e80394},
-  intrahash = {d53bcfff0fe1a1d3a4a171352ee6e92c},
-  keywords = {final thema:neural_attentional_rating_regression},
-  note = {cite arxiv:1412.6980Comment: Published as a conference paper at the 3rd International Conference  for Learning Representations, San Diego, 2015},
-  timestamp = {2020-01-17T03:14:27.000+0100},
-  title = {Adam: A Method for Stochastic Optimization},
-  url = {http://arxiv.org/abs/1412.6980},
-  year = 2014
-}
-
-
-@misc{agarap2018learning,
-  added-at = {2018-03-23T15:12:05.000+0100},
-  author = {Agarap, Abien Fred},
-  biburl = {https://www.bibsonomy.org/bibtex/2ac4c868baa4ea267dad6d02b9c4b5c33/kylemccaulley},
-  interhash = {0b73d7eb00fe360679c6741645b9c874},
-  intrahash = {ac4c868baa4ea267dad6d02b9c4b5c33},
-  keywords = {},
-  timestamp = {2018-03-23T15:12:05.000+0100},
-  title = {Deep Learning using Rectified Linear Units (ReLU)},
-  url = {http://arxiv.org/abs/1803.08375},
-  year = 2018
+@article{kingma2014method,
+  title={Adam: A method for stochastic optimization},
+  author={Kingma, Diederik P and Ba, Jimmy},
+  journal={arXiv preprint arXiv:1412.6980},
+  year={2014}
 }
 
 @article{alphago,
-title	= {Mastering the game of Go with deep neural networks and tree search},
-author	= {David Silver and Aja Huang and Christopher J. Maddison and Arthur Guez and Laurent Sifre and George van den Driessche and Julian Schrittwieser and Ioannis Antonoglou and Veda Panneershelvam and Marc Lanctot and Sander Dieleman and Dominik Grewe and John Nham and Nal Kalchbrenner and Ilya Sutskever and Timothy Lillicrap and Madeleine Leach and Koray Kavukcuoglu and Thore Graepel and Demis Hassabis},
-year	= {2016},
-URL	= {http://www.nature.com/nature/journal/v529/n7587/full/nature16961.html},
-journal	= {Nature},
-volume	= {529}
+  title={Mastering the game of Go with deep neural networks and tree search},
+  author={Silver, David and Huang, Aja and Maddison, Chris J and Guez, Arthur and Sifre, Laurent and Van Den Driessche, George and Schrittwieser, Julian and Antonoglou, Ioannis and Panneershelvam, Veda and Lanctot, Marc and others},
+  journal={nature},
+  volume={529},
+  number={7587},
+  pages={484--489},
+  year={2016},
+  publisher={Nature Publishing Group}
 }
 
 @article{abbasi2011improved,
@@ -432,35 +314,32 @@ volume	= {529}
   author={Abbasi-Yadkori, Yasin and P{\'a}l, D{\'a}vid and Szepesv{\'a}ri, Csaba},
   journal={Advances in neural information processing systems},
   volume={24},
+  pages={2312--2320},
   year={2011}
 }
 
-@misc{halko2010finding,
-      title={Finding structure with randomness: Probabilistic algorithms for constructing approximate matrix decompositions}, 
-      author={Nathan Halko and Per-Gunnar Martinsson and Joel A. Tropp},
-      year={2010},
-      eprint={0909.4061},
-      archivePrefix={arXiv},
-      primaryClass={math.NA}
+@article{halko2010finding,
+  title={Finding structure with randomness: Probabilistic algorithms for constructing approximate matrix decompositions},
+  author={Halko, Nathan and Martinsson, Per-Gunnar and Tropp, Joel A},
+  journal={SIAM review},
+  volume={53},
+  number={2},
+  pages={217--288},
+  year={2011},
+  publisher={SIAM}
 }
 
 @article{10.1145/291128.291131,
-author = {Kolda, Tamara G. and O'Leary, Dianne P.},
-title = {A Semidiscrete Matrix Decomposition for Latent Semantic Indexing Information Retrieval},
-year = {1998},
-issue_date = {Oct. 1998},
-publisher = {Association for Computing Machinery},
-address = {New York, NY, USA},
-volume = {16},
-number = {4},
-issn = {1046-8188},
-url = {https://doi.org/10.1145/291128.291131},
-doi = {10.1145/291128.291131},
-abstract = {The vast amount of textual information available today is useless unless it can be effectively and efficiently searched. The goal in information retrieval is to find documents that are relevant to a given user query. We can represent and document collection by a matrix whose (i, j) entry is nonzero only if the ith term appears in the jth document; thus each document corresponds to a columm vector. The query is also represented as a column vector whose ith term is nonzero only if the ith term appears in the query. We score each document for relevancy by taking its inner product with the query. The highest-scoring documents are considered the most relevant. Unfortunately, this method does not necessarily retrieve all relevant documents because it is based on literal term matching.  Latent semantic indexing (LSI) replaces the document matrix with an approximation generated by the truncated singular-value decomposition (SVD). This method has been shown to overcome many difficulties associated with literal term matching. In this article we propose replacing the SVD with the semidiscrete decomposition (SDD). We will describe the SDD approximation, show how to compute it, and compare the SDD-based LSI method to the SVD-based LSI methods. We will show that SDD-based LSI does as well as SVD-based LSI in terms of document retrieval while requiring only one-twentieth the storage and one-half the time to compute each query. We will also show how to update the SDD approximation when documents are added or deleted from the document collection.},
-journal = {ACM Trans. Inf. Syst.},
-month = oct,
-keywords = {semidiscrete decomposition, singular-value decomposition, data mining, latent semantic indexing, text retrieval}
+  title={A semidiscrete matrix decomposition for latent semantic indexing information retrieval},
+  author={Kolda, Tamara G and O'leary, Dianne P},
+  journal={ACM Transactions on Information Systems (TOIS)},
+  volume={16},
+  number={4},
+  pages={322--346},
+  year={1998},
+  publisher={ACM New York, NY, USA}
 }
+
 
 @article{sherman1950adjustment,
   title={Adjustment of an inverse matrix corresponding to a change in one element of a given matrix},
@@ -468,6 +347,7 @@ keywords = {semidiscrete decomposition, singular-value decomposition, data minin
   journal={The Annals of Mathematical Statistics},
   volume={21},
   number={1},
+  pages={124--127},
   year={1950},
   publisher={JSTOR}
 }
@@ -478,181 +358,238 @@ keywords = {semidiscrete decomposition, singular-value decomposition, data minin
   journal={IEEE transactions on Signal Processing},
   volume={45},
   number={11},
+  pages={2673--2681},
   year={1997},
   publisher={Ieee}
 }
 
 @book{10.5555/3086952,
-author = {Goodfellow, Ian and Bengio, Yoshua and Courville, Aaron},
-title = {Deep Learning},
-year = {2016},
-isbn = {0262035618},
-publisher = {The MIT Press},
-abstract = {"Written by three experts in the field, Deep Learning is the only comprehensive book on the subject." -- Elon Musk, cochair of OpenAI; cofounder and CEO of Tesla and SpaceXDeep learning is a form of machine learning that enables computers to learn from experience and understand the world in terms of a hierarchy of concepts. Because the computer gathers knowledge from experience, there is no need for a human computer operator to formally specify all the knowledge that the computer needs. The hierarchy of concepts allows the computer to learn complicated concepts by building them out of simpler ones; a graph of these hierarchies would be many layers deep. This book introduces a broad range of topics in deep learning. The text offers mathematical and conceptual background, covering relevant concepts in linear algebra, probability theory and information theory, numerical computation, and machine learning. It describes deep learning techniques used by practitioners in industry, including deep feedforward networks, regularization, optimization algorithms, convolutional networks, sequence modeling, and practical methodology; and it surveys such applications as natural language processing, speech recognition, computer vision, online recommendation systems, bioinformatics, and videogames. Finally, the book offers research perspectives, covering such theoretical topics as linear factor models, autoencoders, representation learning, structured probabilistic models, Monte Carlo methods, the partition function, approximate inference, and deep generative models. Deep Learning can be used by undergraduate or graduate students planning careers in either industry or research, and by software engineers who want to begin using deep learning in their products or platforms. A website offers supplementary material for both readers and instructors.}
+  title={Deep learning},
+  author={Goodfellow, Ian and Bengio, Yoshua and Courville, Aaron and Bengio, Yoshua},
+  volume={1},
+  year={2016},
+  publisher={MIT press Cambridge}
 }
 
 @article{LIU201711,
-title = "A survey of deep neural network architectures and their applications",
-journal = "Neurocomputing",
-volume = "234",
-year = "2017",
-issn = "0925-2312",
-doi = "https://doi.org/10.1016/j.neucom.2016.12.038",
-url = "http://www.sciencedirect.com/science/article/pii/S0925231216315533",
-author = "Weibo Liu and Zidong Wang and Xiaohui Liu and Nianyin Zeng and Yurong Liu and Fuad E. Alsaadi",
-keywords = "Autoencoder, Convolutional neural network, Deep learning, Deep belief network, Restricted Boltzmann machine",
-abstract = "Since the proposal of a fast learning algorithm for deep belief networks in 2006, the deep learning techniques have drawn ever-increasing research interests because of their inherent capability of overcoming the drawback of traditional algorithms dependent on hand-designed features. Deep learning approaches have also been found to be suitable for big data analysis with successful applications to computer vision, pattern recognition, speech recognition, natural language processing, and recommendation systems. In this paper, we discuss some widely-used deep learning architectures and their practical applications. An up-to-date overview is provided on four deep learning architectures, namely, autoencoder, convolutional neural network, deep belief network, and restricted Boltzmann machine. Different types of deep neural networks are surveyed and recent progresses are summarized. Applications of deep learning techniques on some selected areas (speech recognition, pattern recognition and computer vision) are highlighted. A list of future research topics are finally given with clear justifications."
+  title={A survey of deep neural network architectures and their applications},
+  author={Liu, Weibo and Wang, Zidong and Liu, Xiaohui and Zeng, Nianyin and Liu, Yurong and Alsaadi, Fuad E},
+  journal={Neurocomputing},
+  volume={234},
+  pages={11--26},
+  year={2017},
+  publisher={Elsevier}
 }
 
 @article{robbins1951stochastic,
   title={A stochastic approximation method},
   author={Robbins, Herbert and Monro, Sutton},
   journal={The annals of mathematical statistics},
+  pages={400--407},
   year={1951},
   publisher={JSTOR}
 }
 
-@misc{wu2016googles,
-      title={Google's Neural Machine Translation System: Bridging the Gap between Human and Machine Translation}, 
-      author={Yonghui Wu and Mike Schuster and Zhifeng Chen and Quoc V. Le and Mohammad Norouzi and Wolfgang Macherey and Maxim Krikun and Yuan Cao and Qin Gao and Klaus Macherey and Jeff Klingner and Apurva Shah and Melvin Johnson and Xiaobing Liu and Łukasz Kaiser and Stephan Gouws and Yoshikiyo Kato and Taku Kudo and Hideto Kazawa and Keith Stevens and George Kurian and Nishant Patil and Wei Wang and Cliff Young and Jason Smith and Jason Riesa and Alex Rudnick and Oriol Vinyals and Greg Corrado and Macduff Hughes and Jeffrey Dean},
-      year={2016},
-      eprint={1609.08144},
-      archivePrefix={arXiv},
-      primaryClass={cs.CL}
+@article{wu2016googles,
+  title={Google's neural machine translation system: Bridging the gap between human and machine translation},
+  author={Wu, Yonghui and Schuster, Mike and Chen, Zhifeng and Le, Quoc V and Norouzi, Mohammad and Macherey, Wolfgang and Krikun, Maxim and Cao, Yuan and Gao, Qin and Macherey, Klaus and others},
+  journal={arXiv preprint arXiv:1609.08144},
+  year={2016}
 }
 
-@misc{xu2016show,
-      title={Show, Attend and Tell: Neural Image Caption Generation with Visual Attention}, 
-      author={Kelvin Xu and Jimmy Ba and Ryan Kiros and Kyunghyun Cho and Aaron Courville and Ruslan Salakhutdinov and Richard Zemel and Yoshua Bengio},
-      year={2016},
-      eprint={1502.03044},
-      archivePrefix={arXiv},
-      primaryClass={cs.LG}
-}
-@misc{joulin2016bag,
-      title={Bag of Tricks for Efficient Text Classification}, 
-      author={Armand Joulin and Edouard Grave and Piotr Bojanowski and Tomas Mikolov},
-      year={2016},
-      eprint={1607.01759},
-      archivePrefix={arXiv},
-      primaryClass={cs.CL}
+@inproceedings{xu2016show,
+  title={Show, attend and tell: Neural image caption generation with visual attention},
+  author={Xu, Kelvin and Ba, Jimmy and Kiros, Ryan and Cho, Kyunghyun and Courville, Aaron and Salakhudinov, Ruslan and Zemel, Rich and Bengio, Yoshua},
+  booktitle={International conference on machine learning},
+  pages={2048--2057},
+  year={2015}
 }
 
-@misc{almeida2019word,
-      title={Word Embeddings: A Survey}, 
-      author={Felipe Almeida and Geraldo Xexéo},
-      year={2019},
-      eprint={1901.09069},
-      archivePrefix={arXiv},
-      primaryClass={cs.CL}
+@article{joulin2016bag,
+  title={Bag of tricks for efficient text classification},
+  author={Joulin, Armand and Grave, Edouard and Bojanowski, Piotr and Mikolov, Tomas},
+  journal={arXiv preprint arXiv:1607.01759},
+  year={2016}
 }
 
-@inproceedings{hermann2015teaching,
+
+@article{almeida2019word,
+  author    = {Felipe Almeida and
+               Geraldo Xex{\'{e}}o},
+  title     = {Word Embeddings: {A} Survey},
+  journal   = {CoRR},
+  volume    = {abs/1901.09069},
+  year      = {2019},
+  url       = {http://arxiv.org/abs/1901.09069},
+  archivePrefix = {arXiv},
+  eprint    = {1901.09069},
+  timestamp = {Sat, 02 Feb 2019 16:56:00 +0100},
+  biburl    = {https://dblp.org/rec/journals/corr/abs-1901-09069.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+@article{hermann2015teaching,
   title={Teaching machines to read and comprehend},
   author={Hermann, Karl Moritz and Kocisky, Tomas and Grefenstette, Edward and Espeholt, Lasse and Kay, Will and Suleyman, Mustafa and Blunsom, Phil},
-  booktitle={Advances in neural information processing systems},
+  journal={Advances in neural information processing systems},
+  volume={28},
   pages={1693--1701},
   year={2015}
 }
 
-@inproceedings{devlin-etal-2019-bert,
-    title = "{BERT}: Pre-training of Deep Bidirectional Transformers for Language Understanding",
-    author = "Devlin, Jacob  and
-      Chang, Ming-Wei  and
-      Lee, Kenton  and
-      Toutanova, Kristina",
-    booktitle = "Proceedings of the 2019 Conference of the North {A}merican Chapter of the Association for Computational Linguistics: Human Language Technologies, Volume 1 (Long and Short Papers)",
-    month = jun,
-    year = "2019",
-    address = "Minneapolis, Minnesota",
-    publisher = "Association for Computational Linguistics",
-    url = "https://www.aclweb.org/anthology/N19-1423",
-    doi = "10.18653/v1/N19-1423",
-    abstract = "We introduce a new language representation model called BERT, which stands for Bidirectional Encoder Representations from Transformers. Unlike recent language representation models (Peters et al., 2018a; Radford et al., 2018), BERT is designed to pre-train deep bidirectional representations from unlabeled text by jointly conditioning on both left and right context in all layers. As a result, the pre-trained BERT model can be fine-tuned with just one additional output layer to create state-of-the-art models for a wide range of tasks, such as question answering and language inference, without substantial task-specific architecture modifications. BERT is conceptually simple and empirically powerful. It obtains new state-of-the-art results on eleven natural language processing tasks, including pushing the GLUE score to 80.5 (7.7 point absolute improvement), MultiNLI accuracy to 86.7{\%} (4.6{\%} absolute improvement), SQuAD v1.1 question answering Test F1 to 93.2 (1.5 point absolute improvement) and SQuAD v2.0 Test F1 to 83.1 (5.1 point absolute improvement).",
+@article{devlin-etal-2019-bert,
+  title={Bert: Pre-training of deep bidirectional transformers for language understanding},
+  author={Devlin, Jacob and Chang, Ming-Wei and Lee, Kenton and Toutanova, Kristina},
+  journal={arXiv preprint arXiv:1810.04805},
+  year={2018}
 }
 
 @inproceedings{vaswani2017attention,
   title={Attention is all you need},
   author={Vaswani, Ashish and Shazeer, Noam and Parmar, Niki and Uszkoreit, Jakob and Jones, Llion and Gomez, Aidan N and Kaiser, {\L}ukasz and Polosukhin, Illia},
   booktitle={Advances in neural information processing systems},
+  pages={5998--6008},
   year={2017}
 }
 
-@misc{dou2020gsum,
-      title={GSum: A General Framework for Guided Neural Abstractive Summarization}, 
-      author={Zi-Yi Dou and Pengfei Liu and Hiroaki Hayashi and Zhengbao Jiang and Graham Neubig},
-      year={2020},
-      eprint={2010.08014},
-      archivePrefix={arXiv},
-      primaryClass={cs.CL}
+
+@article{dou2020gsum,
+  title={GSum: A general framework for guided neural abstractive summarization},
+  author={Dou, Zi-Yi and Liu, Pengfei and Hayashi, Hiroaki and Jiang, Zhengbao and Neubig, Graham},
+  journal={arXiv preprint arXiv:2010.08014},
+  year={2020}
 }
 
 @inproceedings{kryscinski2020evaluating,
   title={Evaluating the factual consistency of abstractive text summarization},
   author={Kryscinski, Wojciech and McCann, Bryan and Xiong, Caiming and Socher, Richard},
   booktitle={Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP)},
+  pages={9332--9346},
   year={2020}
 }
 
-@inproceedings{narayan-etal-2018-ranking,
-    title = "Ranking Sentences for Extractive Summarization with Reinforcement Learning",
-    author = "Narayan, Shashi  and
-      Cohen, Shay B.  and
-      Lapata, Mirella",
-    booktitle = "Proceedings of the 2018 Conference of the North {A}merican Chapter of the Association for Computational Linguistics: Human Language Technologies, Volume 1 (Long Papers)",
-    month = jun,
-    year = "2018",
-    address = "New Orleans, Louisiana",
-    publisher = "Association for Computational Linguistics",
-    url = "https://www.aclweb.org/anthology/N18-1158",
-    doi = "10.18653/v1/N18-1158",
-    abstract = "Single document summarization is the task of producing a shorter version of a document while preserving its principal information content. In this paper we conceptualize extractive summarization as a sentence ranking task and propose a novel training algorithm which globally optimizes the ROUGE evaluation metric through a reinforcement learning objective. We use our algorithm to train a neural summarization model on the CNN and DailyMail datasets and demonstrate experimentally that it outperforms state-of-the-art extractive and abstractive systems when evaluated automatically and by humans.",
+@article{narayan-etal-2018-ranking,
+  title={Ranking sentences for extractive summarization with reinforcement learning},
+  author={Narayan, Shashi and Cohen, Shay B and Lapata, Mirella},
+  journal={arXiv preprint arXiv:1802.08636},
+  year={2018}
 }
 
-@inproceedings{liu2019text,
-  title={Text Summarization with Pretrained Encoders},
+@article{liu2019text,
+  title={Text summarization with pretrained encoders},
   author={Liu, Yang and Lapata, Mirella},
-  booktitle={Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP)},
+  journal={arXiv preprint arXiv:1908.08345},
   year={2019}
 }
 
-@article{CESABIANCHI20121404,
-title = "Combinatorial bandits",
-journal = "Journal of Computer and System Sciences",
-volume = "78",
-number = "5",
-year = "2012",
-note = "JCSS Special Issue: Cloud Computing 2011",
-issn = "0022-0000",
-doi = "https://doi.org/10.1016/j.jcss.2012.01.001",
-url = "http://www.sciencedirect.com/science/article/pii/S0022000012000219",
-author = "Nicolò Cesa-Bianchi and Gábor Lugosi",
-keywords = "Online prediction, Adversarial bandit problems, Online linear optimization",
-abstract = "We study sequential prediction problems in which, at each time instance, the forecaster chooses a vector from a given finite set S⊆Rd. At the same time, the opponent chooses a “loss” vector in Rd and the forecaster suffers a loss that is the inner product of the two vectors. The goal of the forecaster is to achieve that, in the long run, the accumulated loss is not much larger than that of the best possible element in S. We consider the “bandit” setting in which the forecaster only has access to the losses of the chosen vectors (i.e., the entire loss vectors are not observed). We introduce a variant of a strategy by Dani, Hayes and Kakade achieving a regret bound that, for a variety of concrete choices of S, is of order ndln|S| where n is the time horizon. This is not improvable in general and is better than previously known bounds. The examples we consider are all such that S⊆{0,1}d, and we show how the combinatorial structure of these classes can be exploited to improve the regret bounds. We also point out computationally efficient implementations for various interesting choices of S."
+@article{Robbins:1952,
+  title={Some aspects of the sequential design of experiments},
+  author={Robbins, Herbert},
+  journal={Bulletin of the American Mathematical Society},
+  volume={58},
+  number={5},
+  pages={527--535},
+  year={1952},
+  publisher={Citeseer}
 }
 
-@Article{Robbins:1952,
-  author =       "Robbins, Herbert",
-  title =        "Some aspects of the sequential design of experiments",
-  journal =      "Bulletin of the American Mathematical Society",
-  year =         "1952",
-  volume =    "58",
-  number =    "5",
-  pages =     "527--535",
-  url = "http://www.projecteuclid.org/DPubS/Repository/1.0/Disseminate?view=body&id=pdf_1&handle=euclid.bams/1183517370",
-  bib2html_rescat = "General RL, Bandits",
+@article{10.5555/2969442.2969476,
+  title={Combinatorial bandits revisited},
+  author={Combes, Richard and Talebi Mazraeh Shahi, Mohammad Sadegh and Proutiere, Alexandre and others},
+  journal={Advances in neural information processing systems},
+  volume={28},
+  pages={2116--2124},
+  year={2015}
 }
 
-@inproceedings{10.5555/2969442.2969476,
-author = {Combes, Richard and Talebi, M. Sadegh and Proutiere, Alexandre and Lelarge, Marc},
-title = {Combinatorial Bandits Revisited},
-year = {2015},
-publisher = {MIT Press},
-address = {Cambridge, MA, USA},
-abstract = {This paper investigates stochastic and adversarial combinatorial multi-armed bandit problems. In the stochastic setting under semi-bandit feedback, we derive a problem-specific regret lower bound, and discuss its scaling with the dimension of the decision space. We propose ESCB, an algorithm that efficiently exploits the structure of the problem and provide a finite-time analysis of its regret. ESCB has better performance guarantees than existing algorithms, and significantly outperforms these algorithms in practice. In the adversarial setting under bandit feedback, we propose COMBEXP, an algorithm with the same regret scaling as state-of-the-art algorithms, but with lower computational complexity for some combinatorial problems.},
-booktitle = {Proceedings of the 28th International Conference on Neural Information Processing Systems - Volume 2},
-pages = {2116–2124},
-numpages = {9},
-location = {Montreal, Canada},
-series = {NIPS'15}
+@article{lairobbins,
+  title={Asymptotically efficient adaptive allocation rules},
+  author={Lai, Tze Leung and Robbins, Herbert},
+  journal={Advances in applied mathematics},
+  volume={6},
+  number={1},
+  pages={4--22},
+  year={1985},
+  publisher={Academic Press}
+}
+
+@inproceedings{pmlr-v28-chen13a,
+  title={Combinatorial multi-armed bandit: General framework and applications},
+  author={Chen, Wei and Wang, Yajun and Yuan, Yang},
+  booktitle={International Conference on Machine Learning},
+  pages={151--159},
+  year={2013}
+}
+
+
+@book{rubinstein2013cross,
+  title={The cross-entropy method: a unified approach to combinatorial optimization, Monte-Carlo simulation and machine learning},
+  author={Rubinstein, Reuven Y and Kroese, Dirk P},
+  year={2013},
+  publisher={Springer Science \& Business Media}
+}
+
+@article{kryscinski-etal-2019-neural,
+  title={Neural text summarization: A critical evaluation},
+  author={Kry{\'s}ci{\'n}ski, Wojciech and Keskar, Nitish Shirish and McCann, Bryan and Xiong, Caiming and Socher, Richard},
+  journal={arXiv preprint arXiv:1908.08960},
+  year={2019}
+}
+
+
+@inproceedings{pytorch,
+  title={Pytorch: An imperative style, high-performance deep learning library},
+  author={Paszke, Adam and Gross, Sam and Massa, Francisco and Lerer, Adam and Bradbury, James and Chanan, Gregory and Killeen, Trevor and Lin, Zeming and Gimelshein, Natalia and Antiga, Luca and others},
+  booktitle={Advances in neural information processing systems},
+  pages={8026--8037},
+  year={2019}
+}
+
+@inproceedings{tensorflow2015-whitepaper,
+  title={Tensorflow: A system for large-scale machine learning},
+  author={Abadi, Mart{\'\i}n and Barham, Paul and Chen, Jianmin and Chen, Zhifeng and Davis, Andy and Dean, Jeffrey and Devin, Matthieu and Ghemawat, Sanjay and Irving, Geoffrey and Isard, Michael and others},
+  booktitle={12th $\{$USENIX$\}$ symposium on operating systems design and implementation ($\{$OSDI$\}$ 16)},
+  pages={265--283},
+  year={2016}
+}
+
+@book{Sutton1998,
+  title={Reinforcement learning: An introduction},
+  author={Sutton, Richard S and Barto, Andrew G},
+  year={2018},
+  publisher={MIT press}
+}
+
+@inproceedings{soare2014multi,
+  title={Multi-task linear bandits},
+  author={Soare, Marta and Alsharif, Ouais and Lazaric, Alessandro and Pineau, Joelle},
+  booktitle={NIPS2014 Workshop on Transfer and Multi-task Learning: Theory meets Practice},
+  year={2014}
+}
+
+@inproceedings{deshmukh2017multi,
+  title={Multi-task learning for contextual bandits},
+  author={Deshmukh, Aniket Anand and Dogan, Urun and Scott, Clay},
+  booktitle={Advances in neural information processing systems},
+  pages={4848--4856},
+  year={2017}
+}
+
+
+@article{contextual_bandits,
+  title={Using confidence bounds for exploitation-exploration trade-offs},
+  author={Auer, Peter},
+  journal={Journal of Machine Learning Research},
+  volume={3},
+  number={Nov},
+  pages={397--422},
+  year={2002}
+}
+
+@inproceedings{NEURIPS2018_207f8801,
+  title={Contextual combinatorial multi-armed bandits with volatile arms and submodular reward},
+  author={Chen, Lixing and Xu, Jie and Lu, Zhuo},
+  booktitle={Advances in Neural Information Processing Systems},
+  pages={3247--3256},
+  year={2018}
 }
