@@ -7,16 +7,11 @@
       primaryClass={cs.LG}
 }
 
-@inproceedings{unilm,
- author = {Dong, Li and Yang, Nan and Wang, Wenhui and Wei, Furu and Liu, Xiaodong and Wang, Yu and Gao, Jianfeng and Zhou, Ming and Hon, Hsiao-Wuen},
- booktitle = {Advances in Neural Information Processing Systems},
- editor = {H. Wallach and H. Larochelle and A. Beygelzimer and F. d\textquotesingle Alch\'{e}-Buc and E. Fox and R. Garnett},
- pages = {13063--13075},
- publisher = {Curran Associates, Inc.},
- title = {Unified Language Model Pre-training for Natural Language Understanding and Generation},
- url = {https://proceedings.neurips.cc/paper/2019/file/c20bb2d9a50d5ac1f713f8b34d9aac5a-Paper.pdf},
- volume = {32},
- year = {2019}
+@article{unilm,
+  title={Unified language model pre-training for natural language understanding and generation},
+  author={Dong, Li and Yang, Nan and Wang, Wenhui and Wei, Furu and Liu, Xiaodong and Wang, Yu and Gao, Jianfeng and Zhou, Ming and Hon, Hsiao-Wuen},
+  journal={arXiv preprint arXiv:1905.03197},
+  year={2019}
 }
 
 
@@ -30,72 +25,37 @@
 }
 
 @inproceedings{dong2018banditsum,
-    title = "{B}andit{S}um: Extractive Summarization as a Contextual Bandit",
-    author = "Dong, Yue  and
-      Shen, Yikang  and
-      Crawford, Eric  and
-      van Hoof, Herke  and
-      Cheung, Jackie Chi Kit",
-    booktitle = "Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing",
-    month = oct # "-" # nov,
-    year = "2018",
-    address = "Brussels, Belgium",
-    publisher = "Association for Computational Linguistics",
-    url = "https://www.aclweb.org/anthology/D18-1409",
-    doi = "10.18653/v1/D18-1409",
-    pages = "3739--3748",
-    abstract = "In this work, we propose a novel method for training neural networks to perform single-document extractive summarization without heuristically-generated extractive labels. We call our approach BanditSum as it treats extractive summarization as a contextual bandit (CB) problem, where the model receives a document to summarize (the context), and chooses a sequence of sentences to include in the summary (the action). A policy gradient reinforcement learning algorithm is used to train the model to select sequences of sentences that maximize ROUGE score. We perform a series of experiments demonstrating that BanditSum is able to achieve ROUGE scores that are better than or comparable to the state-of-the-art for extractive summarization, and converges using significantly fewer update steps than competing approaches. In addition, we show empirically that BanditSum performs significantly better than competing approaches when good summary sentences appear late in the source document.",
+  title={BanditSum: Extractive Summarization as a Contextual Bandit},
+  author={Dong, Yue and Shen, Yikang and Crawford, Eric and van Hoof, Herke and Cheung, Jackie Chi Kit},
+  booktitle={Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing},
+  pages={3739--3748},
+  year={2018}
 }
 
 @inproceedings{luo-etal-2019-reading,
-    title = "Reading Like {HER}: Human Reading Inspired Extractive Summarization",
-    author = "Luo, Ling  and
-      Ao, Xiang  and
-      Song, Yan  and
-      Pan, Feiyang  and
-      Yang, Min  and
-      He, Qing",
-    booktitle = "Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP)",
-    month = nov,
-    year = "2019",
-    address = "Hong Kong, China",
-    publisher = "Association for Computational Linguistics",
-    url = "https://www.aclweb.org/anthology/D19-1300",
-    doi = "10.18653/v1/D19-1300",
-    pages = "3033--3043",
-    abstract = "In this work, we re-examine the problem of extractive text summarization for long documents. We observe that the process of extracting summarization of human can be divided into two stages: 1) a rough reading stage to look for sketched information, and 2) a subsequent careful reading stage to select key sentences to form the summary. By simulating such a two-stage process, we propose a novel approach for extractive summarization. We formulate the problem as a contextual-bandit problem and solve it with policy gradient. We adopt a convolutional neural network to encode gist of paragraphs for rough reading, and a decision making policy with an adapted termination mechanism for careful reading. Experiments on the CNN and DailyMail datasets show that our proposed method can provide high-quality summaries with varied length, and significantly outperform the state-of-the-art extractive methods in terms of ROUGE metrics.",
+  title={Reading like HER: Human reading inspired extractive summarization},
+  author={Luo, Ling and Ao, Xiang and Song, Yan and Pan, Feiyang and Yang, Min and He, Qing},
+  booktitle={Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP)},
+  pages={3024--3034},
+  year={2019}
 }
 
-@inproceedings{zhong-etal-2020-extractive,
-    title = "Extractive Summarization as Text Matching",
-    author = "Zhong, Ming  and
-      Liu, Pengfei  and
-      Chen, Yiran  and
-      Wang, Danqing  and
-      Qiu, Xipeng  and
-      Huang, Xuanjing",
-    booktitle = "Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics",
-    month = jul,
-    year = "2020",
-    address = "Online",
-    publisher = "Association for Computational Linguistics",
-    url = "https://www.aclweb.org/anthology/2020.acl-main.552",
-    doi = "10.18653/v1/2020.acl-main.552",
-    pages = "6197--6208",
-    abstract = "This paper creates a paradigm shift with regard to the way we build neural extractive summarization systems. Instead of following the commonly used framework of extracting sentences individually and modeling the relationship between sentences, we formulate the extractive summarization task as a semantic text matching problem, in which a source document and candidate summaries will be (extracted from the original text) matched in a semantic space. Notably, this paradigm shift to semantic matching framework is well-grounded in our comprehensive analysis of the inherent gap between sentence-level and summary-level extractors based on the property of the dataset. Besides, even instantiating the framework with a simple form of a matching model, we have driven the state-of-the-art extractive result on CNN/DailyMail to a new level (44.41 in ROUGE-1). Experiments on the other five datasets also show the effectiveness of the matching framework. We believe the power of this matching-based summarization framework has not been fully exploited. To encourage more instantiations in the future, we have released our codes, processed dataset, as well as generated summaries in \url{https://github.com/maszhongming/MatchSum}.",
+@article{zhong-etal-2020-extractive,
+  title={Extractive summarization as text matching},
+  author={Zhong, Ming and Liu, Pengfei and Chen, Yiran and Wang, Danqing and Qiu, Xipeng and Huang, Xuanjing},
+  journal={arXiv preprint arXiv:2004.08795},
+  year={2020}
 }
+
 
 @inproceedings{lin-2004-rouge,
-    title = "{ROUGE}: A Package for Automatic Evaluation of Summaries",
-    author = "Lin, Chin-Yew",
-    booktitle = "Text Summarization Branches Out",
-    month = jul,
-    year = "2004",
-    address = "Barcelona, Spain",
-    publisher = "Association for Computational Linguistics",
-    url = "https://www.aclweb.org/anthology/W04-1013",
-    pages = "74--81",
+  title={Rouge: A package for automatic evaluation of summaries},
+  author={Lin, Chin-Yew},
+  booktitle={Text summarization branches out},
+  pages={74--81},
+  year={2004}
 }
+
 
 @inproceedings{DBLP:journals/corr/SeeLM17,
     title = "Get To The Point: Summarization with Pointer-Generator Networks",
@@ -412,20 +372,12 @@ series = {UAI'07}
   year={2016}
 }
 
-
 @article{almeida2019word,
-  author    = {Felipe Almeida and
+  title={Word Embeddings: {A} Survey},
+  author={Felipe Almeida and
                Geraldo Xex{\'{e}}o},
-  title     = {Word Embeddings: {A} Survey},
-  journal   = {CoRR},
-  volume    = {abs/1901.09069},
-  year      = {2019},
-  url       = {http://arxiv.org/abs/1901.09069},
-  archivePrefix = {arXiv},
-  eprint    = {1901.09069},
-  timestamp = {Sat, 02 Feb 2019 16:56:00 +0100},
-  biburl    = {https://dblp.org/rec/journals/corr/abs-1901-09069.bib},
-  bibsource = {dblp computer science bibliography, https://dblp.org}
+  journal={arXiv preprint arXiv:1901.09069},
+  year={2019}
 }
 
 @article{hermann2015teaching,

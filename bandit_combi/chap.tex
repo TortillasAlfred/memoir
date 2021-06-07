@@ -2,7 +2,7 @@
 \label{chap:bandit_combi}                   % étiquette pour renvois (à compléter!)
 
 Dans ce chapitre, on présente comment la génération du résumé d'un document
-peut être interprétée un problème de bandit combinatoire \citep{pmlr-v28-chen13a}.
+peut être interprétée comme un problème de bandit combinatoire \citep{pmlr-v28-chen13a}.
 On montre ensuite comment l'algorithme Combinatorial Upper Confidence Bound (CUCB) 
 \citep{pmlr-v28-chen13a} peut être utilisé pour résoudre ce type de problème.
 Avec le jeu de développement, on établit empiriquement l'applicabilité 
@@ -297,7 +297,7 @@ Concrètement, on propose donc d'utiliser les moyennes $\bar{x}_a$ produites
 par CUCB comme approximations des potentiels extractifs $v_a$ pour générer les cibles $y_a$ selon le processus suivant.
 On commence par appliquer une mise à l'échelle min-max des moyennes $\bar{x}_a$.
 Cette mise à l'échelle produit des moyennes normalisées $\bar{x}_a' \in [0, 1]$
-en conservant proportions originales entre les moyennes.
+en conservant les proportions originales entre les moyennes.
 Les $\bar{x}_a'$ sont ensuite utilisées pour produire les cibles $y_a$ selon
 
 \begin{equation}
@@ -524,7 +524,7 @@ et met à jour les poids $\theta$ du modèle neuronal selon \eqref{eq:bce}.
 \subsection{Expériences}
 
 On effectue un entraînement sur le jeu de données du CNN/DailyMail en 
-parcourant dans son entièreté le jeu de d'entraînement à 5 reprises
+parcourant dans son entièreté le jeu d'entraînement à 5 reprises
 et en utilisant des \textit{minibatches} de taille $B=64$.
 Notre implémentation est faite selon les détails expérimentaux décrits à la section 
 \ref{subsec:archi}.

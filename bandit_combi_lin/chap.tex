@@ -122,6 +122,9 @@ nombre d'occurrences de chaque $n$-gramme dans la phrase, pour $N$  le nombre de
 différents dans le document.
 Dans nos expériences, on limite l'exploration des \ngrams aux unigrammes,
 afin de garder une taille raisonnable pour les vecteurs parcimonieux générés.
+Bien qu'elle ne permet pas d'incorporer toute l'information requise pour 
+le calcul du ROUGE, cette représentation basée uniquement sur les unigrammes
+permet d'avoir une approximation suffisante pour nos besoins.
 
 On bâtit ensuite une matrice parcimonieuse dont les rangées sont les vecteurs parcimonieux 
 de chaque phrase du document.

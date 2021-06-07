@@ -1,7 +1,7 @@
 \chapter{Problématique}
 \label{chap:bandit_contextuel}
 
-L'objectif fondamental de ce document est de proposer et 
+L'objectif fondamental de ce mémoire est de proposer et 
 d'analyser différents algorithmes basés 
 sur les bandits pour l'apprentissage de systèmes de génération 
 de résumés.
@@ -715,7 +715,7 @@ Enfin, notons que la probabilité de générer un résumé $\hat{s}$ d'un docume
 $\xi \left(\hat{s} | \pi_\theta, d \right)$ dans l'équation
 \ref{eq:REINFORCE_baseline}, s'écrit alors sous la forme close
 \begin{equation}
-    \xi \left(\hat{s} | \pi_\theta, d, \epsilon \right) = \displaystyle \prod_{i=1}^3 \left(\dfrac{\epsilon}{|d| -i + 1}  + \dfrac{(1 - \epsilon)\pi(d)_{\hat{s}_i}}{\sum_{j=1}^{i-1} \pi(d)_{\hat{s}_j}}\right),
+    \xi \left(\hat{s} | \pi_\theta, d, \epsilon \right) = \displaystyle \prod_{i=1}^3 \left(\dfrac{\epsilon}{|d| -i + 1}  + \dfrac{(1 - \epsilon)\pi(d)_{\hat{s}_i}}{\sum_s \pi(d)_s - \sum_{j=1}^{i-1} \pi(d)_{\hat{s}_j}}\right),
     \label{eq:Xi}
 \end{equation}
 où $\hat{s}_i$ représente l'index de la $i$-ème phrase du résumé produit $\hat{s}$. 
